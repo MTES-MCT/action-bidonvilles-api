@@ -1,0 +1,47 @@
+{
+  "name": "action-bidonvilles-api",
+  "version": "0.0.1",
+  "description": "API d'Action Bidonvilles",
+  "main": "server/index.js",
+  "repository": "git+https://github.com/MTES-MCT/action-bidonvilles.git",
+  "author": {
+    "name": "Anis Safine Laget",
+    "email": "anis@users.noreply.github.com"
+  },
+  "license": "AGPL-3.0-or-later",
+  "private": true,
+  "dependencies": {
+    "body-parser": "^1.18.3",
+    "cors": "^2.8.5",
+    "express": "^4.16.4",
+    "pg": "^6.4.2",
+    "pg-hstore": "^2.3.2",
+    "request": "^2.88.0",
+    "request-promise": "^4.2.2",
+    "sequelize": "^4.42.0",
+    "sequelize-cli": "^5.4.0"
+  },
+  "devDependencies": {
+    "eslint": "^5.10.0",
+    "eslint-config-airbnb-base": "^13.1.0",
+    "eslint-plugin-import": "^2.14.0",
+    "husky": "^1.2.0",
+    "lint-staged": "^8.1.0",
+    "nodemon": "^1.18.9"
+  },
+  "husky": {
+    "hooks": {
+      "pre-commit": "yarn lint-staged"
+    }
+  },
+  "lint-staged": {
+    "server/**/*.js": [
+      "eslint"
+    ]
+  },
+  "scripts": {
+    "db:create": "sequelize db:migrate && sequelize db:seed:all",
+    "start": "node server/index.js",
+    "dev": "nodemon server/index.js"
+  }
+}
