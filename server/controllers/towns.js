@@ -31,7 +31,7 @@ function serializeTown(town) {
         accessToElectricity: town.accessToElectricity,
         accessToWater: town.accessToWater,
         trashEvacuation: town.trashEvacuation,
-        justiceStatus: false,
+        justiceStatus: town.justiceStatus,
         actions: [],
         socialOrigins: town.socialOrigins.map(origin => ({
             id: origin.id,
@@ -94,6 +94,7 @@ function cleanParams(body) {
         access_to_electricity,
         access_to_water,
         trash_evacuation,
+        justice_status,
         social_origins,
         field_type,
         owner_type,
@@ -113,6 +114,7 @@ function cleanParams(body) {
         accessToElectricity: getIntOrNull(access_to_electricity),
         accessToWater: getIntOrNull(access_to_water),
         trashEvacuation: getIntOrNull(trash_evacuation),
+        justiceStatus: getIntOrNull(justice_status),
         socialOrigins: social_origins,
         fieldType: getIntOrNull(field_type),
         ownerType: getIntOrNull(owner_type),
@@ -170,6 +172,7 @@ module.exports = {
             accessToElectricity,
             accessToWater,
             trashEvacuation,
+            justiceStatus,
             socialOrigins,
             fieldType,
             ownerType,
@@ -243,6 +246,13 @@ module.exports = {
             error('owner_type', 'Le champ "type de propriétaire" est obligatoire');
         }
 
+        // justice status
+        if (justiceStatus === null) {
+            error('justice_status', 'Le champ "Statut judiciaire en cours" est obligatoire');
+        } else if ([-1, 0, 1].indexOf(justiceStatus) === -1) {
+            error('justice_status', 'Valeur invalide');
+        }
+
         // population
         if (populationTotal < 0) {
             error('population_total', 'La population ne peut pas être négative');
@@ -305,6 +315,7 @@ module.exports = {
                     accessToElectricity: toBool(accessToElectricity),
                     accessToWater: toBool(accessToWater),
                     trashEvacuation: toBool(trashEvacuation),
+                    justiceStatus: toBool(justiceStatus),
                     fieldType,
                     ownerType,
                     city: citycode,

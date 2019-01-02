@@ -86,6 +86,11 @@ module.exports = function (sequelize, DataTypes) {
             allowNull: true,
             field: 'trash_evacuation',
         },
+        justiceStatus: {
+            type: DataTypes.BOOLEAN,
+            allowNull: true,
+            field: 'justice_status',
+        },
         createdAt: {
             type: DataTypes.DATE,
             defaultValue: DataTypes.NOW,

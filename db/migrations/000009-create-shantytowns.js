@@ -64,6 +64,10 @@ module.exports = {
                 type: Sequelize.BOOLEAN,
                 allowNull: true,
             },
+            justice_status: {
+                type: Sequelize.BOOLEAN,
+                allowNull: true,
+            },
             created_at: {
                 type: Sequelize.DATE,
                 allowNull: false,
