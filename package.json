@@ -43,6 +43,7 @@
   },
   "scripts": {
     "db:create": "sequelize db:migrate && sequelize db:seed:all",
+    "db:reset": "sequelize db:migrate:undo:all && sequelize db:migrate && sequelize db:seed:all",
     "start": "node server/index.js",
     "dev": "nodemon server/index.js"
   }

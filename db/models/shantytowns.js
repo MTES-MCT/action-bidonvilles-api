@@ -7,6 +7,16 @@ module.exports = function (sequelize, DataTypes) {
             autoIncrement: true,
             field: 'shantytown_id',
         },
+        status: {
+            type: DataTypes.ENUM('open', 'gone', 'covered', 'expelled'),
+            allowNull: false,
+            defaultValue: 'open',
+        },
+        closedAt: {
+            type: DataTypes.DATE,
+            allowNull: true,
+            field: 'closed_at',
+        },
         latitude: {
             type: DataTypes.DOUBLE(2, 15),
             allowNull: false,

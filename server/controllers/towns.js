@@ -8,6 +8,8 @@ const ShantyTowns = require('../../db/models').Shantytown;
 function serializeTown(town) {
     return {
         id: town.id,
+        status: town.status,
+        closedAt: town.closedAt,
         latitude: town.latitude,
         longitude: town.longitude,
         address: town.address,

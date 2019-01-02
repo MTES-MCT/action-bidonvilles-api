@@ -8,6 +8,15 @@ module.exports = {
                 primaryKey: true,
                 autoIncrement: true,
             },
+            status: {
+                type: Sequelize.ENUM('open', 'gone', 'covered', 'expelled'),
+                allowNull: false,
+                defaultValue: 'open',
+            },
+            closed_at: {
+                type: Sequelize.DATE,
+                allowNull: true,
+            },
             latitude: {
                 type: Sequelize.DOUBLE(2, 15),
                 allowNull: false,
@@ -127,6 +136,27 @@ module.exports = {
             },
             onUpdate: 'cascade',
             onDelete: 'restrict',
+        }),
+
+        queryInterface.addConstraint('shantytowns', ['closed_at'], {
+            type: 'check',
+            name: 'check_closed_at_notNull',
+            where: {
+                $or: [
+                    {
+                        $and: {
+                            status: { $eq: 'open' },
+                            closed_at: { $eq: null },
+                        },
+                    },
+                    {
+                        $and: {
+                            status: { $ne: 'open' },
+                            closed_at: { $ne: null },
+                        },
+                    },
+                ],
+            },
         }),
     ])),
 
