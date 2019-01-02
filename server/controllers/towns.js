@@ -182,32 +182,33 @@ module.exports = {
         const error = addError.bind(this, fieldErrors);
 
         // address
+        let dbCity = null;
+
         if (address === null || address.length === 0) {
             error('address', 'L\'adresse du site est obligatoire');
         } else if (city === null || citycode === null) {
             error('address', 'Impossible d\'associer une commune à l\'adresse indiquée');
         } else if (/^[0-9]{5}$/g.test(citycode) !== true) {
             error('address', 'Le code communal associé à l\'adresse est invalide');
-        }
+        } else {
+            try {
+                dbCity = await Cities.findOne({
+                    where: {
+                        code: citycode,
+                    },
+                });
+            } catch (e) {
+                return res.status(500).send({
+                    error: {
+                        developer_message: e.message,
+                        user_message: 'Une erreur est survenue dans l\'identification de la commune en base de données',
+                    },
+                });
+            }
 
-        let dbCity;
-        try {
-            dbCity = await Cities.findOne({
-                where: {
-                    code: citycode,
-                },
-            });
-        } catch (e) {
-            return res.status(500).send({
-                error: {
-                    developer_message: e.message,
-                    user_message: 'Une erreur est survenue dans l\'identification de la commune en base de données',
-                },
-            });
-        }
-
-        if (dbCity === null) {
-            error('address', `La commune ${citycode} n'existe pas en base de données`);
+            if (dbCity === null) {
+                error('address', `La commune ${citycode} n'existe pas en base de données`);
+            }
         }
 
         // latitude, longitude
