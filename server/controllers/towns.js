@@ -39,6 +39,7 @@ function serializeTown(town) {
             id: origin.id,
             label: origin.label,
         })),
+        updatedAt: new Date(town.updatedAt).getTime() / 1000,
     };
 }
 
