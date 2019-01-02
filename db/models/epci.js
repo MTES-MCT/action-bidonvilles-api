@@ -1,7 +1,7 @@
 module.exports = function (sequelize, DataTypes) {
-    const City = sequelize.define('City', {
+    const Epci = sequelize.define('Epci', {
         code: {
-            type: DataTypes.STRING(5),
+            type: DataTypes.STRING(9),
             allowNull: false,
             primaryKey: true,
         },
@@ -9,14 +9,14 @@ module.exports = function (sequelize, DataTypes) {
             type: DataTypes.STRING,
             allowNull: false,
         },
-        epci: {
-            type: DataTypes.STRING(9),
+        departement: {
+            type: DataTypes.STRING(3),
             allowNull: false,
             references: {
-                model: 'epci',
+                model: 'departements',
                 key: 'code',
             },
-            field: 'fk_epci',
+            field: 'fk_departement',
         },
         createdAt: {
             type: DataTypes.DATE,
@@ -30,15 +30,15 @@ module.exports = function (sequelize, DataTypes) {
             field: 'updated_at',
         },
     }, {
-        tableName: 'cities',
+        tableName: 'epci',
         underscored: true,
         paranoid: false,
         timestamps: true,
     });
 
-    City.associate = (models) => {
-        City.belongsTo(models.Epci, { foreignKey: 'fk_epci' });
+    Epci.associate = (models) => {
+        Epci.belongsTo(models.Departement, { foreignKey: 'fk_departement' });
     };
 
-    return City;
+    return Epci;
 };

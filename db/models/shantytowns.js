@@ -91,10 +91,19 @@ module.exports = function (sequelize, DataTypes) {
             defaultValue: DataTypes.NOW,
             field: 'created_at',
         },
+        createdBy: {
+            type: DataTypes.INTEGER,
+            allowNull: false,
+            references: {
+                model: 'users',
+                key: 'user_id',
+            },
+            field: 'created_by',
+        },
         updatedAt: {
             type: DataTypes.DATE,
             defaultValue: DataTypes.NOW,
-            onUpdate : DataTypes.NOW,
+            onUpdate: DataTypes.NOW,
             field: 'updated_at',
         },
     }, {
@@ -113,6 +122,7 @@ module.exports = function (sequelize, DataTypes) {
             as: 'socialOrigins',
             foreignKey: 'fk_shantytown',
         });
+        Shantytown.belongsTo(models.User, { foreignKey: 'created_by' });
     };
 
     return Shantytown;

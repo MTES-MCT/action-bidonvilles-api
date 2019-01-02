@@ -1,22 +1,32 @@
 module.exports = function (sequelize, DataTypes) {
-    const City = sequelize.define('City', {
-        code: {
-            type: DataTypes.STRING(5),
+    const User = sequelize.define('User', {
+        id: {
+            type: DataTypes.INTEGER,
             allowNull: false,
             primaryKey: true,
+            autoIncrement: true,
+            field: 'user_id',
         },
-        name: {
+        email: {
             type: DataTypes.STRING,
             allowNull: false,
         },
-        epci: {
-            type: DataTypes.STRING(9),
+        password: {
+            type: DataTypes.TEXT,
+            allowNull: false,
+        },
+        salt: {
+            type: DataTypes.STRING,
+            allowNull: false,
+        },
+        departement: {
+            type: DataTypes.STRING(3),
             allowNull: false,
             references: {
-                model: 'epci',
+                model: 'departements',
                 key: 'code',
             },
-            field: 'fk_epci',
+            field: 'fk_departement',
         },
         createdAt: {
             type: DataTypes.DATE,
@@ -30,15 +40,15 @@ module.exports = function (sequelize, DataTypes) {
             field: 'updated_at',
         },
     }, {
-        tableName: 'cities',
+        tableName: 'users',
         underscored: true,
         paranoid: false,
         timestamps: true,
     });
 
-    City.associate = (models) => {
-        City.belongsTo(models.Epci, { foreignKey: 'fk_epci' });
+    User.associate = (models) => {
+        User.belongsTo(models.Departement, { foreignKey: 'fk_departement' });
     };
 
-    return City;
+    return User;
 };

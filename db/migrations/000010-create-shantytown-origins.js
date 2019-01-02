@@ -1,6 +1,5 @@
 module.exports = {
-    up: (queryInterface, Sequelize) => {
-        return queryInterface.createTable(
+    up: (queryInterface, Sequelize) => queryInterface.createTable(
             'shantytown_origins',
             {
                 fk_shantytown: {
@@ -52,10 +51,7 @@ module.exports = {
                     onDelete: 'cascade',
                 }),
             ]);
-        });
-    },
+        }),
 
-    down: (queryInterface) => {
-        return queryInterface.dropTable('shantytown_origins');
-    },
+    down: (queryInterface) => queryInterface.dropTable('shantytown_origins'),
 };

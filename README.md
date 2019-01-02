@@ -10,23 +10,28 @@
 cp ./db/config/config.js.sample ./db/config/config.js
 ```
 
-2. Créer un utilisateur Postgres
+2. Créer un fichier `server/config.js` sur la base du fichier `server/config.js.sample`
+```
+cp ./server/config.js.sample ./server/config.js
+```
+
+3. Créer un utilisateur Postgres
 ```
 # pour la production, utiliser un mot de passe différent
 sudo -u postgres bash -c "psql -c \"CREATE USER fabnum WITH PASSWORD 'fabnum';\""
 ```
 
-3. Créer la base de données, et l'assigner à l'utilisateur :
+4. Créer la base de données, et l'assigner à l'utilisateur :
 ```
 sudo -u postgres bash -c "psql -c \"CREATE DATABASE action_bidonvilles WITH OWNER fabnum;\""
 ```
 
-4. Installer les dépendances
+5. Installer les dépendances
 ```
 yarn install
 ```
 
-5. Générer la structure de la base de données (cette commande crée la base, et injecte les données de base)
+6. Générer la structure de la base de données (cette commande crée la base, et injecte les données de base)
 ```
 yarn db:create
 ```

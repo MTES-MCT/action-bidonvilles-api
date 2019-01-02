@@ -187,6 +187,26 @@ module.exports = {
             error('address', 'Le code communal associé à l\'adresse est invalide');
         }
 
+        let dbCity;
+        try {
+            dbCity = await Cities.findOne({
+                where: {
+                    code: citycode,
+                },
+            });
+        } catch (e) {
+            return res.status(500).send({
+                error: {
+                    developer_message: e.message,
+                    user_message: 'Une erreur est survenue dans l\'identification de la commune en base de données',
+                },
+            });
+        }
+
+        if (dbCity === null) {
+            error('address', `La commune ${citycode} n'existe pas en base de données`);
+        }
+
         // latitude, longitude
         if (latitude === null || longitude === null) {
             error('address', 'Les coordonnées géographiques du site sont obligatoires');
@@ -268,26 +288,6 @@ module.exports = {
             });
         }
 
-        // get or create the city
-        try {
-            await Cities.findOrCreate({
-                where: {
-                    code: citycode,
-                },
-                defaults: {
-                    code: citycode,
-                    name: city,
-                },
-            });
-        } catch (e) {
-            return res.status(500).send({
-                error: {
-                    developer_message: e.message,
-                    user_message: 'Une erreur est survenue dans l\'enregistrement de la commune en base de données',
-                },
-            });
-        }
-
         // create the town
         try {
             let town;
@@ -308,6 +308,7 @@ module.exports = {
                     fieldType,
                     ownerType,
                     city: citycode,
+                    createdBy: req.decoded.userId,
                 });
 
                 await town.setSocialOrigins(socialOrigins);

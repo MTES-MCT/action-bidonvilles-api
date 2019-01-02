@@ -1,7 +1,9 @@
-const { SocialOrigin, FieldType, OwnerType } = require('../../db/models');
+const {
+    SocialOrigin, FieldType, OwnerType, User, Departement,
+} = require('../../db/models');
 
 module.exports = {
-    list(req, res) {
+    async list(req, res) {
         const queries = {
             field_types: FieldType.findAll(),
             owner_types: OwnerType.findAll(),
@@ -15,12 +17,23 @@ module.exports = {
             promises.push(queries[key]);
         });
 
+        const user = await User.findOne({
+            include: [
+                Departement,
+            ],
+            where: {
+                id: req.decoded.userId,
+            },
+        });
+
         return Promise.all(promises)
             .then((results) => {
                 const response = {
                     user: {
-                        email: 'whatever',
-                        map_center: [43.3050621, 0.684586],
+                        map_center: [
+                            user.Departement.latitude,
+                            user.Departement.longitude,
+                        ],
                     },
                 };
                 names.forEach((name, index) => {
