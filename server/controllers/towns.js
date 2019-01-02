@@ -134,6 +134,9 @@ module.exports = {
                         OwnerTypes,
                         { model: SocialOrigins, as: 'socialOrigins' },
                     ],
+                    where: {
+                        status: 'open',
+                    },
                 })
                 .then(towns => res.status(200).send(towns.map(serializeTown)))
                 .catch(error => res.status(400).send(error));
