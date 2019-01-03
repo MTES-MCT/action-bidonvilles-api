@@ -9,7 +9,7 @@ function serializeTown(town) {
     return {
         id: town.id,
         status: town.status,
-        closedAt: town.closedAt,
+        closedAt: town.closedAt ? new Date(town.closedAt).getTime() / 1000 : null,
         latitude: town.latitude,
         longitude: town.longitude,
         address: town.address,
@@ -84,13 +84,15 @@ function trim(str) {
 
 function cleanParams(body) {
     const {
+        built_at,
+        status,
+        closed_at,
         latitude,
         longitude,
         city,
         citycode,
         address,
         detailed_address,
-        built_at,
         population_total,
         population_couples,
         population_minors,
@@ -104,13 +106,15 @@ function cleanParams(body) {
     } = body;
 
     return {
+        builtAt: built_at !== '' ? built_at : null,
+        status: trim(status),
+        closedAt: closed_at,
         latitude: getFloatOrNull(latitude),
         longitude: getFloatOrNull(longitude),
         city: trim(city),
         citycode: trim(citycode),
         address: trim(address),
         addressDetails: trim(detailed_address),
-        builtAt: built_at !== '' ? built_at : null,
         populationTotal: getIntOrNull(population_total),
         populationCouples: getIntOrNull(population_couples),
         populationMinors: getIntOrNull(population_minors),
@@ -124,14 +128,16 @@ function cleanParams(body) {
     };
 }
 
-async function validateInput(body) {
+async function validateInput(body, mode = 'create') {
     const {
+        builtAt,
+        status,
+        closedAt,
         address,
         city,
         citycode,
         latitude,
         longitude,
-        builtAt,
         populationTotal,
         populationCouples,
         populationMinors,
@@ -143,8 +149,48 @@ async function validateInput(body) {
         ownerType,
     } = cleanParams(body);
 
+    const now = Date.now();
     const fieldErrors = {};
     const error = addError.bind(this, fieldErrors);
+
+    // builtAt
+    let builtAtTimestamp = null;
+    if (builtAt === '') {
+        error('built_at', 'La date d\'installation est obligatoire.');
+    } else {
+        builtAtTimestamp = new Date(builtAt).getTime();
+
+        if (Number.isNaN(builtAtTimestamp)) {
+            error('built_at', 'La date fournie n\'est pas reconnue');
+        } else if (builtAtTimestamp >= now) {
+            error('built_at', 'La date d\'installation ne peut pas être future');
+        }
+    }
+
+    // status
+    if (mode === 'edit') {
+        if (status === null) {
+            error('status', 'La cause de fermeture du site est obligatoire');
+        } else if (['open', 'gone', 'expelled', 'covered'].indexOf(status) === -1) {
+            error('status', 'La cause de fermeture du site fournie n\'est pas reconnue');
+        }
+
+        if (status !== 'open') {
+            const timestamp = new Date(closedAt).getTime();
+
+            if (Number.isNaN(timestamp)) {
+                error('closed_at', 'La date fournie n\'est pas reconnue');
+            } else {
+                if (timestamp >= now) {
+                    error('closed_at', 'La date de fermeture du site ne peut pas être future');
+                }
+
+                if (!Number.isNaN(builtAtTimestamp) && timestamp <= builtAtTimestamp) {
+                    error('closed_at', 'La date de fermeture du site ne peut être antérieur à celle d\'installation');
+                }
+            }
+        }
+    }
 
     // address
     let dbCity = null;
@@ -184,19 +230,6 @@ async function validateInput(body) {
 
         if (longitude < -180 || longitude > 180) {
             error('address', 'La longitude est invalide');
-        }
-    }
-
-    // builtAt
-    if (builtAt === '') {
-        error('built_at', 'La date d\'installation est obligatoire.');
-    } else {
-        const timestamp = new Date(builtAt).getTime();
-
-        if (Number.isNaN(timestamp)) {
-            error('built_at', 'La date fournie n\'est pas reconnue');
-        } else if (timestamp >= Date.now()) {
-            error('built_at', 'La date d\'installation ne peut pas être future');
         }
     }
 
@@ -373,7 +406,7 @@ module.exports = {
         // check errors
         let fieldErrors = {};
         try {
-            fieldErrors = await validateInput(req.body);
+            fieldErrors = await validateInput(req.body, 'edit');
         } catch (error) {
             return res.status(500).send({ error });
         }
@@ -406,12 +439,14 @@ module.exports = {
 
         // edit the town
         const {
+            builtAt,
+            status,
+            closedAt,
             address,
             citycode,
             latitude,
             longitude,
             addressDetails,
-            builtAt,
             populationTotal,
             populationCouples,
             populationMinors,
@@ -427,11 +462,13 @@ module.exports = {
         try {
             await sequelize.transaction(async () => {
                 town.update({
+                    builtAt,
+                    status,
+                    closedAt,
                     latitude,
                     longitude,
                     address,
                     addressDetails,
-                    builtAt,
                     populationTotal,
                     populationCouples,
                     populationMinors,

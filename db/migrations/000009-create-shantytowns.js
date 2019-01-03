@@ -140,6 +140,30 @@ module.exports = {
 
         queryInterface.addConstraint('shantytowns', ['closed_at'], {
             type: 'check',
+            name: 'check_closed_after_built',
+            where: {
+                $or: [
+                    {
+                        built_at: { $eq: null },
+                    },
+                    {
+                        closed_at: { $eq: null },
+                    },
+                    {
+                        $and: {
+                            built_at: { $ne: null },
+                            closed_at: {
+                                $ne: null,
+                                $gt: Sequelize.col('built_at'),
+                            },
+                        },
+                    },
+                ],
+            },
+        }),
+
+        queryInterface.addConstraint('shantytowns', ['closed_at'], {
+            type: 'check',
             name: 'check_closed_at_notNull',
             where: {
                 $or: [
