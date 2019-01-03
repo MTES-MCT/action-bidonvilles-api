@@ -124,6 +124,136 @@ function cleanParams(body) {
     };
 }
 
+async function validateInput(body) {
+    const {
+        address,
+        city,
+        citycode,
+        latitude,
+        longitude,
+        builtAt,
+        populationTotal,
+        populationCouples,
+        populationMinors,
+        accessToElectricity,
+        accessToWater,
+        trashEvacuation,
+        justiceStatus,
+        fieldType,
+        ownerType,
+    } = cleanParams(body);
+
+    const fieldErrors = {};
+    const error = addError.bind(this, fieldErrors);
+
+    // address
+    let dbCity = null;
+
+    if (address === null || address.length === 0) {
+        error('address', 'L\'adresse du site est obligatoire');
+    } else if (city === null || citycode === null) {
+        error('address', 'Impossible d\'associer une commune à l\'adresse indiquée');
+    } else if (/^[0-9]{5}$/g.test(citycode) !== true) {
+        error('address', 'Le code communal associé à l\'adresse est invalide');
+    } else {
+        try {
+            dbCity = await Cities.findOne({
+                where: {
+                    code: citycode,
+                },
+            });
+        } catch (e) {
+            throw new Error({
+                developer_message: e.message,
+                user_message: 'Une erreur est survenue dans l\'identification de la commune en base de données',
+            });
+        }
+
+        if (dbCity === null) {
+            error('address', `La commune ${citycode} n'existe pas en base de données`);
+        }
+    }
+
+    // latitude, longitude
+    if (latitude === null || longitude === null) {
+        error('address', 'Les coordonnées géographiques du site sont obligatoires');
+    } else {
+        if (latitude < -90 || latitude > 90) {
+            error('address', 'La latitude est invalide');
+        }
+
+        if (longitude < -180 || longitude > 180) {
+            error('address', 'La longitude est invalide');
+        }
+    }
+
+    // builtAt
+    if (builtAt === '') {
+        error('built_at', 'La date d\'installation est obligatoire.');
+    } else {
+        const timestamp = new Date(builtAt).getTime();
+
+        if (Number.isNaN(timestamp)) {
+            error('built_at', 'La date fournie n\'est pas reconnue');
+        } else if (timestamp >= Date.now()) {
+            error('built_at', 'La date d\'installation ne peut pas être future');
+        }
+    }
+
+    // field type
+    if (fieldType === null) {
+        error('field_type', 'Le champ "type de site" est obligatoire');
+    }
+
+    // owner type
+    if (ownerType === null) {
+        error('owner_type', 'Le champ "type de propriétaire" est obligatoire');
+    }
+
+    // justice status
+    if (justiceStatus === null) {
+        error('justice_status', 'Le champ "Statut judiciaire en cours" est obligatoire');
+    } else if ([-1, 0, 1].indexOf(justiceStatus) === -1) {
+        error('justice_status', 'Valeur invalide');
+    }
+
+    // population
+    if (populationTotal < 0) {
+        error('population_total', 'La population ne peut pas être négative');
+    }
+
+    if (populationCouples < 0) {
+        error('population_couples', 'Le nombre de ménages ne peut pas être négatif');
+    }
+
+    if (populationMinors < 0) {
+        error('population_minors', 'Le nombre de mineurs ne peut pas être négatif');
+    }
+
+    // access to electricty
+    if (accessToElectricity === null) {
+        error('access_to_electricity', 'Le champ "Accès à l\'éléctricité" est obligatoire');
+    } else if ([-1, 0, 1].indexOf(accessToElectricity) === -1) {
+        error('access_to_electricity', 'Valeur invalide');
+    }
+
+    // access to water
+    if (accessToWater === null) {
+        error('access_to_water', 'Le champ "Accès à l\'eau" est obligatoire');
+    } else if ([-1, 0, 1].indexOf(accessToWater) === -1) {
+        error('access_to_water', 'Valeur invalide');
+    }
+
+    // trash evacuatioon
+    if (trashEvacuation === null) {
+        error('trash_evacuation', 'Le champ "Évacuation des déchets" est obligatoire');
+    } else if ([-1, 0, 1].indexOf(trashEvacuation) === -1) {
+        error('trash_evacuation', 'Valeur invalide');
+    }
+
+    return fieldErrors;
+}
+
 module.exports = {
     list(req, res) {
         try {
@@ -164,9 +294,27 @@ module.exports = {
     },
 
     async add(req, res) {
+        // check errors
+        let fieldErrors = {};
+        try {
+            fieldErrors = await validateInput(req.body);
+        } catch (error) {
+            return res.status(500).send({ error });
+        }
+
+        if (Object.keys(fieldErrors).length > 0) {
+            return res.status(400).send({
+                error: {
+                    developer_message: 'The submitted data contains errors',
+                    user_message: 'Certaines données sont invalides',
+                    fields: fieldErrors,
+                },
+            });
+        }
+
+        // create the town
         const {
             address,
-            city,
             citycode,
             latitude,
             longitude,
@@ -179,133 +327,11 @@ module.exports = {
             accessToWater,
             trashEvacuation,
             justiceStatus,
-            socialOrigins,
             fieldType,
             ownerType,
+            socialOrigins,
         } = cleanParams(req.body);
 
-        const fieldErrors = {};
-        const error = addError.bind(this, fieldErrors);
-
-        // address
-        let dbCity = null;
-
-        if (address === null || address.length === 0) {
-            error('address', 'L\'adresse du site est obligatoire');
-        } else if (city === null || citycode === null) {
-            error('address', 'Impossible d\'associer une commune à l\'adresse indiquée');
-        } else if (/^[0-9]{5}$/g.test(citycode) !== true) {
-            error('address', 'Le code communal associé à l\'adresse est invalide');
-        } else {
-            try {
-                dbCity = await Cities.findOne({
-                    where: {
-                        code: citycode,
-                    },
-                });
-            } catch (e) {
-                return res.status(500).send({
-                    error: {
-                        developer_message: e.message,
-                        user_message: 'Une erreur est survenue dans l\'identification de la commune en base de données',
-                    },
-                });
-            }
-
-            if (dbCity === null) {
-                error('address', `La commune ${citycode} n'existe pas en base de données`);
-            }
-        }
-
-        // latitude, longitude
-        if (latitude === null || longitude === null) {
-            error('address', 'Les coordonnées géographiques du site sont obligatoires');
-        } else {
-            if (latitude < -90 || latitude > 90) {
-                error('address', 'La latitude est invalide');
-            }
-
-            if (longitude < -180 || longitude > 180) {
-                error('address', 'La longitude est invalide');
-            }
-        }
-
-        // builtAt
-        if (builtAt === '') {
-            error('built_at', 'La date d\'installation est obligatoire.');
-        } else {
-            const timestamp = new Date(builtAt).getTime();
-
-            if (Number.isNaN(timestamp)) {
-                error('built_at', 'La date fournie n\'est pas reconnue');
-            } else if (timestamp >= Date.now()) {
-                error('built_at', 'La date d\'installation ne peut pas être future');
-            }
-        }
-
-        // field type
-        if (fieldType === null) {
-            error('field_type', 'Le champ "type de site" est obligatoire');
-        }
-
-        // owner type
-        if (ownerType === null) {
-            error('owner_type', 'Le champ "type de propriétaire" est obligatoire');
-        }
-
-        // justice status
-        if (justiceStatus === null) {
-            error('justice_status', 'Le champ "Statut judiciaire en cours" est obligatoire');
-        } else if ([-1, 0, 1].indexOf(justiceStatus) === -1) {
-            error('justice_status', 'Valeur invalide');
-        }
-
-        // population
-        if (populationTotal < 0) {
-            error('population_total', 'La population ne peut pas être négative');
-        }
-
-        if (populationCouples < 0) {
-            error('population_couples', 'Le nombre de ménages ne peut pas être négatif');
-        }
-
-        if (populationMinors < 0) {
-            error('population_minors', 'Le nombre de mineurs ne peut pas être négatif');
-        }
-
-        // access to electricty
-        if (accessToElectricity === null) {
-            error('access_to_electricity', 'Le champ "Accès à l\'éléctricité" est obligatoire');
-        } else if ([-1, 0, 1].indexOf(accessToElectricity) === -1) {
-            error('access_to_electricity', 'Valeur invalide');
-        }
-
-        // access to water
-        if (accessToWater === null) {
-            error('access_to_water', 'Le champ "Accès à l\'eau" est obligatoire');
-        } else if ([-1, 0, 1].indexOf(accessToWater) === -1) {
-            error('access_to_water', 'Valeur invalide');
-        }
-
-        // trash evacuatioon
-        if (trashEvacuation === null) {
-            error('trash_evacuation', 'Le champ "Évacuation des déchets" est obligatoire');
-        } else if ([-1, 0, 1].indexOf(trashEvacuation) === -1) {
-            error('trash_evacuation', 'Valeur invalide');
-        }
-
-        // check errors
-        if (Object.keys(fieldErrors).length > 0) {
-            return res.status(400).send({
-                error: {
-                    developer_message: 'The submitted data contains errors',
-                    user_message: 'Certaines données sont invalides',
-                    fields: fieldErrors,
-                },
-            });
-        }
-
-        // create the town
         try {
             let town;
 
@@ -327,6 +353,95 @@ module.exports = {
                     ownerType,
                     city: citycode,
                     createdBy: req.decoded.userId,
+                });
+
+                await town.setSocialOrigins(socialOrigins);
+            });
+
+            return res.status(200).send(town);
+        } catch (e) {
+            return res.status(500).send({
+                error: {
+                    developer_message: e.message,
+                    user_message: 'Une erreur est survenue dans l\'enregistrement du site en base de données',
+                },
+            });
+        }
+    },
+
+    async edit(req, res) {
+        // check errors
+        let fieldErrors = {};
+        try {
+            fieldErrors = await validateInput(req.body);
+        } catch (error) {
+            return res.status(500).send({ error });
+        }
+
+        if (Object.keys(fieldErrors).length > 0) {
+            return res.status(400).send({
+                error: {
+                    developer_message: 'The submitted data contains errors',
+                    user_message: 'Certaines données sont invalides',
+                    fields: fieldErrors,
+                },
+            });
+        }
+
+        // check if the town exists
+        const town = await ShantyTowns.findOne({
+            where: {
+                shantytown_id: req.params.id,
+            },
+        });
+
+        if (town === null) {
+            return res.status(400).send({
+                error: {
+                    developer_message: `Tried to update unknown town of id #${req.params.id}`,
+                    user_message: `Le site d'identifiant ${req.params.id} n'existe pas : mise à jour impossible`,
+                },
+            });
+        }
+
+        // edit the town
+        const {
+            address,
+            citycode,
+            latitude,
+            longitude,
+            addressDetails,
+            builtAt,
+            populationTotal,
+            populationCouples,
+            populationMinors,
+            accessToElectricity,
+            accessToWater,
+            trashEvacuation,
+            justiceStatus,
+            fieldType,
+            ownerType,
+            socialOrigins,
+        } = cleanParams(req.body);
+
+        try {
+            await sequelize.transaction(async () => {
+                town.update({
+                    latitude,
+                    longitude,
+                    address,
+                    addressDetails,
+                    builtAt,
+                    populationTotal,
+                    populationCouples,
+                    populationMinors,
+                    accessToElectricity: toBool(accessToElectricity),
+                    accessToWater: toBool(accessToWater),
+                    trashEvacuation: toBool(trashEvacuation),
+                    justiceStatus: toBool(justiceStatus),
+                    fieldType,
+                    ownerType,
+                    city: citycode,
                 });
 
                 await town.setSocialOrigins(socialOrigins);

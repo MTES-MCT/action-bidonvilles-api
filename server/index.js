@@ -15,6 +15,7 @@ app.get('/config', checkToken, configController.list);
 app.get('/towns', checkToken, townsController.list);
 app.get('/towns/:id', checkToken, townsController.find);
 app.post('/towns', checkToken, townsController.add);
+app.post('/towns/:id', checkToken, townsController.edit);
 
 app.listen(process.env.API_PORT || 5000, () => {
     console.log('Server is now running! :)');
