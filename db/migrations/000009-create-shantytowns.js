@@ -1,13 +1,7 @@
-module.exports = {
-    up: (queryInterface, Sequelize) => queryInterface.createTable(
-        'shantytowns',
-        {
-            shantytown_id: {
-                type: Sequelize.INTEGER,
-                allowNull: false,
-                primaryKey: true,
-                autoIncrement: true,
-            },
+function createTable(queryInterface, Sequelize, name, additionalColumns = {}) {
+    return queryInterface.createTable(
+        name,
+        Object.assign({
             status: {
                 type: Sequelize.ENUM('open', 'gone', 'covered', 'expelled'),
                 allowNull: false,
@@ -92,9 +86,9 @@ module.exports = {
                 defaultValue: Sequelize.literal('CURRENT_TIMESTAMP'),
                 onUpdate: Sequelize.literal('CURRENT_TIMESTAMP'),
             },
-        },
+        }, additionalColumns),
     ).then(() => Promise.all([
-        queryInterface.addConstraint('shantytowns', ['fk_city'], {
+        queryInterface.addConstraint(name, ['fk_city'], {
             type: 'foreign key',
             name: 'fk_shantytowns_city',
             references: {
@@ -105,7 +99,7 @@ module.exports = {
             onDelete: 'restrict',
         }),
 
-        queryInterface.addConstraint('shantytowns', ['fk_field_type'], {
+        queryInterface.addConstraint(name, ['fk_field_type'], {
             type: 'foreign key',
             name: 'fk_shantytowns_field_type',
             references: {
@@ -116,7 +110,7 @@ module.exports = {
             onDelete: 'restrict',
         }),
 
-        queryInterface.addConstraint('shantytowns', ['fk_owner_type'], {
+        queryInterface.addConstraint(name, ['fk_owner_type'], {
             type: 'foreign key',
             name: 'fk_shantytowns_owner_type',
             references: {
@@ -127,7 +121,7 @@ module.exports = {
             onDelete: 'restrict',
         }),
 
-        queryInterface.addConstraint('shantytowns', ['created_by'], {
+        queryInterface.addConstraint(name, ['created_by'], {
             type: 'foreign key',
             name: 'fk_shantytowns_creator',
             references: {
@@ -138,7 +132,7 @@ module.exports = {
             onDelete: 'restrict',
         }),
 
-        queryInterface.addConstraint('shantytowns', ['closed_at'], {
+        queryInterface.addConstraint(name, ['closed_at'], {
             type: 'check',
             name: 'check_closed_after_built',
             where: {
@@ -162,7 +156,7 @@ module.exports = {
             },
         }),
 
-        queryInterface.addConstraint('shantytowns', ['closed_at'], {
+        queryInterface.addConstraint(name, ['closed_at'], {
             type: 'check',
             name: 'check_closed_at_notNull',
             where: {
@@ -182,7 +176,39 @@ module.exports = {
                 ],
             },
         }),
-    ])),
+    ]));
+}
 
-    down: queryInterface => queryInterface.dropTable('shantytowns'),
+module.exports = {
+    up: (queryInterface, Sequelize) => Promise.all([
+        createTable(queryInterface, Sequelize, 'shantytowns', {
+            shantytown_id: {
+                type: Sequelize.INTEGER,
+                allowNull: false,
+                primaryKey: true,
+                autoIncrement: true,
+            },
+        }),
+        createTable(queryInterface, Sequelize, 'ShantytownHistories', {
+            shantytown_id: {
+                type: Sequelize.INTEGER,
+                allowNull: false,
+            },
+            hid: {
+                type: Sequelize.INTEGER,
+                allowNull: false,
+                primaryKey: true,
+                autoIncrement: true,
+            },
+            archivedAt: {
+                type: Sequelize.DATE,
+                allowNull: false,
+            },
+        }),
+    ]),
+
+    down: queryInterface => Promise.all([
+        queryInterface.dropTable('shantytowns'),
+        queryInterface.dropTable('ShantytownHistories'),
+    ]),
 };

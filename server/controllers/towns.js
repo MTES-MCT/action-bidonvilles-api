@@ -461,7 +461,7 @@ module.exports = {
 
         try {
             await sequelize.transaction(async () => {
-                town.update({
+                await town.update({
                     builtAt,
                     status,
                     closedAt,

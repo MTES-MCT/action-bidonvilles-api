@@ -21,7 +21,8 @@
     "request": "^2.88.0",
     "request-promise": "^4.2.2",
     "sequelize": "^4.42.0",
-    "sequelize-cli": "^5.4.0"
+    "sequelize-cli": "^5.4.0",
+    "sequelize-temporal": "^1.0.6"
   },
   "devDependencies": {
     "eslint": "^5.10.0",

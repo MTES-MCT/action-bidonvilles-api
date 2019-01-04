@@ -1,3 +1,5 @@
+const Temporal = require('sequelize-temporal');
+
 module.exports = function (sequelize, DataTypes) {
     const Shantytown = sequelize.define('Shantytown', {
         id: {
@@ -140,5 +142,5 @@ module.exports = function (sequelize, DataTypes) {
         Shantytown.belongsTo(models.User, { foreignKey: 'created_by' });
     };
 
-    return Shantytown;
+    return Temporal(Shantytown, sequelize);
 };

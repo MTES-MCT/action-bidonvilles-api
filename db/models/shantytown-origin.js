@@ -1,3 +1,5 @@
+const Temporal = require('sequelize-temporal');
+
 module.exports = function (sequelize, DataTypes) {
     const ShantytownOrigin = sequelize.define('ShantytownOrigin', {
         fk_shantytown: {
@@ -24,7 +26,7 @@ module.exports = function (sequelize, DataTypes) {
         updatedAt: {
             type: DataTypes.DATE,
             defaultValue: DataTypes.NOW,
-            onUpdate : DataTypes.NOW,
+            onUpdate: DataTypes.NOW,
             field: 'updated_at',
         },
     }, {
@@ -34,5 +36,5 @@ module.exports = function (sequelize, DataTypes) {
         timestamps: true,
     });
 
-    return ShantytownOrigin;
+    return Temporal(ShantytownOrigin, sequelize);
 };
