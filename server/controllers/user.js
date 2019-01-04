@@ -3,6 +3,17 @@ const jwt = require('jsonwebtoken');
 const { secret } = require('../config');
 const { User } = require('../../db/models');
 
+/**
+ * Generates a new token
+ *
+ * @param {Object} content
+ *
+ * @returns {string}
+ */
+function generateToken(content) {
+    return jwt.sign(content, secret, { expiresIn: '168h' });
+}
+
 module.exports = {
     async signin(req, res) {
         const { email, password } = req.body;
@@ -34,7 +45,15 @@ module.exports = {
 
         // congratulations
         return res.status(200).send({
-            token: jwt.sign({ userId: user.id, email }, secret, { expiresIn: '2h' }),
+            token: generateToken({ userId: user.id, email }),
+        });
+    },
+
+    renewToken(req, res) {
+        const { userId, email } = req.decoded;
+
+        return res.status(200).send({
+            token: generateToken({ userId, email }),
         });
     },
 };

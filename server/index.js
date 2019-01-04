@@ -11,6 +11,7 @@ app.use(cors());
 app.use(bodyParser.json());
 
 app.post('/signin', userController.signin);
+app.get('/refreshToken', checkToken, userController.renewToken);
 app.get('/config', checkToken, configController.list);
 app.get('/towns', checkToken, townsController.list);
 app.get('/towns/:id', checkToken, townsController.find);
