@@ -1,47 +1,6 @@
 const { sequelize } = require('../../db/models');
 const Cities = require('../../db/models').City;
-const FieldTypes = require('../../db/models').FieldType;
-const OwnerTypes = require('../../db/models').OwnerType;
-const SocialOrigins = require('../../db/models').SocialOrigin;
 const ShantyTowns = require('../../db/models').Shantytown;
-
-function serializeTown(town) {
-    return {
-        id: town.id,
-        status: town.status,
-        closedAt: town.closedAt ? new Date(town.closedAt).getTime() / 1000 : null,
-        latitude: town.latitude,
-        longitude: town.longitude,
-        address: town.address,
-        addressDetails: town.addressDetails,
-        city: {
-            code: town.City.code,
-            name: town.City.name,
-        },
-        builtAt: town.builtAt ? new Date(town.builtAt).getTime() / 1000 : null,
-        fieldType: {
-            id: town.FieldType.id,
-            label: town.FieldType.label,
-        },
-        ownerType: {
-            id: town.OwnerType.id,
-            label: town.OwnerType.label,
-        },
-        populationTotal: town.populationTotal,
-        populationCouples: town.populationCouples,
-        populationMinors: town.populationMinors,
-        accessToElectricity: town.accessToElectricity,
-        accessToWater: town.accessToWater,
-        trashEvacuation: town.trashEvacuation,
-        justiceStatus: town.justiceStatus,
-        actions: [],
-        socialOrigins: town.socialOrigins.map(origin => ({
-            id: origin.id,
-            label: origin.label,
-        })),
-        updatedAt: new Date(town.updatedAt).getTime() / 1000,
-    };
-}
 
 function addError(errors, field, error) {
     if (!Object.prototype.hasOwnProperty.call(errors, field)) {
@@ -287,43 +246,150 @@ async function validateInput(body, mode = 'create') {
     return fieldErrors;
 }
 
+function parseTown(town) {
+    return {
+        id: town.id,
+        status: town.status,
+        closedAt: town.closedat ? new Date(town.closedat).getTime() / 1000 : null,
+        latitude: town.latitude,
+        longitude: town.longitude,
+        address: town.address,
+        addressDetails: town.addressdetails,
+        city: {
+            code: town.citycode,
+            name: town.city,
+        },
+        builtAt: town.builtat ? new Date(town.builtat).getTime() / 1000 : null,
+        fieldType: {
+            id: town.fieldtypeid,
+            label: town.fieldtype,
+        },
+        ownerType: {
+            id: town.ownertypeid,
+            label: town.ownertype,
+        },
+        populationTotal: town.populationtotal,
+        populationCouples: town.populationcouples,
+        populationMinors: town.populationminors,
+        accessToElectricity: town.accesstoelectricity,
+        accessToWater: town.accesstowater,
+        trashEvacuation: town.trashevacuation,
+        justiceStatus: town.justicestatus,
+        actions: [],
+        socialOrigins: [],
+        updatedAt: Math.round(new Date(town.updatedat).getTime() / 1000),
+    };
+}
+
+function parseAction(town) {
+    return {
+        id: town.actionid,
+        startedAt: Math.round(new Date(town.actionstartedat).getTime() / 1000),
+        description: town.action,
+        type: town.actiontype,
+    };
+}
+
+function parseOrigin(town) {
+    return {
+        id: town.socialoriginid,
+        label: town.socialorigin,
+    };
+}
+
+function parseTowns(towns) {
+    const t = [];
+    const used = {};
+    const usedActions = {};
+    const usedOrigins = {};
+
+    for (let i = 0, len = towns.length; i < len; i += 1) {
+        const town = towns[i];
+        if (used[town.id] === undefined) {
+            used[town.id] = parseTown(town);
+            t.push(used[town.id]);
+        }
+
+        const parsed = used[town.id];
+        if (town.actionid !== null && usedActions[town.actionid] === undefined) {
+            usedActions[town.actionid] = parseAction(town);
+            parsed.actions.push(usedActions[town.actionid]);
+        }
+
+        if (town.socialoriginid !== null && usedOrigins[town.socialoriginid] === undefined) {
+            usedOrigins[town.socialoriginid] = parseOrigin(town);
+            parsed.socialOrigins.push(usedOrigins[town.socialoriginid]);
+        }
+    }
+
+    return t;
+}
+
+function fetchTowns(where = []) {
+    return sequelize.query(
+        `${'SELECT'
+        // shantytown
+        + ' s.shantytown_id AS id, s.status as status, s.closed_at AS closedAt, s.latitude AS latitude,'
+        + ' s.longitude AS longitude, s.address AS address, s.address_details AS addressDetails,'
+        + ' s.built_at as builtAt, s.population_total as populationTotal, s.population_couples AS populationCouples,'
+        + ' s.population_minors AS populationMinors, s.access_to_electricity AS accessToElectricity,'
+        + ' s.access_to_water AS accessToWater, s.trash_evacuation AS trashEvacuation,'
+        + ' s.justice_status AS justiceStatus, s.created_at AS createdAt, s.updated_at AS updatedAt,'
+        // field_type
+        + ' f.field_type_id AS fieldTypeId, f.label AS fieldType,'
+        // owner_type
+        + ' o.owner_type_id AS ownerTypeId, o.label AS ownerType,'
+        // origins
+        + ' social.social_origin_id AS socialOriginId, social.label AS socialOrigin,'
+        // city
+        + ' c.code AS cityCode, c.name AS city,'
+        // actions
+        + ' a.action_id AS actionId, a.started_at AS actionStartedAt, a.description AS action, at.label AS actiontype'
+
+        + ' FROM shantytowns s'
+        + ' LEFT JOIN field_types f ON s.fk_field_type = f.field_type_id'
+        + ' LEFT JOIN owner_types o ON s.fk_owner_type = o.owner_type_id'
+        + ' LEFT JOIN shantytown_origins so ON so.fk_shantytown = s.shantytown_id'
+        + ' LEFT JOIN social_origins social ON so.fk_social_origin = social.social_origin_id'
+        + ' LEFT JOIN cities c ON s.fk_city = c.code'
+        + ' LEFT JOIN epci e ON c.fk_epci = e.code'
+        + ' LEFT JOIN departements d ON e.fk_departement = d.code'
+        + ' LEFT JOIN regions r ON d.fk_region = r.code'
+        + ' LEFT JOIN actions a ON a.fk_city = c.code OR a.fk_epci = e.code OR a.fk_departement = d.code OR a.fk_region = r.code'
+        + ' LEFT JOIN action_types at ON a.fk_action_type = at.action_type_id'}${
+            where.length > 0 ? (` WHERE ${where.join(' AND ')}`) : ''}`,
+        { type: sequelize.QueryTypes.SELECT },
+    );
+}
+
 module.exports = {
-    list(req, res) {
+    async list(req, res) {
         try {
-            return ShantyTowns
-                .findAll({
-                    include: [
-                        Cities,
-                        FieldTypes,
-                        OwnerTypes,
-                        { model: SocialOrigins, as: 'socialOrigins' },
-                    ],
-                    where: {
-                        status: 'open',
-                    },
-                })
-                .then(towns => res.status(200).send(towns.map(serializeTown)))
-                .catch(error => res.status(400).send(error));
+            return res.status(200).send(parseTowns(await fetchTowns()));
         } catch (error) {
             return res.status(400).send(error);
         }
     },
 
     async find(req, res) {
-        return ShantyTowns
-            .findOne({
-                include: [
-                    Cities,
-                    FieldTypes,
-                    OwnerTypes,
-                    { model: SocialOrigins, as: 'socialOrigins' },
-                ],
-                where: {
-                    shantytown_id: req.params.id,
-                },
-            })
-            .then(town => res.status(200).send(serializeTown(town)))
-            .catch(error => res.status(400).send(error));
+        try {
+            const towns = parseTowns(await fetchTowns([
+                `s.shantytown_id = ${parseInt(req.params.id, 10)}`,
+            ]));
+
+            if (towns.length !== 1) {
+                return res.status(404).send({
+                    error: {
+                        developer_message: 'The requested town does not exist',
+                        user_message: 'Le site demandé n\'existe pas en base de données',
+                    },
+                });
+            }
+
+            return res.status(200).send(towns.shift());
+        } catch (error) {
+            return res.status(400).send(error);
+        }
     },
 
     async add(req, res) {
