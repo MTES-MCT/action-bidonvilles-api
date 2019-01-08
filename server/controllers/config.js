@@ -1,13 +1,16 @@
 const {
-    SocialOrigin, FieldType, OwnerType, User, Departement,
+    SocialOrigin, FieldType, OwnerType, ActionType, User, Departement, Region,
 } = require('../../db/models');
 
 module.exports = {
     async list(req, res) {
         const queries = {
+            action_types: ActionType.findAll(),
             field_types: FieldType.findAll(),
             owner_types: OwnerType.findAll(),
             social_origins: SocialOrigin.findAll(),
+            departements: Departement.findAll(),
+            regions: Region.findAll(),
         };
 
         const promises = [];
