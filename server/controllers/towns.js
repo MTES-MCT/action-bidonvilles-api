@@ -298,76 +298,88 @@ function parseOrigin(town) {
 }
 
 function parseTowns(towns) {
-    const t = [];
     const used = {};
-    const usedActions = {};
     const usedOrigins = {};
 
     for (let i = 0, len = towns.length; i < len; i += 1) {
         const town = towns[i];
         if (used[town.id] === undefined) {
             used[town.id] = parseTown(town);
-            t.push(used[town.id]);
         }
 
         const parsed = used[town.id];
-        if (town.actionid !== null && usedActions[town.actionid] === undefined) {
-            usedActions[town.actionid] = parseAction(town);
-            parsed.actions.push(usedActions[town.actionid]);
-        }
-
         if (town.socialoriginid !== null && usedOrigins[town.socialoriginid] === undefined) {
             usedOrigins[town.socialoriginid] = parseOrigin(town);
             parsed.socialOrigins.push(usedOrigins[town.socialoriginid]);
         }
     }
 
-    return t;
+    return used;
 }
 
-function fetchTowns(where = []) {
-    return sequelize.query(
-        `${'SELECT'
-        // shantytown
-        + ' s.shantytown_id AS id, s.status as status, s.closed_at AS closedAt, s.latitude AS latitude,'
-        + ' s.longitude AS longitude, s.address AS address, s.address_details AS addressDetails,'
-        + ' s.built_at as builtAt, s.population_total as populationTotal, s.population_couples AS populationCouples,'
-        + ' s.population_minors AS populationMinors, s.access_to_electricity AS accessToElectricity,'
-        + ' s.access_to_water AS accessToWater, s.trash_evacuation AS trashEvacuation,'
-        + ' s.justice_status AS justiceStatus, s.created_at AS createdAt, s.updated_at AS updatedAt,'
-        // field_type
-        + ' f.field_type_id AS fieldTypeId, f.label AS fieldType,'
-        // owner_type
-        + ' o.owner_type_id AS ownerTypeId, o.label AS ownerType,'
-        // origins
-        + ' social.social_origin_id AS socialOriginId, social.label AS socialOrigin,'
-        // city
-        + ' c.code AS cityCode, c.name AS city,'
-        // actions
-        + ' a.action_id AS actionId, a.started_at AS actionStartedAt, a.description AS action, at.label AS actiontype'
+async function fetchTowns(where = []) {
+    // get the towns with their related social origins
+    const towns = parseTowns(
+        await sequelize.query(
+            `${'SELECT'
+            // shantytown
+            + ' s.shantytown_id AS id, s.status as status, s.closed_at AS closedAt, s.latitude AS latitude,'
+            + ' s.longitude AS longitude, s.address AS address, s.address_details AS addressDetails,'
+            + ' s.built_at as builtAt, s.population_total as populationTotal, s.population_couples AS populationCouples,'
+            + ' s.population_minors AS populationMinors, s.access_to_electricity AS accessToElectricity,'
+            + ' s.access_to_water AS accessToWater, s.trash_evacuation AS trashEvacuation,'
+            + ' s.justice_status AS justiceStatus, s.created_at AS createdAt, s.updated_at AS updatedAt,'
+            // field_type
+            + ' f.field_type_id AS fieldTypeId, f.label AS fieldType,'
+            // owner_type
+            + ' o.owner_type_id AS ownerTypeId, o.label AS ownerType,'
+            // origins
+            + ' social.social_origin_id AS socialOriginId, social.label AS socialOrigin,'
+            // city
+            + ' c.code AS cityCode, c.name AS city'
 
+            + ' FROM shantytowns s'
+            + ' LEFT JOIN field_types f ON s.fk_field_type = f.field_type_id'
+            + ' LEFT JOIN owner_types o ON s.fk_owner_type = o.owner_type_id'
+            + ' LEFT JOIN shantytown_origins so ON so.fk_shantytown = s.shantytown_id'
+            + ' LEFT JOIN social_origins social ON so.fk_social_origin = social.social_origin_id'
+            + ' LEFT JOIN cities c ON s.fk_city = c.code'}${
+                where.length > 0 ? (` WHERE ${where.join(' AND ')}`) : ''}`,
+            { type: sequelize.QueryTypes.SELECT },
+        ),
+    );
+
+    // get the related actions
+    const actions = await sequelize.query(
+        'SELECT'
+        // shantytown
+        + ' s.shantytown_id,'
+        // action
+        + ' a.action_id AS actionId, a.started_at AS actionStartedAt, a.description AS action, at.label AS actiontype'
         + ' FROM shantytowns s'
-        + ' LEFT JOIN field_types f ON s.fk_field_type = f.field_type_id'
-        + ' LEFT JOIN owner_types o ON s.fk_owner_type = o.owner_type_id'
-        + ' LEFT JOIN shantytown_origins so ON so.fk_shantytown = s.shantytown_id'
-        + ' LEFT JOIN social_origins social ON so.fk_social_origin = social.social_origin_id'
         + ' LEFT JOIN cities c ON s.fk_city = c.code'
         + ' LEFT JOIN epci e ON c.fk_epci = e.code'
         + ' LEFT JOIN departements d ON e.fk_departement = d.code'
         + ' LEFT JOIN regions r ON d.fk_region = r.code'
-        + ' LEFT JOIN actions a ON a.fk_city = c.code OR a.fk_epci = e.code OR a.fk_departement = d.code OR a.fk_region = r.code'
-        + ' LEFT JOIN action_types at ON a.fk_action_type = at.action_type_id'}${
-            where.length > 0 ? (` WHERE ${where.join(' AND ')}`) : ''}`,
+        + ' RIGHT JOIN actions a ON a.fk_city = c.code OR a.fk_epci = e.code OR a.fk_departement = d.code OR a.fk_region = r.code'
+        + ' LEFT JOIN action_types at ON a.fk_action_type = at.action_type_id'
+        + ` WHERE s.shantytown_id IN (${Object.keys(towns).join(',')})`,
         { type: sequelize.QueryTypes.SELECT },
     );
+
+    actions.forEach((action) => {
+        towns[action.shantytown_id].actions.push(parseAction(action));
+    });
+
+    return Object.values(towns);
 }
 
 module.exports = {
     async list(req, res) {
         try {
-            return res.status(200).send(parseTowns(await fetchTowns([
+            return res.status(200).send(await fetchTowns([
                 's.status = \'open\'',
-            ])));
+            ]));
         } catch (error) {
             return res.status(400).send(error);
         }
@@ -375,9 +387,9 @@ module.exports = {
 
     async find(req, res) {
         try {
-            const towns = parseTowns(await fetchTowns([
+            const towns = await fetchTowns([
                 `s.shantytown_id = ${parseInt(req.params.id, 10)}`,
-            ]));
+            ]);
 
             if (towns.length !== 1) {
                 return res.status(404).send({
