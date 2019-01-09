@@ -123,6 +123,15 @@ module.exports = function (sequelize, DataTypes) {
             onUpdate: DataTypes.NOW,
             field: 'updated_at',
         },
+        updatedBy: {
+            type: DataTypes.INTEGER,
+            allowNull: true,
+            references: {
+                model: 'users',
+                key: 'user_id',
+            },
+            field: 'updated_by',
+        },
     }, {
         tableName: 'shantytowns',
         underscored: true,
@@ -140,6 +149,7 @@ module.exports = function (sequelize, DataTypes) {
             foreignKey: 'fk_shantytown',
         });
         Shantytown.belongsTo(models.User, { foreignKey: 'created_by' });
+        Shantytown.belongsTo(models.User, { foreignKey: 'updated_by' });
     };
 
     return Temporal(Shantytown, sequelize);

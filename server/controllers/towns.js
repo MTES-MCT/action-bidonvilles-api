@@ -547,6 +547,7 @@ module.exports = {
                     fieldType,
                     ownerType,
                     city: citycode,
+                    updatedBy: req.decoded.userId,
                 });
 
                 await town.setSocialOrigins(socialOrigins);
