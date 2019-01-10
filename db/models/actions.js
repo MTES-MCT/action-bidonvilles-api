@@ -1,3 +1,5 @@
+const Temporal = require('sequelize-temporal');
+
 module.exports = function (sequelize, DataTypes) {
     const Action = sequelize.define('Action', {
         id: {
@@ -121,5 +123,5 @@ module.exports = function (sequelize, DataTypes) {
         });
     };
 
-    return Action;
+    return Temporal(Action, sequelize);
 };

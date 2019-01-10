@@ -1,3 +1,5 @@
+const Temporal = require('sequelize-temporal');
+
 module.exports = function (sequelize, DataTypes) {
     const ActionStep = sequelize.define('ActionStep', {
         id: {
@@ -46,5 +48,5 @@ module.exports = function (sequelize, DataTypes) {
         ActionStep.belongsTo(models.Action, { foreignKey: 'fk_action' });
     };
 
-    return ActionStep;
+    return Temporal(ActionStep, sequelize);
 };
