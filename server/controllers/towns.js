@@ -285,6 +285,7 @@ function parseAction(town) {
     return {
         id: town.actionid,
         startedAt: Math.round(new Date(town.actionstartedat).getTime() / 1000),
+        endedAt: town.actionendedat ? Math.round(new Date(town.actionstartedat).getTime() / 1000) : null,
         name: town.actionname,
         description: town.actiondescription,
         type: town.actiontype,
@@ -356,7 +357,7 @@ async function fetchTowns(where = []) {
         // shantytown
         + ' s.shantytown_id,'
         // action
-        + ' a.action_id AS actionId, a.started_at AS actionStartedAt, a.name AS actionName, a.description AS actionDescriptioon, at.label AS actiontype'
+        + ' a.action_id AS actionId, a.started_at AS actionStartedAt, a.ended_at AS actionEndedAt, a.name AS actionName, a.description AS actionDescriptioon, at.label AS actiontype'
         + ' FROM shantytowns s'
         + ' LEFT JOIN cities c ON s.fk_city = c.code'
         + ' LEFT JOIN epci e ON c.fk_epci = e.code'

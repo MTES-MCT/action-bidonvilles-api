@@ -37,6 +37,7 @@ function serializeAction(action) {
         name: action.name,
         description: action.description,
         startedAt: new Date(action.startedAt).getTime() / 1000,
+        endedAt: action.endedAt ? new Date(action.endedAt).getTime() / 1000 : null,
         type: {
             id: action.ActionType.id,
             label: action.ActionType.label,

@@ -20,6 +20,11 @@ module.exports = function (sequelize, DataTypes) {
             allowNull: false,
             field: 'started_at',
         },
+        endedAt: {
+            type: DataTypes.DATE,
+            allowNull: true,
+            field: 'ended_at',
+        },
         type: {
             type: DataTypes.INTEGER,
             allowNull: false,
