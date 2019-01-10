@@ -21,6 +21,7 @@ app.get('/towns', checkToken, townsController.list);
 app.get('/towns/:id', checkToken, townsController.find);
 app.post('/towns', checkToken, townsController.add);
 app.post('/towns/:id', checkToken, townsController.edit);
+app.delete('/towns/:id', checkToken, townsController.delete);
 
 // actions
 app.get('/actions', checkToken, actionsController.list);
@@ -28,6 +29,7 @@ app.get('/actions/:id', checkToken, actionsController.find);
 app.post('/actions', checkToken, actionsController.add);
 app.post('/actions/:id', checkToken, actionsController.edit);
 app.post('/actions/:id/steps', checkToken, actionsController.addStep);
+app.delete('/actions/:id', checkToken, actionsController.delete);
 
 // geo
 app.get('/cities/search', checkToken, geoController.searchCities);

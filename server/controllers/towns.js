@@ -577,4 +577,35 @@ module.exports = {
             });
         }
     },
+
+    async delete(req, res) {
+        // check if the town exists
+        const town = await ShantyTowns.findOne({
+            where: {
+                shantytown_id: req.params.id,
+            },
+        });
+
+        if (town === null) {
+            return res.status(400).send({
+                error: {
+                    developer_message: `Tried to delete unknown town of id #${req.params.id}`,
+                    user_message: `Le site d'identifiant ${req.params.id} n'existe pas : suppression impossible`,
+                },
+            });
+        }
+
+        // delete the town
+        try {
+            await town.destroy();
+            return res.status(200).send({});
+        } catch (e) {
+            return res.status(500).send({
+                error: {
+                    developer_message: e.message,
+                    user_message: 'Une erreur est survenue pendant la suppression du site de la base de données',
+                },
+            });
+        }
+    },
 };

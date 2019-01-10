@@ -404,4 +404,35 @@ module.exports = {
             });
         }
     },
+
+    async delete(req, res) {
+        // check if the action exists
+        const action = await Actions.findOne({
+            where: {
+                action_id: req.params.id,
+            },
+        });
+
+        if (action === null) {
+            return res.status(400).send({
+                error: {
+                    developer_message: `Tried to delete unknown action of id #${req.params.id}`,
+                    user_message: `L'action d'identifiant ${req.params.id} n'existe pas : suppression impossible`,
+                },
+            });
+        }
+
+        // delete the action
+        try {
+            await action.destroy();
+            return res.status(200).send({});
+        } catch (e) {
+            return res.status(500).send({
+                error: {
+                    developer_message: e.message,
+                    user_message: 'Une erreur est survenue pendant la suppression de l\'action de la base de données',
+                },
+            });
+        }
+    },
 };
