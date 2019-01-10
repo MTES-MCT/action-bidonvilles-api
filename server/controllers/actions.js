@@ -90,8 +90,8 @@ function cleanParams(body) {
         type: getIntOrNull(type),
         name: trim(name),
         description: trim(description),
-        startedAt: started_at !== '' ? started_at : null,
-        endedAt: ended_at !== '' ? ended_at : null,
+        startedAt: started_at || null,
+        endedAt: ended_at || null,
         territoryType: trim(territory_type),
         territoryCode: trim(territory_code),
     };
