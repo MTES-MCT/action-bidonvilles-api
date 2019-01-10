@@ -81,6 +81,7 @@ function cleanParams(body) {
         name,
         description,
         started_at,
+        ended_at,
         territory_type,
         territory_code,
     } = body;
@@ -89,17 +90,19 @@ function cleanParams(body) {
         type: getIntOrNull(type),
         name: trim(name),
         description: trim(description),
-        startedAt: started_at !== '' ? trim(started_at) : null,
+        startedAt: started_at !== '' ? started_at : null,
+        endedAt: ended_at !== '' ? ended_at : null,
         territoryType: trim(territory_type),
         territoryCode: trim(territory_code),
     };
 }
 
-async function validateInput(body) {
+async function validateInput(body, mode = 'create') {
     const {
         type,
         name,
         startedAt,
+        endedAt,
         territoryType,
         territoryCode,
     } = cleanParams(body);
@@ -118,23 +121,37 @@ async function validateInput(body) {
     }
 
     // startedAt
+    let startedAtTimestamp;
     if (startedAt === null) {
         error('started_at', 'La date de démarrage de l\'action est obligatoire.');
     } else {
-        const startedAtTimestamp = new Date(startedAt).getTime();
+        startedAtTimestamp = new Date(startedAt).getTime();
 
         if (Number.isNaN(startedAtTimestamp)) {
-            error('built_at', 'La date fournie n\'est pas reconnue');
+            error('started_at', 'La date fournie n\'est pas reconnue');
+        }
+    }
+
+    // endedAt
+    if (endedAt !== null) {
+        const endedAtTimestamp = new Date(endedAt).getTime();
+
+        if (Number.isNaN(endedAtTimestamp)) {
+            error('ended_at', 'La date fournie n\'est pas reconnue');
+        } else if (endedAtTimestamp <= startedAtTimestamp) {
+            error('ended_at', 'La date de fin de l\'action ne peut être antérieure à la date de début');
         }
     }
 
     // territory
-    if (['region', 'departement', 'epci', 'city'].indexOf(territoryType) === -1) {
-        error('territory', 'Le type de territoire n\'est pas reconnu');
-    }
+    if (mode === 'create') {
+        if (['region', 'departement', 'epci', 'city'].indexOf(territoryType) === -1) {
+            error('territory', 'Le type de territoire n\'est pas reconnu');
+        }
 
-    if (territoryCode === null) {
-        error('territory', 'Le territoire d\'application de l\'action est obligatoire');
+        if (territoryCode === null) {
+            error('territory', 'Le territoire d\'application de l\'action est obligatoire');
+        }
     }
 
     return fieldErrors;
@@ -228,6 +245,89 @@ module.exports = {
                 error: {
                     developer_message: e.message,
                     user_message: 'Une erreur est survenue dans l\'enregistrement de l\'action en base de données',
+                },
+            });
+        }
+    },
+
+    async edit(req, res) {
+        // check errors
+        let fieldErrors = {};
+        try {
+            fieldErrors = await validateInput(req.body, 'edit');
+        } catch (error) {
+            return res.status(500).send({ error });
+        }
+
+        if (Object.keys(fieldErrors).length > 0) {
+            return res.status(400).send({
+                error: {
+                    developer_message: 'The submitted data contains errors',
+                    user_message: 'Certaines données sont invalides',
+                    fields: fieldErrors,
+                },
+            });
+        }
+
+        // check if the action exists
+        let action;
+        try {
+            action = await Actions.findOne({
+                where: {
+                    action_id: req.params.id,
+                },
+                include: [
+                    ActionTypes,
+                    Cities,
+                    Epci,
+                    Departements,
+                    Regions,
+                    { model: ActionSteps, as: 'actionSteps' },
+                ],
+            });
+        } catch (error) {
+            return res.status(500).send({
+                error: {
+                    developer_message: error.message,
+                    user_message: 'Une erreur est survenue dans la recherche de l\'action en base de données',
+                },
+            });
+        }
+
+        if (action === null) {
+            return res.status(404).send({
+                error: {
+                    developer_message: `Tried to update unknown action of id #${req.params.id}`,
+                    user_message: `L'action d'identifiant ${req.params.id} n'existe pas : mise à jour impossible`,
+                },
+            });
+        }
+
+        // update the action
+        const {
+            type,
+            startedAt,
+            endedAt,
+            name,
+            description,
+        } = cleanParams(req.body);
+
+        try {
+            await action.update({
+                type,
+                startedAt,
+                endedAt,
+                name,
+                description,
+                updatedBy: req.decoded.userId,
+            });
+
+            return res.status(200).send(serializeAction(action));
+        } catch (error) {
+            return res.status(500).send({
+                error: {
+                    developer_message: error.message,
+                    user_message: 'Une erreur est survenue dans l\'enregistrement des modifications en base de données',
                 },
             });
         }

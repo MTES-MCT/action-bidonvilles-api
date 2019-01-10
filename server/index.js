@@ -26,6 +26,7 @@ app.post('/towns/:id', checkToken, townsController.edit);
 app.get('/actions', checkToken, actionsController.list);
 app.get('/actions/:id', checkToken, actionsController.find);
 app.post('/actions', checkToken, actionsController.add);
+app.post('/actions/:id', checkToken, actionsController.edit);
 app.post('/actions/:id/steps', checkToken, actionsController.addStep);
 
 // geo
