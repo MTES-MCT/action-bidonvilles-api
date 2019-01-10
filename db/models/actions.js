@@ -7,6 +7,10 @@ module.exports = function (sequelize, DataTypes) {
             autoIncrement: true,
             field: 'action_id',
         },
+        name: {
+            type: DataTypes.STRING,
+            allowNull: false,
+        },
         description: {
             type: DataTypes.TEXT,
             allowNull: true,

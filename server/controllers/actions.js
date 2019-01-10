@@ -34,6 +34,7 @@ function serializeAction(action) {
 
     return {
         id: action.id,
+        name: action.name,
         description: action.description,
         startedAt: new Date(action.startedAt).getTime() / 1000,
         type: {
@@ -76,6 +77,7 @@ function trim(str) {
 function cleanParams(body) {
     const {
         type,
+        name,
         description,
         started_at,
         territory_type,
@@ -84,6 +86,7 @@ function cleanParams(body) {
 
     return {
         type: getIntOrNull(type),
+        name: trim(name),
         description: trim(description),
         startedAt: started_at !== '' ? trim(started_at) : null,
         territoryType: trim(territory_type),
@@ -94,6 +97,7 @@ function cleanParams(body) {
 async function validateInput(body) {
     const {
         type,
+        name,
         startedAt,
         territoryType,
         territoryCode,
@@ -105,6 +109,11 @@ async function validateInput(body) {
     // type
     if (type === null) {
         error('type', 'Le type d\'action est obligatoire');
+    }
+
+    // name
+    if (name === '' || name === null) {
+        error('name', 'Le nom de l\'action est obligatoire');
     }
 
     // startedAt
@@ -192,6 +201,7 @@ module.exports = {
         // create the action
         const {
             type,
+            name,
             description,
             startedAt,
             territoryType,
@@ -201,6 +211,7 @@ module.exports = {
         try {
             const action = await Actions.create({
                 type,
+                name,
                 description,
                 startedAt,
                 city: territoryType === 'city' ? territoryCode : null,
