@@ -121,6 +121,16 @@ module.exports = function (sequelize, DataTypes) {
             as: 'actionSteps',
             foreignKey: 'fk_action',
         });
+        Action.belongsToMany(models.Operator, {
+            through: models.ActionOperator,
+            as: 'operators',
+            foreignKey: 'fk_action',
+        });
+        Action.belongsToMany(models.Contact, {
+            through: models.ActionContact,
+            as: 'contacts',
+            foreignKey: 'fk_action',
+        });
     };
 
     return Temporal(Action, sequelize);

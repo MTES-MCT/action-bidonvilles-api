@@ -7,6 +7,7 @@ const configController = require('./controllers/config');
 const townsController = require('./controllers/towns');
 const actionsController = require('./controllers/actions');
 const geoController = require('./controllers/geo');
+const operatorsController = require('./controllers/operators');
 
 const app = express();
 app.use(cors());
@@ -34,6 +35,10 @@ app.delete('/actions/:id', checkToken, actionsController.delete);
 // geo
 app.get('/cities/search', checkToken, geoController.searchCities);
 app.get('/epci/search', checkToken, geoController.searchEpci);
+
+// operators
+app.get('/operators/search', checkToken, operatorsController.searchOperators);
+app.get('/contacts/search', checkToken, operatorsController.searchContacts);
 
 app.listen(process.env.API_PORT || 5000, () => {
     console.log('Server is now running! :)');

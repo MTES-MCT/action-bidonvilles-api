@@ -5,6 +5,8 @@ const Cities = require('../../db/models').City;
 const { Epci } = require('../../db/models');
 const Departements = require('../../db/models').Departement;
 const Regions = require('../../db/models').Region;
+const Operators = require('../../db/models').Operator;
+const { createOperatorsAndContacts } = require('./helpers/operators');
 
 function getTerritory(action) {
     const territories = ['City', 'Epci', 'Departement', 'Region'];
@@ -29,10 +31,17 @@ function serializeActionStep(actionStep) {
     };
 }
 
+function serializeOperator(operator) {
+    return {
+        id: parseInt(operator.id, 10),
+        name: operator.name,
+    };
+}
+
 function serializeAction(action) {
     const territory = getTerritory(action);
 
-    return {
+    const serializedAction = {
         id: action.id,
         name: action.name,
         description: action.description,
@@ -51,6 +60,12 @@ function serializeAction(action) {
         createdAt: new Date(action.createdAt).getTime() / 1000,
         updatedAt: new Date(action.updatedAt).getTime() / 1000,
     };
+
+    if (action.operators) {
+        serializedAction.operators = action.operators.map(serializeOperator);
+    }
+
+    return serializedAction;
 }
 
 function addError(errors, field, error) {
@@ -75,6 +90,52 @@ function trim(str) {
     return str.replace(/^\s*|\s*$/g, '');
 }
 
+function cleanContact(contact) {
+    const {
+        // existing contact
+        id,
+
+        // new contact
+        name,
+        email,
+    } = contact;
+
+    if (id) {
+        return {
+            id: getIntOrNull(id),
+        };
+    }
+
+    return {
+        name: trim(name),
+        email: trim(email),
+    };
+}
+
+function cleanOperator(operator) {
+    const {
+        // existing operator
+        id,
+
+        // new operator
+        label,
+        contacts,
+    } = operator;
+
+    const cleanedContacts = (contacts || []).map(cleanContact);
+    if (id) {
+        return {
+            id: getIntOrNull(id),
+            contacts: cleanedContacts,
+        };
+    }
+
+    return {
+        name: trim(label),
+        contacts: cleanedContacts,
+    };
+}
+
 function cleanParams(body) {
     const {
         type,
@@ -84,6 +145,7 @@ function cleanParams(body) {
         ended_at,
         territory_type,
         territory_code,
+        operators,
     } = body;
 
     return {
@@ -94,6 +156,7 @@ function cleanParams(body) {
         endedAt: ended_at || null,
         territoryType: trim(territory_type),
         territoryCode: trim(territory_code),
+        operators: (operators || []).map(cleanOperator),
     };
 }
 
@@ -105,6 +168,7 @@ async function validateInput(body, mode = 'create') {
         endedAt,
         territoryType,
         territoryCode,
+        operators,
     } = cleanParams(body);
 
     const fieldErrors = {};
@@ -154,6 +218,49 @@ async function validateInput(body, mode = 'create') {
         }
     }
 
+    // operators and contacts
+    const operatorErrors = operators.map((operator) => {
+        const errorDetails = {};
+        if (operator.id === undefined) {
+            if (operator.name === null || operator.name === '') {
+                addError(errorDetails, 'name', 'Le nom de l\'opérateur est obligatoire');
+            }
+        }
+
+        const contactErrors = operator.contacts.map((contact) => {
+            const contactErrorDetails = {};
+            if (contact.id === undefined) {
+                if (contact.name === null || contact.name === '') {
+                    addError(contactErrorDetails, 'name', 'Le nom du contact est obligatoire');
+                }
+
+                if (contact.email === null || contact.email === '') {
+                    addError(contactErrorDetails, 'email', 'L\'email du contact est obligatoire');
+                }
+            }
+
+            if (Object.keys(contactErrorDetails).length === 0) {
+                return null;
+            }
+
+            return contactErrorDetails;
+        });
+
+        if (contactErrors.find(c => c !== null) !== undefined) {
+            errorDetails.contacts = contactErrors;
+        }
+
+        if (Object.keys(errorDetails).length === 0) {
+            return null;
+        }
+
+        return errorDetails;
+    });
+
+    if (operatorErrors.find(o => o !== null) !== undefined) {
+        fieldErrors.operators = operatorErrors;
+    }
+
     return fieldErrors;
 }
 
@@ -188,6 +295,7 @@ module.exports = {
                     Departements,
                     Regions,
                     { model: ActionSteps, as: 'actionSteps' },
+                    { model: Operators, as: 'operators' },
                 ],
                 where: {
                     action_id: req.params.id,
@@ -224,9 +332,16 @@ module.exports = {
             startedAt,
             territoryType,
             territoryCode,
+            operators,
         } = cleanParams(req.body);
 
         try {
+            const instances = await createOperatorsAndContacts(operators);
+            const operatorIds = instances.map(operator => operator.id);
+            const contactIds = instances
+                .reduce((contacts, operator) => ([...contacts, ...operator.contacts]), [])
+                .map(contact => contact.id);
+
             const action = await Actions.create({
                 type,
                 name,
@@ -239,7 +354,15 @@ module.exports = {
                 createdBy: req.decoded.userId,
             });
 
-            return res.status(200).send(action);
+            if (operatorIds.length > 0) {
+                await action.setOperators(operatorIds);
+            }
+
+            if (contactIds.length > 0) {
+                await action.setContacts(contactIds);
+            }
+
+            return res.status(200).send({});
         } catch (e) {
             return res.status(500).send({
                 error: {
