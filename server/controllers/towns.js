@@ -379,9 +379,7 @@ async function fetchTowns(where = []) {
 module.exports = {
     async list(req, res) {
         try {
-            return res.status(200).send(await fetchTowns([
-                's.status = \'open\'',
-            ]));
+            return res.status(200).send(await fetchTowns());
         } catch (error) {
             return res.status(400).send(error);
         }
