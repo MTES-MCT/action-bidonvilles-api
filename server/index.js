@@ -40,6 +40,9 @@ app.get('/epci/search', checkToken, geoController.searchEpci);
 app.get('/operators/search', checkToken, operatorsController.searchOperators);
 app.get('/contacts/search', checkToken, operatorsController.searchContacts);
 
+// users
+app.post('/users', userController.add);
+
 app.listen(process.env.API_PORT || 5000, () => {
     console.log('Server is now running! :)');
 });
