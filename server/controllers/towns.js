@@ -1,6 +1,7 @@
 const { sequelize } = require('../../db/models');
 const Cities = require('../../db/models').City;
 const ShantyTowns = require('../../db/models').Shantytown;
+const ShantyTownComments = require('../../db/models').ShantytownComment;
 
 function addError(errors, field, error) {
     if (!Object.prototype.hasOwnProperty.call(errors, field)) {
@@ -287,6 +288,7 @@ function parseTown(town) {
         trashEvacuation: town.trashevacuation,
         justiceStatus: town.justicestatus,
         actions: [],
+        comments: [],
         socialOrigins: [],
         updatedAt: Math.round(new Date(town.updatedat).getTime() / 1000),
     };
@@ -330,6 +332,14 @@ function parseTowns(towns) {
     return used;
 }
 
+function serializeComment(comment) {
+    return {
+        description: comment.description,
+        createdAt: new Date(comment.createdat || comment.createdAt).getTime() / 1000,
+        createdBy: comment.createdby || comment.createdBy,
+    };
+}
+
 async function fetchTowns(where = []) {
     // get the towns with their related social origins
     const towns = parseTowns(
@@ -361,6 +371,23 @@ async function fetchTowns(where = []) {
             { type: sequelize.QueryTypes.SELECT },
         ),
     );
+
+    // get the related comments
+    const comments = await sequelize.query(
+        'SELECT'
+        // shantytown
+        + ' s.shantytown_id,'
+        // comment
+        + ' c.description, c.created_at AS createdAt, c.created_by AS createdBy'
+        + ' FROM shantytown_comments c'
+        + ' LEFT JOIN shantytowns s ON c.fk_shantytown = s.shantytown_id'
+        + ` WHERE c.fk_shantytown IN (${Object.keys(towns).join(',')})`,
+        { type: sequelize.QueryTypes.SELECT },
+    );
+
+    comments.forEach((comment) => {
+        towns[comment.shantytown_id].comments.push(serializeComment(comment));
+    });
 
     // get the related actions
     const actions = await sequelize.query(
@@ -617,6 +644,77 @@ module.exports = {
                 error: {
                     developer_message: e.message,
                     user_message: 'Une erreur est survenue pendant la suppression du site de la base de données',
+                },
+            });
+        }
+    },
+
+    async addComment(req, res) {
+        const {
+            description,
+        } = req.body;
+
+        // get the related town
+        let shantytown;
+        try {
+            shantytown = await ShantyTowns.findOne({
+                where: {
+                    shantytown_id: req.params.id,
+                },
+            });
+        } catch (error) {
+            return res.status(500).send({
+                error: {
+                    developer_message: 'Failed to retrieve the shantytown',
+                    user_message: 'Impossible de retrouver le site concerné en base de données',
+                },
+            });
+        }
+
+        if (shantytown === null) {
+            return res.status(404).send({
+                error: {
+                    developer_message: 'Shantytown does not exist',
+                    user_message: 'Le site concerné par le commentaire n\'existe pas',
+                },
+            });
+        }
+
+        // ensure the description is not empty
+        const trimmedDescription = trim(description);
+        if (trimmedDescription === null || trimmedDescription.length === 0) {
+            return res.status(404).send({
+                error: {
+                    developer_message: 'The submitted data contains errors',
+                    user_message: 'Certaines données sont invalides',
+                    fields: {
+                        description: ['La description est obligatoire'],
+                    },
+                },
+            });
+        }
+
+        // add the step
+        try {
+            await ShantyTownComments.create({
+                shantytown: shantytown.id,
+                description: trimmedDescription,
+                createdBy: req.decoded.userId,
+            });
+
+            const comments = await ShantyTownComments.findAll({
+                where: {
+                    shantytown: shantytown.id,
+                },
+            });
+            return res.status(200).send({
+                comments: comments.map(serializeComment),
+            });
+        } catch (e) {
+            return res.status(500).send({
+                error: {
+                    developer_message: e.message,
+                    user_message: 'Une erreur est survenue dans l\'enregistrement de l\'étape en base de données',
                 },
             });
         }
