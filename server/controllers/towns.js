@@ -43,6 +43,7 @@ function trim(str) {
 
 function cleanParams(body) {
     const {
+        priority,
         built_at,
         status,
         closed_at,
@@ -65,6 +66,7 @@ function cleanParams(body) {
     } = body;
 
     return {
+        priority: getIntOrNull(priority),
         builtAt: built_at !== '' ? built_at : null,
         status: trim(status),
         closedAt: closed_at,
@@ -89,6 +91,7 @@ function cleanParams(body) {
 
 async function validateInput(body, mode = 'create') {
     const {
+        priority,
         builtAt,
         status,
         closedAt,
@@ -111,6 +114,13 @@ async function validateInput(body, mode = 'create') {
     const now = Date.now();
     const fieldErrors = {};
     const error = addError.bind(this, fieldErrors);
+
+    // priority
+    if (priority === null) {
+        error('priority', 'La niveau de priorité du site est obligatoire');
+    } else if (priority < 1 || priority > 3) {
+        error('priority', 'Le niveau de priorité doit être compris entre 1 et 3');
+    }
 
     // builtAt
     let builtAtTimestamp = null;
@@ -249,6 +259,7 @@ async function validateInput(body, mode = 'create') {
 function parseTown(town) {
     return {
         id: town.id,
+        priority: town.priority,
         status: town.status,
         closedAt: town.closedat ? new Date(town.closedat).getTime() / 1000 : null,
         latitude: town.latitude,
@@ -325,7 +336,7 @@ async function fetchTowns(where = []) {
         await sequelize.query(
             `${'SELECT'
             // shantytown
-            + ' s.shantytown_id AS id, s.status as status, s.closed_at AS closedAt, s.latitude AS latitude,'
+            + ' s.shantytown_id AS id, s.priority as priority, s.status as status, s.closed_at AS closedAt, s.latitude AS latitude,'
             + ' s.longitude AS longitude, s.address AS address, s.address_details AS addressDetails,'
             + ' s.built_at as builtAt, s.population_total as populationTotal, s.population_couples AS populationCouples,'
             + ' s.population_minors AS populationMinors, s.access_to_electricity AS accessToElectricity,'
@@ -427,6 +438,7 @@ module.exports = {
 
         // create the town
         const {
+            priority,
             address,
             citycode,
             latitude,
@@ -450,6 +462,7 @@ module.exports = {
 
             await sequelize.transaction(async () => {
                 town = await ShantyTowns.create({
+                    priority,
                     latitude,
                     longitude,
                     address,
@@ -519,6 +532,7 @@ module.exports = {
 
         // edit the town
         const {
+            priority,
             builtAt,
             status,
             closedAt,
@@ -542,6 +556,7 @@ module.exports = {
         try {
             await sequelize.transaction(async () => {
                 await town.update({
+                    priority,
                     builtAt,
                     status,
                     closedAt,
