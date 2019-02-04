@@ -9,6 +9,11 @@ module.exports = function (sequelize, DataTypes) {
             autoIncrement: true,
             field: 'shantytown_id',
         },
+        priority: {
+            type: DataTypes.INTEGER,
+            allowNull: false,
+            defaultValue: 3,
+        },
         status: {
             type: DataTypes.ENUM('open', 'gone', 'covered', 'expelled'),
             allowNull: false,
