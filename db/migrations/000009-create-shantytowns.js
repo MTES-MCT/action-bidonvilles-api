@@ -3,7 +3,7 @@ function createTable(queryInterface, Sequelize, name, additionalColumns = {}) {
         name,
         Object.assign({
             status: {
-                type: Sequelize.ENUM('open', 'gone', 'covered', 'expelled'),
+                type: Sequelize.ENUM('open', 'immediately_expelled', 'closed', 'closed_by_justice', 'closed_by_admin', 'covered'),
                 allowNull: false,
                 defaultValue: 'open',
             },
@@ -68,7 +68,7 @@ function createTable(queryInterface, Sequelize, name, additionalColumns = {}) {
                 allowNull: true,
             },
             justice_status: {
-                type: Sequelize.BOOLEAN,
+                type: Sequelize.ENUM('none', 'seized', 'rendered'),
                 allowNull: true,
             },
             created_at: {

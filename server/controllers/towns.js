@@ -61,9 +61,21 @@ function cleanParams(body) {
         access_to_water,
         trash_evacuation,
         justice_status,
+        justice_rendered_by,
+        justice_rendered_at,
         social_origins,
         field_type,
         owner_type,
+        owner,
+        declared_at,
+        census_status,
+        census_requested_at,
+        census_conducted_at,
+        census_conducted_by,
+        police_status,
+        police_requested_at,
+        police_granted_at,
+        bailiff,
     } = body;
 
     return {
@@ -83,10 +95,22 @@ function cleanParams(body) {
         accessToElectricity: getIntOrNull(access_to_electricity),
         accessToWater: getIntOrNull(access_to_water),
         trashEvacuation: getIntOrNull(trash_evacuation),
-        justiceStatus: getIntOrNull(justice_status),
+        justiceStatus: trim(justice_status),
+        justiceRenderedBy: trim(justice_rendered_by),
+        justiceRenderedAt: justice_rendered_at,
         socialOrigins: social_origins,
         fieldType: getIntOrNull(field_type),
         ownerType: getIntOrNull(owner_type),
+        owner: trim(owner),
+        declaredAt: declared_at,
+        censusStatus: trim(census_status),
+        censusRequestedAt: census_requested_at,
+        censusConductedAt: census_conducted_at,
+        censusConductedBy: trim(census_conducted_by),
+        policeStatus: trim(police_status),
+        policeRequestedAt: police_requested_at,
+        policeGrantedAt: police_granted_at,
+        bailiff: trim(bailiff),
     };
 }
 
@@ -108,8 +132,10 @@ async function validateInput(body, mode = 'create') {
         accessToWater,
         trashEvacuation,
         justiceStatus,
+        justiceRenderedAt,
         fieldType,
         ownerType,
+        declaredAt,
     } = cleanParams(body);
 
     const now = Date.now();
@@ -119,8 +145,8 @@ async function validateInput(body, mode = 'create') {
     // priority
     if (priority === null) {
         error('priority', 'La niveau de priorité du site est obligatoire');
-    } else if (priority < 1 || priority > 3) {
-        error('priority', 'Le niveau de priorité doit être compris entre 1 et 3');
+    } else if (priority < 1 || priority > 4) {
+        error('priority', 'Le niveau de priorité doit être compris entre 1 et 4');
     }
 
     // builtAt
@@ -137,11 +163,25 @@ async function validateInput(body, mode = 'create') {
         }
     }
 
+    // declaredAt
+    let declaredAtTimestamp = null;
+    if (declaredAt === '') {
+        error('declared_at', 'La date de signalement est obligatoire.');
+    } else {
+        declaredAtTimestamp = new Date(declaredAt).getTime();
+
+        if (Number.isNaN(declaredAtTimestamp)) {
+            error('declared_at', 'La date fournie n\'est pas reconnue');
+        } else if (declaredAtTimestamp >= now) {
+            error('declared_at', 'La date de signalement ne peut pas être future');
+        }
+    }
+
     // status
     if (mode === 'edit') {
         if (status === null) {
             error('status', 'La cause de fermeture du site est obligatoire');
-        } else if (['open', 'gone', 'expelled', 'covered'].indexOf(status) === -1) {
+        } else if (['immediately_expelled', 'closed', 'closed_by_justice', 'closed_by_admin', 'covered'].indexOf(status) === -1) {
             error('status', 'La cause de fermeture du site fournie n\'est pas reconnue');
         }
 
@@ -216,8 +256,19 @@ async function validateInput(body, mode = 'create') {
     // justice status
     if (justiceStatus === null) {
         error('justice_status', 'Le champ "Statut judiciaire en cours" est obligatoire');
-    } else if ([-1, 0, 1].indexOf(justiceStatus) === -1) {
+    } else if (['none', 'seized', 'rendered'].indexOf(justiceStatus) === -1) {
         error('justice_status', 'Valeur invalide');
+    }
+
+    // justice rendered at
+    if (justiceRenderedAt !== '') {
+        const justiceRenderedAtTimestamp = new Date(justiceRenderedAt).getTime();
+
+        if (Number.isNaN(justiceRenderedAtTimestamp)) {
+            error('justice_rendered_at', 'La date fournie n\'est pas reconnue');
+        } else if (justiceRenderedAtTimestamp >= now) {
+            error('justice_rendered_at', 'La date ne peut pas être future');
+        }
     }
 
     // population
@@ -290,6 +341,18 @@ function parseTown(town) {
         actions: [],
         comments: [],
         socialOrigins: [],
+        owner: town.owner,
+        declaredAt: town.declared_at !== null ? new Date(town.declared_at).getTime() / 1000 : null,
+        censusStatus: town.census_status,
+        censusRequestedAt: town.census_requested_at !== null ? new Date(town.census_requested_at).getTime() / 1000 : null,
+        censusConductedAt: town.census_conducted_at !== null ? new Date(town.census_conducted_at).getTime() / 1000 : null,
+        censusConductedBy: town.census_conducted_by,
+        justiceRenderedBy: town.justice_rendered_by,
+        justiceRenderedAt: town.justice_rendered_at !== null ? new Date(town.justice_rendered_at).getTime() / 1000 : null,
+        policeStatus: town.police_status,
+        policeRequestedAt: town.police_requested_at !== null ? new Date(town.police_requested_at).getTime() / 1000 : null,
+        policeGrantedAt: town.police_granted_at ? new Date(town.police_granted_at).getTime() / 1000 : null,
+        bailiff: town.bailiff,
         updatedAt: Math.round(new Date(town.updatedat).getTime() / 1000),
     };
 }
@@ -352,6 +415,9 @@ async function fetchTowns(where = []) {
             + ' s.population_minors AS populationMinors, s.access_to_electricity AS accessToElectricity,'
             + ' s.access_to_water AS accessToWater, s.trash_evacuation AS trashEvacuation,'
             + ' s.justice_status AS justiceStatus, s.created_at AS createdAt, s.updated_at AS updatedAt,'
+            + ' s.owner AS owner, s.census_status, s.census_requested_at, s.census_conducted_at, s.census_conducted_by,'
+            + ' s.justice_rendered_by, s.justice_rendered_at, s.police_status, s.police_requested_at, s.police_granted_at,'
+            + ' s.bailiff,'
             // field_type
             + ' f.field_type_id AS fieldTypeId, f.label AS fieldType,'
             // owner_type
@@ -482,11 +548,22 @@ module.exports = {
             fieldType,
             ownerType,
             socialOrigins,
+            owner,
+            declaredAt,
+            censusStatus,
+            censusRequestedAt,
+            censusConductedAt,
+            censusConductedBy,
+            justiceRenderedBy,
+            justiceRenderedAt,
+            policeStatus,
+            policeRequestedAt,
+            policeGrantedAt,
+            bailiff,
         } = cleanParams(req.body);
 
         try {
             let town;
-
             await sequelize.transaction(async () => {
                 town = await ShantyTowns.create({
                     priority,
@@ -501,11 +578,23 @@ module.exports = {
                     accessToElectricity: toBool(accessToElectricity),
                     accessToWater: toBool(accessToWater),
                     trashEvacuation: toBool(trashEvacuation),
-                    justiceStatus: toBool(justiceStatus),
+                    justiceStatus,
                     fieldType,
                     ownerType,
                     city: citycode,
                     createdBy: req.decoded.userId,
+                    owner,
+                    declaredAt,
+                    censusStatus,
+                    censusRequestedAt,
+                    censusConductedAt,
+                    censusConductedBy,
+                    justiceRenderedBy,
+                    justiceRenderedAt,
+                    policeStatus,
+                    policeRequestedAt,
+                    policeGrantedAt,
+                    bailiff,
                 });
 
                 await town.setSocialOrigins(socialOrigins);
@@ -597,7 +686,7 @@ module.exports = {
                     accessToElectricity: toBool(accessToElectricity),
                     accessToWater: toBool(accessToWater),
                     trashEvacuation: toBool(trashEvacuation),
-                    justiceStatus: toBool(justiceStatus),
+                    justiceStatus,
                     fieldType,
                     ownerType,
                     city: citycode,
