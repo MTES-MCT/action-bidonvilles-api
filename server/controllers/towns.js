@@ -439,43 +439,45 @@ async function fetchTowns(where = []) {
     );
 
     // get the related comments
-    const comments = await sequelize.query(
-        'SELECT'
-        // shantytown
-        + ' s.shantytown_id,'
-        // comment
-        + ' c.description, c.created_at AS createdAt, c.created_by AS createdBy'
-        + ' FROM shantytown_comments c'
-        + ' LEFT JOIN shantytowns s ON c.fk_shantytown = s.shantytown_id'
-        + ` WHERE c.fk_shantytown IN (${Object.keys(towns).join(',')})`,
-        { type: sequelize.QueryTypes.SELECT },
-    );
+    if (towns.length > 0) {
+        const comments = await sequelize.query(
+            'SELECT'
+            // shantytown
+            + ' s.shantytown_id,'
+            // comment
+            + ' c.description, c.created_at AS createdAt, c.created_by AS createdBy'
+            + ' FROM shantytown_comments c'
+            + ' LEFT JOIN shantytowns s ON c.fk_shantytown = s.shantytown_id'
+            + ` WHERE c.fk_shantytown IN (${Object.keys(towns).join(',')})`,
+            { type: sequelize.QueryTypes.SELECT },
+        );
 
-    comments.forEach((comment) => {
-        towns[comment.shantytown_id].comments.push(serializeComment(comment));
-    });
+        comments.forEach((comment) => {
+            towns[comment.shantytown_id].comments.push(serializeComment(comment));
+        });
 
-    // get the related actions
-    const actions = await sequelize.query(
-        'SELECT'
-        // shantytown
-        + ' s.shantytown_id,'
-        // action
-        + ' a.action_id AS actionId, a.started_at AS actionStartedAt, a.ended_at AS actionEndedAt, a.name AS actionName, a.description AS actionDescriptioon, at.label AS actiontype'
-        + ' FROM shantytowns s'
-        + ' LEFT JOIN cities c ON s.fk_city = c.code'
-        + ' LEFT JOIN epci e ON c.fk_epci = e.code'
-        + ' LEFT JOIN departements d ON e.fk_departement = d.code'
-        + ' LEFT JOIN regions r ON d.fk_region = r.code'
-        + ' RIGHT JOIN actions a ON a.fk_city = c.code OR a.fk_epci = e.code OR a.fk_departement = d.code OR a.fk_region = r.code'
-        + ' LEFT JOIN action_types at ON a.fk_action_type = at.action_type_id'
-        + ` WHERE s.shantytown_id IN (${Object.keys(towns).join(',')})`,
-        { type: sequelize.QueryTypes.SELECT },
-    );
+        // get the related actions
+        const actions = await sequelize.query(
+            'SELECT'
+            // shantytown
+            + ' s.shantytown_id,'
+            // action
+            + ' a.action_id AS actionId, a.started_at AS actionStartedAt, a.ended_at AS actionEndedAt, a.name AS actionName, a.description AS actionDescriptioon, at.label AS actiontype'
+            + ' FROM shantytowns s'
+            + ' LEFT JOIN cities c ON s.fk_city = c.code'
+            + ' LEFT JOIN epci e ON c.fk_epci = e.code'
+            + ' LEFT JOIN departements d ON e.fk_departement = d.code'
+            + ' LEFT JOIN regions r ON d.fk_region = r.code'
+            + ' RIGHT JOIN actions a ON a.fk_city = c.code OR a.fk_epci = e.code OR a.fk_departement = d.code OR a.fk_region = r.code'
+            + ' LEFT JOIN action_types at ON a.fk_action_type = at.action_type_id'
+            + ` WHERE s.shantytown_id IN (${Object.keys(towns).join(',')})`,
+            { type: sequelize.QueryTypes.SELECT },
+        );
 
-    actions.forEach((action) => {
-        towns[action.shantytown_id].actions.push(parseAction(action));
-    });
+        actions.forEach((action) => {
+            towns[action.shantytown_id].actions.push(parseAction(action));
+        });
+    }
 
     return Object.values(towns);
 }
