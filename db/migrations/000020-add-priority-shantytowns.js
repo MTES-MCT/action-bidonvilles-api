@@ -5,7 +5,7 @@ function addColumnTo(queryInterface, Sequelize, table) {
         {
             type: Sequelize.INTEGER,
             allowNull: false,
-            defaultValue: 3,
+            defaultValue: 4,
         },
     );
 }
@@ -20,7 +20,7 @@ function addConstraintTo(queryInterface, table) {
                     priority: { $gte: 1 },
                 },
                 {
-                    priority: { $lte: 3 },
+                    priority: { $lte: 4 },
                 },
             ],
         },

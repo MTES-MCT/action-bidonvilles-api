@@ -12,10 +12,10 @@ module.exports = function (sequelize, DataTypes) {
         priority: {
             type: DataTypes.INTEGER,
             allowNull: false,
-            defaultValue: 3,
+            defaultValue: 4,
         },
         status: {
-            type: DataTypes.ENUM('open', 'gone', 'covered', 'expelled'),
+            type: DataTypes.ENUM('open', 'immediately_expelled', 'closed', 'closed_by_justice', 'closed_by_admin', 'covered'),
             allowNull: false,
             defaultValue: 'open',
         },
@@ -50,10 +50,34 @@ module.exports = function (sequelize, DataTypes) {
             },
             field: 'fk_city',
         },
-        builtAt: {
+        owner: {
+            type: DataTypes.STRING,
+            allowNull: true,
+        },
+        declaredAt: {
             type: DataTypes.DATEONLY,
             allowNull: true,
-            field: 'built_at',
+            field: 'declared_at',
+        },
+        censusStatus: {
+            type: DataTypes.ENUM('none', 'scheduled', 'done'),
+            allowNull: true,
+            field: 'census_status',
+        },
+        censusConductedAt: {
+            type: DataTypes.DATEONLY,
+            allowNull: true,
+            field: 'census_conducted_at',
+        },
+        censusRequestedAt: {
+            type: DataTypes.DATEONLY,
+            allowNull: true,
+            field: 'census_requested_at',
+        },
+        censusConductedBy: {
+            type: DataTypes.STRING,
+            allowNull: true,
+            field: 'census_conducted_by',
         },
         fieldType: {
             type: DataTypes.INTEGER,
@@ -104,9 +128,44 @@ module.exports = function (sequelize, DataTypes) {
             field: 'trash_evacuation',
         },
         justiceStatus: {
-            type: DataTypes.BOOLEAN,
+            type: DataTypes.ENUM('none', 'seized', 'rendered'),
             allowNull: true,
             field: 'justice_status',
+        },
+        justiceRenderedBy: {
+            type: DataTypes.STRING,
+            allowNull: true,
+            field: 'justice_rendered_by',
+        },
+        justiceRenderedAt: {
+            type: DataTypes.DATEONLY,
+            allowNull: true,
+            field: 'justice_rendered_at',
+        },
+        policeStatus: {
+            type: DataTypes.ENUM('none', 'requested', 'granted'),
+            allowNull: true,
+            field: 'police_status',
+        },
+        policeRequestedAt: {
+            type: DataTypes.DATEONLY,
+            allowNull: true,
+            field: 'police_requested_at',
+        },
+        policeGrantedAt: {
+            type: DataTypes.DATEONLY,
+            allowNull: true,
+            field: 'police_granted_at',
+        },
+        bailiff: {
+            type: DataTypes.STRING,
+            allowNull: true,
+            field: 'bailiff',
+        },
+        status: {
+            type: DataTypes.ENUM('open', 'gone', 'covered', 'expelled'),
+            allowNull: false,
+            defaultValue: 'open',
         },
         createdAt: {
             type: DataTypes.DATE,
