@@ -165,15 +165,17 @@ async function validateInput(body, mode = 'create') {
 
     // declaredAt
     let declaredAtTimestamp = null;
-    if (declaredAt === '') {
-        error('declared_at', 'La date de signalement est obligatoire.');
-    } else {
-        declaredAtTimestamp = new Date(declaredAt).getTime();
+    if (mode === 'create') {
+        if (declaredAt === '') {
+            error('declared_at', 'La date de signalement est obligatoire.');
+        } else {
+            declaredAtTimestamp = new Date(declaredAt).getTime();
 
-        if (Number.isNaN(declaredAtTimestamp)) {
-            error('declared_at', 'La date fournie n\'est pas reconnue');
-        } else if (declaredAtTimestamp >= now) {
-            error('declared_at', 'La date de signalement ne peut pas être future');
+            if (Number.isNaN(declaredAtTimestamp)) {
+                error('declared_at', 'La date fournie n\'est pas reconnue');
+            } else if (declaredAtTimestamp >= now) {
+                error('declared_at', 'La date de signalement ne peut pas être future');
+            }
         }
     }
 
@@ -181,7 +183,7 @@ async function validateInput(body, mode = 'create') {
     if (mode === 'edit') {
         if (status === null) {
             error('status', 'La cause de fermeture du site est obligatoire');
-        } else if (['immediately_expelled', 'closed', 'closed_by_justice', 'closed_by_admin', 'covered'].indexOf(status) === -1) {
+        } else if (['open', 'immediately_expelled', 'closed', 'closed_by_justice', 'closed_by_admin', 'covered'].indexOf(status) === -1) {
             error('status', 'La cause de fermeture du site fournie n\'est pas reconnue');
         }
 
@@ -261,13 +263,15 @@ async function validateInput(body, mode = 'create') {
     }
 
     // justice rendered at
-    if (justiceRenderedAt !== '') {
-        const justiceRenderedAtTimestamp = new Date(justiceRenderedAt).getTime();
+    if (mode === 'create') {
+        if (justiceRenderedAt !== '') {
+            const justiceRenderedAtTimestamp = new Date(justiceRenderedAt).getTime();
 
-        if (Number.isNaN(justiceRenderedAtTimestamp)) {
-            error('justice_rendered_at', 'La date fournie n\'est pas reconnue');
-        } else if (justiceRenderedAtTimestamp >= now) {
-            error('justice_rendered_at', 'La date ne peut pas être future');
+            if (Number.isNaN(justiceRenderedAtTimestamp)) {
+                error('justice_rendered_at', 'La date fournie n\'est pas reconnue');
+            } else if (justiceRenderedAtTimestamp >= now) {
+                error('justice_rendered_at', 'La date ne peut pas être future');
+            }
         }
     }
 
