@@ -122,20 +122,30 @@ module.exports = function (sequelize, DataTypes) {
             allowNull: true,
             field: 'trash_evacuation',
         },
-        justiceStatus: {
-            type: DataTypes.ENUM('none', 'seized', 'rendered'),
+        justiceProcedure: {
+            type: DataTypes.BOOLEAN,
             allowNull: true,
-            field: 'justice_status',
+            field: 'justice_procedure',
+        },
+        justiceRendered: {
+            type: DataTypes.BOOLEAN,
+            allowNull: true,
+            field: 'justice_rendered',
+        },
+        justiceRenderedAt: {
+            type: DataTypes.DATEONLY,
+            allowNull: true,
+            field: 'justice_rendered_at',
         },
         justiceRenderedBy: {
             type: DataTypes.STRING,
             allowNull: true,
             field: 'justice_rendered_by',
         },
-        justiceRenderedAt: {
-            type: DataTypes.DATEONLY,
+        justiceChallenged: {
+            type: DataTypes.BOOLEAN,
             allowNull: true,
-            field: 'justice_rendered_at',
+            field: 'justice_challenged',
         },
         policeStatus: {
             type: DataTypes.ENUM('none', 'requested', 'granted'),
