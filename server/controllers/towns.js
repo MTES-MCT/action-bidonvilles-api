@@ -60,9 +60,11 @@ function cleanParams(body) {
         access_to_electricity,
         access_to_water,
         trash_evacuation,
-        justice_status,
+        justice_procedure,
+        justice_rendered,
         justice_rendered_by,
         justice_rendered_at,
+        justice_challenged,
         social_origins,
         field_type,
         owner_type,
@@ -94,9 +96,11 @@ function cleanParams(body) {
         accessToElectricity: getIntOrNull(access_to_electricity),
         accessToWater: getIntOrNull(access_to_water),
         trashEvacuation: getIntOrNull(trash_evacuation),
-        justiceStatus: trim(justice_status),
+        justiceProcedure: getIntOrNull(justice_procedure),
+        justiceRendered: getIntOrNull(justice_rendered),
         justiceRenderedBy: trim(justice_rendered_by),
         justiceRenderedAt: justice_rendered_at !== '' ? justice_rendered_at : null,
+        justiceChallenged: getIntOrNull(justice_challenged),
         socialOrigins: social_origins,
         fieldType: getIntOrNull(field_type),
         ownerType: getIntOrNull(owner_type),
@@ -129,8 +133,10 @@ async function validateInput(body, mode = 'create') {
         accessToElectricity,
         accessToWater,
         trashEvacuation,
-        justiceStatus,
+        justiceProcedure,
+        justiceRendered,
         justiceRenderedAt,
+        justiceChallenged,
         fieldType,
         ownerType,
         declaredAt,
@@ -254,8 +260,24 @@ async function validateInput(body, mode = 'create') {
     }
 
     // justice status
-    if (justiceStatus !== null && ['none', 'seized', 'rendered'].indexOf(justiceStatus) === -1) {
-        error('justice_status', 'Valeur invalide');
+    if (justiceProcedure === null) {
+        error('justice_procedure', 'Le champ "Existence d\'une procédure judiciaire" est obligatoire');
+    } else if ([-1, 0, 1].indexOf(justiceProcedure) === -1) {
+        error('justice_procedure', 'Valeur invalide');
+    }
+
+    if (mode === 'create') {
+        if (justiceRendered === null) {
+            error('justice_rendered', 'Le champ "Décision de justice rendue" est obligatoire');
+        } else if ([-1, 0, 1].indexOf(justiceRendered) === -1) {
+            error('justice_rendered', 'Valeur invalide');
+        }
+
+        if (justiceChallenged === null) {
+            error('justice_challenged', 'Le champ "Contentieux relatif à la décision de justice" est obligatoire');
+        } else if ([-1, 0, 1].indexOf(justiceChallenged) === -1) {
+            error('justice_challenged', 'Valeur invalide');
+        }
     }
 
     // justice rendered at
@@ -337,7 +359,6 @@ function parseTown(town) {
         accessToElectricity: town.accesstoelectricity,
         accessToWater: town.accesstowater,
         trashEvacuation: town.trashevacuation,
-        justiceStatus: town.justicestatus,
         actions: [],
         comments: [],
         socialOrigins: [],
@@ -346,8 +367,11 @@ function parseTown(town) {
         censusStatus: town.census_status,
         censusConductedAt: town.census_conducted_at !== null ? new Date(town.census_conducted_at).getTime() / 1000 : null,
         censusConductedBy: town.census_conducted_by,
+        justiceProcedure: town.justice_procedure,
+        justiceRendered: town.justice_rendered,
         justiceRenderedBy: town.justice_rendered_by,
         justiceRenderedAt: town.justice_rendered_at !== null ? new Date(town.justice_rendered_at).getTime() / 1000 : null,
+        justiceChallenged: town.justice_challenged,
         policeStatus: town.police_status,
         policeRequestedAt: town.police_requested_at !== null ? new Date(town.police_requested_at).getTime() / 1000 : null,
         policeGrantedAt: town.police_granted_at ? new Date(town.police_granted_at).getTime() / 1000 : null,
@@ -413,9 +437,10 @@ async function fetchTowns(where = []) {
             + ' s.built_at as builtAt, s.population_total as populationTotal, s.population_couples AS populationCouples,'
             + ' s.population_minors AS populationMinors, s.access_to_electricity AS accessToElectricity,'
             + ' s.access_to_water AS accessToWater, s.trash_evacuation AS trashEvacuation,'
-            + ' s.justice_status AS justiceStatus, s.created_at AS createdAt, s.updated_at AS updatedAt,'
+            + ' s.created_at AS createdAt, s.updated_at AS updatedAt,'
             + ' s.owner AS owner, s.census_status, s.census_conducted_at, s.census_conducted_by,'
-            + ' s.justice_rendered_by, s.justice_rendered_at, s.police_status, s.police_requested_at, s.police_granted_at,'
+            + ' s.justice_procedure, s.justice_rendered, s.justice_rendered_by, s.justice_rendered_at, s.justice_challenged,'
+            + ' s.police_status, s.police_requested_at, s.police_granted_at,'
             + ' s.bailiff,'
             // field_type
             + ' f.field_type_id AS fieldTypeId, f.label AS fieldType,'
@@ -545,7 +570,6 @@ module.exports = {
             accessToElectricity,
             accessToWater,
             trashEvacuation,
-            justiceStatus,
             fieldType,
             ownerType,
             socialOrigins,
@@ -554,8 +578,11 @@ module.exports = {
             censusStatus,
             censusConductedAt,
             censusConductedBy,
+            justiceProcedure,
+            justiceRendered,
             justiceRenderedBy,
             justiceRenderedAt,
+            justiceChallenged,
             policeStatus,
             policeRequestedAt,
             policeGrantedAt,
@@ -578,7 +605,6 @@ module.exports = {
                     accessToElectricity: toBool(accessToElectricity),
                     accessToWater: toBool(accessToWater),
                     trashEvacuation: toBool(trashEvacuation),
-                    justiceStatus,
                     fieldType,
                     ownerType,
                     city: citycode,
@@ -588,8 +614,11 @@ module.exports = {
                     censusStatus,
                     censusConductedAt,
                     censusConductedBy,
+                    justiceProcedure: toBool(justiceProcedure),
+                    justiceRendered: toBool(justiceRendered),
                     justiceRenderedBy,
                     justiceRenderedAt,
+                    justiceChallenged: toBool(justiceChallenged),
                     policeStatus,
                     policeRequestedAt,
                     policeGrantedAt,
@@ -662,7 +691,7 @@ module.exports = {
             accessToElectricity,
             accessToWater,
             trashEvacuation,
-            justiceStatus,
+            justiceProcedure,
             fieldType,
             ownerType,
             socialOrigins,
@@ -685,7 +714,7 @@ module.exports = {
                     accessToElectricity: toBool(accessToElectricity),
                     accessToWater: toBool(accessToWater),
                     trashEvacuation: toBool(trashEvacuation),
-                    justiceStatus,
+                    justiceProcedure: toBool(justiceProcedure),
                     fieldType,
                     ownerType,
                     city: citycode,
