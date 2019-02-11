@@ -69,7 +69,6 @@ function cleanParams(body) {
         owner,
         declared_at,
         census_status,
-        census_requested_at,
         census_conducted_at,
         census_conducted_by,
         police_status,
@@ -104,7 +103,6 @@ function cleanParams(body) {
         owner: trim(owner),
         declaredAt: declared_at !== '' ? declared_at : null,
         censusStatus: trim(census_status),
-        censusRequestedAt: census_requested_at !== '' ? census_requested_at : null,
         censusConductedAt: census_conducted_at !== '' ? census_conducted_at : null,
         censusConductedBy: trim(census_conducted_by),
         policeStatus: trim(police_status),
@@ -348,7 +346,6 @@ function parseTown(town) {
         owner: town.owner,
         declaredAt: town.declared_at !== null ? new Date(town.declared_at).getTime() / 1000 : null,
         censusStatus: town.census_status,
-        censusRequestedAt: town.census_requested_at !== null ? new Date(town.census_requested_at).getTime() / 1000 : null,
         censusConductedAt: town.census_conducted_at !== null ? new Date(town.census_conducted_at).getTime() / 1000 : null,
         censusConductedBy: town.census_conducted_by,
         justiceRenderedBy: town.justice_rendered_by,
@@ -419,7 +416,7 @@ async function fetchTowns(where = []) {
             + ' s.population_minors AS populationMinors, s.access_to_electricity AS accessToElectricity,'
             + ' s.access_to_water AS accessToWater, s.trash_evacuation AS trashEvacuation,'
             + ' s.justice_status AS justiceStatus, s.created_at AS createdAt, s.updated_at AS updatedAt,'
-            + ' s.owner AS owner, s.census_status, s.census_requested_at, s.census_conducted_at, s.census_conducted_by,'
+            + ' s.owner AS owner, s.census_status, s.census_conducted_at, s.census_conducted_by,'
             + ' s.justice_rendered_by, s.justice_rendered_at, s.police_status, s.police_requested_at, s.police_granted_at,'
             + ' s.bailiff,'
             // field_type
@@ -557,7 +554,6 @@ module.exports = {
             owner,
             declaredAt,
             censusStatus,
-            censusRequestedAt,
             censusConductedAt,
             censusConductedBy,
             justiceRenderedBy,
@@ -592,7 +588,6 @@ module.exports = {
                     owner,
                     declaredAt,
                     censusStatus,
-                    censusRequestedAt,
                     censusConductedAt,
                     censusConductedBy,
                     justiceRenderedBy,

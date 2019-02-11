@@ -69,11 +69,6 @@ module.exports = function (sequelize, DataTypes) {
             allowNull: true,
             field: 'census_conducted_at',
         },
-        censusRequestedAt: {
-            type: DataTypes.DATEONLY,
-            allowNull: true,
-            field: 'census_requested_at',
-        },
         censusConductedBy: {
             type: DataTypes.STRING,
             allowNull: true,
