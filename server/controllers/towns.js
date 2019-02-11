@@ -187,7 +187,7 @@ async function validateInput(body, mode = 'create') {
     if (mode === 'edit') {
         if (status === null) {
             error('status', 'La cause de fermeture du site est obligatoire');
-        } else if (['open', 'immediately_expelled', 'closed', 'closed_by_justice', 'closed_by_admin', 'covered'].indexOf(status) === -1) {
+        } else if (['open', 'closed_by_justice', 'closed_by_admin', 'other', 'unknown'].indexOf(status) === -1) {
             error('status', 'La cause de fermeture du site fournie n\'est pas reconnue');
         }
 
