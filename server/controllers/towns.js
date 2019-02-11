@@ -254,9 +254,7 @@ async function validateInput(body, mode = 'create') {
     }
 
     // justice status
-    if (justiceStatus === null) {
-        error('justice_status', 'Le champ "Statut judiciaire en cours" est obligatoire');
-    } else if (['none', 'seized', 'rendered'].indexOf(justiceStatus) === -1) {
+    if (justiceStatus !== null && ['none', 'seized', 'rendered'].indexOf(justiceStatus) === -1) {
         error('justice_status', 'Valeur invalide');
     }
 
