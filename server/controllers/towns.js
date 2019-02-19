@@ -120,8 +120,6 @@ async function validateInput(body, mode = 'create') {
     const {
         priority,
         builtAt,
-        status,
-        closedAt,
         address,
         city,
         citycode,
@@ -179,31 +177,6 @@ async function validateInput(body, mode = 'create') {
                 error('declared_at', 'La date fournie n\'est pas reconnue');
             } else if (declaredAtTimestamp >= now) {
                 error('declared_at', 'La date de signalement ne peut pas être future');
-            }
-        }
-    }
-
-    // status
-    if (mode === 'edit') {
-        if (status === null) {
-            error('status', 'La cause de fermeture du site est obligatoire');
-        } else if (['open', 'closed_by_justice', 'closed_by_admin', 'other', 'unknown'].indexOf(status) === -1) {
-            error('status', 'La cause de fermeture du site fournie n\'est pas reconnue');
-        }
-
-        if (status !== 'open') {
-            const timestamp = new Date(closedAt).getTime();
-
-            if (Number.isNaN(timestamp)) {
-                error('closed_at', 'La date fournie n\'est pas reconnue');
-            } else {
-                if (timestamp >= now) {
-                    error('closed_at', 'La date de fermeture du site ne peut pas être future');
-                }
-
-                if (!Number.isNaN(builtAtTimestamp) && timestamp <= builtAtTimestamp) {
-                    error('closed_at', 'La date de fermeture du site ne peut être antérieur à celle d\'installation');
-                }
             }
         }
     }
@@ -722,6 +695,79 @@ module.exports = {
                 });
 
                 await town.setSocialOrigins(socialOrigins);
+            });
+
+            return res.status(200).send(town);
+        } catch (e) {
+            return res.status(500).send({
+                error: {
+                    developer_message: e.message,
+                    user_message: 'Une erreur est survenue dans l\'enregistrement du site en base de données',
+                },
+            });
+        }
+    },
+
+    async close(req, res) {
+        // status
+        const {
+            status,
+            closedAt,
+        } = cleanParams(req.body);
+
+        const now = Date.now();
+        const fieldErrors = {};
+        const error = addError.bind(this, fieldErrors);
+
+        if (status === null) {
+            error('status', 'La cause de fermeture du site est obligatoire');
+        } else if (['open', 'closed_by_justice', 'closed_by_admin', 'other', 'unknown'].indexOf(status) === -1) {
+            error('status', 'La cause de fermeture du site fournie n\'est pas reconnue');
+        }
+
+        if (status !== 'open') {
+            const timestamp = new Date(closedAt).getTime();
+
+            if (!closedAt || Number.isNaN(timestamp)) {
+                error('closed_at', 'La date fournie n\'est pas reconnue');
+            } else if (timestamp >= now) {
+                error('closed_at', 'La date de fermeture du site ne peut pas être future');
+            }
+        }
+
+        // check errors
+        if (Object.keys(fieldErrors).length > 0) {
+            return res.status(400).send({
+                error: {
+                    developer_message: 'The submitted data contains errors',
+                    user_message: 'Certaines données sont invalides',
+                    fields: fieldErrors,
+                },
+            });
+        }
+
+        // check if the town exists
+        const town = await ShantyTowns.findOne({
+            where: {
+                shantytown_id: req.params.id,
+            },
+        });
+
+        if (town === null) {
+            return res.status(400).send({
+                error: {
+                    developer_message: `Tried to close unknown town of id #${req.params.id}`,
+                    user_message: `Le site d'identifiant ${req.params.id} n'existe pas : fermeture impossible`,
+                },
+            });
+        }
+
+        // close the town
+        try {
+            await town.update({
+                status,
+                closedAt,
+                updatedBy: req.decoded.userId,
             });
 
             return res.status(200).send(town);

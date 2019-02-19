@@ -21,6 +21,7 @@ app.get('/towns', checkToken, townsController.list);
 app.get('/towns/:id', checkToken, townsController.find);
 app.post('/towns', checkToken, townsController.add);
 app.post('/towns/:id', checkToken, townsController.edit);
+app.post('/towns/:id/close', checkToken, townsController.close);
 app.delete('/towns/:id', checkToken, townsController.delete);
 app.post('/towns/:id/comments', checkToken, townsController.addComment);
 
