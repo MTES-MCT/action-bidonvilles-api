@@ -54,6 +54,11 @@ module.exports = function (sequelize, DataTypes) {
             type: DataTypes.STRING,
             allowNull: true,
         },
+        builtAt: {
+            type: DataTypes.DATEONLY,
+            allowNull: true,
+            field: 'built_at',
+        },
         declaredAt: {
             type: DataTypes.DATEONLY,
             allowNull: true,
