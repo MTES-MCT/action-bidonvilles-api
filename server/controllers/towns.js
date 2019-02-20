@@ -342,6 +342,7 @@ function parseTown(town) {
         actions: [],
         comments: [],
         socialOrigins: [],
+        closingSolutions: [],
         owner: town.owner,
         declaredAt: town.declared_at !== null ? new Date(town.declared_at).getTime() / 1000 : null,
         censusStatus: town.census_status,
@@ -406,6 +407,14 @@ function serializeComment(comment) {
     };
 }
 
+function serializeClosingSolution(solution) {
+    return {
+        id: solution.closing_solution_id,
+        peopleAffected: solution.people_affected || null,
+        householdsAffected: solution.households_affected || null,
+    };
+}
+
 async function fetchTowns(where = []) {
     // get the towns with their related social origins
     const towns = parseTowns(
@@ -443,7 +452,7 @@ async function fetchTowns(where = []) {
     );
 
     // get the related comments
-    if (towns.length > 0) {
+    if (Object.keys(towns).length > 0) {
         const comments = await sequelize.query(
             'SELECT'
             // shantytown
@@ -480,6 +489,22 @@ async function fetchTowns(where = []) {
 
         actions.forEach((action) => {
             towns[action.shantytown_id].actions.push(parseAction(action));
+        });
+
+        // get the related closing solutions
+        const solutions = await sequelize.query(
+            'SELECT'
+            + ' scs.fk_shantytown AS shantytown_id,'
+            + ' scs.fk_closing_solution AS closing_solution_id,'
+            + ' scs.number_of_people_affected AS people_affected,'
+            + ' scs.number_of_households_affected AS households_affected'
+            + ' FROM shantytown_closing_solutions scs'
+            + ` WHERE scs.fk_shantytown IN (${Object.keys(towns).join(',')})`,
+            { type: sequelize.QueryTypes.SELECT },
+        );
+
+        solutions.forEach((solution) => {
+            towns[solution.shantytown_id].closingSolutions.push(serializeClosingSolution(solution));
         });
     }
 
@@ -756,16 +781,16 @@ module.exports = {
             if (solution.peopleAffected !== null) {
                 if (Number.isNaN(solution.peopleAffected)) {
                     addError(solutionErrors, solution.id, 'Le nombre de personnes concernées par le dispositif est invalide');
-                } else if (solution.peopleAffected < 0) {
-                    addError(solutionErrors, solution.id, 'Le nombre de personnes concernées par le dispositif ne peut pas être négatif');
+                } else if (solution.peopleAffected <= 0) {
+                    addError(solutionErrors, solution.id, 'Le nombre de personnes concernées par le dispositif doit être positif');
                 }
             }
 
             if (solution.householdsAffected !== null) {
                 if (Number.isNaN(solution.householdsAffected)) {
                     addError(solutionErrors, solution.id, 'Le nombre de ménages concernés par le dispositif est invalide');
-                } else if (solution.householdsAffected < 0) {
-                    addError(solutionErrors, solution.id, 'Le nombre de ménages concernés par le dispositif ne peut pas être négatif');
+                } else if (solution.householdsAffected <= 0) {
+                    addError(solutionErrors, solution.id, 'Le nombre de ménages concernés par le dispositif doit être positif');
                 }
             }
         });
