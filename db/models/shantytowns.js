@@ -127,6 +127,11 @@ module.exports = function (sequelize, DataTypes) {
             allowNull: true,
             field: 'trash_evacuation',
         },
+        ownerComplaint: {
+            type: DataTypes.BOOLEAN,
+            allowNull: true,
+            field: 'owner_complaint',
+        },
         justiceProcedure: {
             type: DataTypes.BOOLEAN,
             allowNull: true,

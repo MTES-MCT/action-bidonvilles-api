@@ -61,6 +61,7 @@ function cleanParams(body) {
         access_to_electricity,
         access_to_water,
         trash_evacuation,
+        owner_complaint,
         justice_procedure,
         justice_rendered,
         justice_rendered_by,
@@ -98,6 +99,7 @@ function cleanParams(body) {
         accessToElectricity: getIntOrNull(access_to_electricity),
         accessToWater: getIntOrNull(access_to_water),
         trashEvacuation: getIntOrNull(trash_evacuation),
+        ownerComplaint: getIntOrNull(owner_complaint),
         justiceProcedure: getIntOrNull(justice_procedure),
         justiceRendered: getIntOrNull(justice_rendered),
         justiceRenderedBy: trim(justice_rendered_by),
@@ -123,7 +125,7 @@ function cleanParams(body) {
     };
 }
 
-async function validateInput(body, mode = 'create') {
+async function validateInput(body) {
     const {
         priority,
         builtAt,
@@ -138,6 +140,7 @@ async function validateInput(body, mode = 'create') {
         accessToElectricity,
         accessToWater,
         trashEvacuation,
+        ownerComplaint,
         justiceProcedure,
         justiceRendered,
         justiceRenderedAt,
@@ -174,17 +177,15 @@ async function validateInput(body, mode = 'create') {
 
     // declaredAt
     let declaredAtTimestamp = null;
-    if (mode === 'create') {
-        if (declaredAt === '') {
-            error('declared_at', 'La date de signalement est obligatoire.');
-        } else {
-            declaredAtTimestamp = new Date(declaredAt).getTime();
+    if (declaredAt === '') {
+        error('declared_at', 'La date de signalement est obligatoire.');
+    } else {
+        declaredAtTimestamp = new Date(declaredAt).getTime();
 
-            if (Number.isNaN(declaredAtTimestamp)) {
-                error('declared_at', 'La date fournie n\'est pas reconnue');
-            } else if (declaredAtTimestamp >= now) {
-                error('declared_at', 'La date de signalement ne peut pas être future');
-            }
+        if (Number.isNaN(declaredAtTimestamp)) {
+            error('declared_at', 'La date fournie n\'est pas reconnue');
+        } else if (declaredAtTimestamp >= now) {
+            error('declared_at', 'La date de signalement ne peut pas être future');
         }
     }
 
@@ -240,35 +241,42 @@ async function validateInput(body, mode = 'create') {
     }
 
     // justice status
-    if (justiceProcedure === null) {
-        error('justice_procedure', 'Le champ "Existence d\'une procédure judiciaire" est obligatoire');
-    } else if ([-1, 0, 1].indexOf(justiceProcedure) === -1) {
-        error('justice_procedure', 'Valeur invalide');
+    if (ownerComplaint === null) {
+        error('owner_complaint', 'Le champ "Dépôt de plainte par le propriétaire" est obligatoire');
+    } else if ([-1, 0, 1].indexOf(ownerComplaint) === -1) {
+        error('owner_complaint', 'Valeur invalide');
     }
 
-    if (mode === 'create') {
-        if (justiceRendered === null) {
-            error('justice_rendered', 'Le champ "Décision de justice rendue" est obligatoire');
-        } else if ([-1, 0, 1].indexOf(justiceRendered) === -1) {
-            error('justice_rendered', 'Valeur invalide');
+    if (ownerComplaint === 1) {
+        if (justiceProcedure === null) {
+            error('justice_procedure', 'Le champ "Existence d\'une procédure judiciaire" est obligatoire');
+        } else if ([-1, 0, 1].indexOf(justiceProcedure) === -1) {
+            error('justice_procedure', 'Valeur invalide');
         }
 
-        if (justiceChallenged === null) {
-            error('justice_challenged', 'Le champ "Contentieux relatif à la décision de justice" est obligatoire');
-        } else if ([-1, 0, 1].indexOf(justiceChallenged) === -1) {
-            error('justice_challenged', 'Valeur invalide');
-        }
-    }
+        if (justiceProcedure === 1) {
+            if (justiceRendered === null) {
+                error('justice_rendered', 'Le champ "Décision de justice rendue" est obligatoire');
+            } else if ([-1, 0, 1].indexOf(justiceRendered) === -1) {
+                error('justice_rendered', 'Valeur invalide');
+            }
 
-    // justice rendered at
-    if (mode === 'create') {
-        if (justiceRenderedAt !== '') {
-            const justiceRenderedAtTimestamp = new Date(justiceRenderedAt).getTime();
+            if (justiceRendered === 1) {
+                if (justiceChallenged === null) {
+                    error('justice_challenged', 'Le champ "Contentieux relatif à la décision de justice" est obligatoire');
+                } else if ([-1, 0, 1].indexOf(justiceChallenged) === -1) {
+                    error('justice_challenged', 'Valeur invalide');
+                }
 
-            if (Number.isNaN(justiceRenderedAtTimestamp)) {
-                error('justice_rendered_at', 'La date fournie n\'est pas reconnue');
-            } else if (justiceRenderedAtTimestamp >= now) {
-                error('justice_rendered_at', 'La date ne peut pas être future');
+                if (justiceRenderedAt !== '') {
+                    const justiceRenderedAtTimestamp = new Date(justiceRenderedAt).getTime();
+
+                    if (Number.isNaN(justiceRenderedAtTimestamp)) {
+                        error('justice_rendered_at', 'La date fournie n\'est pas reconnue');
+                    } else if (justiceRenderedAtTimestamp >= now) {
+                        error('justice_rendered_at', 'La date ne peut pas être future');
+                    }
+                }
             }
         }
     }
@@ -348,6 +356,7 @@ function parseTown(town) {
         censusStatus: town.census_status,
         censusConductedAt: town.census_conducted_at !== null ? new Date(town.census_conducted_at).getTime() / 1000 : null,
         censusConductedBy: town.census_conducted_by,
+        ownerComplaint: town.owner_complaint,
         justiceProcedure: town.justice_procedure,
         justiceRendered: town.justice_rendered,
         justiceRenderedBy: town.justice_rendered_by,
@@ -423,11 +432,13 @@ async function fetchTowns(where = []) {
             // shantytown
             + ' s.shantytown_id AS id, s.priority as priority, s.status as status, s.closed_at AS closedAt, s.latitude AS latitude,'
             + ' s.longitude AS longitude, s.address AS address, s.address_details AS addressDetails,'
+            + ' s.declared_at,'
             + ' s.built_at as builtAt, s.population_total as populationTotal, s.population_couples AS populationCouples,'
             + ' s.population_minors AS populationMinors, s.access_to_electricity AS accessToElectricity,'
             + ' s.access_to_water AS accessToWater, s.trash_evacuation AS trashEvacuation,'
             + ' s.created_at AS createdAt, s.updated_at AS updatedAt,'
             + ' s.owner AS owner, s.census_status, s.census_conducted_at, s.census_conducted_by,'
+            + ' s.owner_complaint,'
             + ' s.justice_procedure, s.justice_rendered, s.justice_rendered_by, s.justice_rendered_at, s.justice_challenged,'
             + ' s.police_status, s.police_requested_at, s.police_granted_at,'
             + ' s.bailiff,'
@@ -583,6 +594,7 @@ module.exports = {
             censusStatus,
             censusConductedAt,
             censusConductedBy,
+            ownerComplaint,
             justiceProcedure,
             justiceRendered,
             justiceRenderedBy,
@@ -619,6 +631,7 @@ module.exports = {
                     censusStatus,
                     censusConductedAt,
                     censusConductedBy,
+                    ownerComplaint: toBool(ownerComplaint),
                     justiceProcedure: toBool(justiceProcedure),
                     justiceRendered: toBool(justiceRendered),
                     justiceRenderedBy,
@@ -648,7 +661,7 @@ module.exports = {
         // check errors
         let fieldErrors = {};
         try {
-            fieldErrors = await validateInput(req.body, 'edit');
+            fieldErrors = await validateInput(req.body);
         } catch (error) {
             return res.status(500).send({ error });
         }
@@ -682,6 +695,7 @@ module.exports = {
         // edit the town
         const {
             priority,
+            declaredAt,
             builtAt,
             status,
             closedAt,
@@ -690,22 +704,35 @@ module.exports = {
             latitude,
             longitude,
             addressDetails,
+            censusStatus,
+            censusConductedAt,
+            censusConductedBy,
             populationTotal,
             populationCouples,
             populationMinors,
             accessToElectricity,
             accessToWater,
             trashEvacuation,
-            justiceProcedure,
             fieldType,
             ownerType,
             socialOrigins,
+            ownerComplaint,
+            justiceProcedure,
+            justiceRendered,
+            justiceRenderedBy,
+            justiceRenderedAt,
+            justiceChallenged,
+            policeStatus,
+            policeRequestedAt,
+            policeGrantedAt,
+            bailiff,
         } = cleanParams(req.body);
 
         try {
             await sequelize.transaction(async () => {
                 await town.update({
                     priority,
+                    declaredAt,
                     builtAt,
                     status,
                     closedAt,
@@ -713,17 +740,29 @@ module.exports = {
                     longitude,
                     address,
                     addressDetails,
+                    censusStatus,
+                    censusConductedAt,
+                    censusConductedBy,
                     populationTotal,
                     populationCouples,
                     populationMinors,
                     accessToElectricity: toBool(accessToElectricity),
                     accessToWater: toBool(accessToWater),
                     trashEvacuation: toBool(trashEvacuation),
-                    justiceProcedure: toBool(justiceProcedure),
                     fieldType,
                     ownerType,
                     city: citycode,
                     updatedBy: req.decoded.userId,
+                    ownerComplaint: toBool(ownerComplaint),
+                    justiceProcedure: toBool(justiceProcedure),
+                    justiceRendered: toBool(justiceRendered),
+                    justiceRenderedBy,
+                    justiceRenderedAt,
+                    justiceChallenged: toBool(justiceChallenged),
+                    policeStatus,
+                    policeRequestedAt,
+                    policeGrantedAt,
+                    bailiff,
                 });
 
                 await town.setSocialOrigins(socialOrigins);
