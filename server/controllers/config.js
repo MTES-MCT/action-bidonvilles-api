@@ -1,5 +1,5 @@
 const {
-    SocialOrigin, FieldType, OwnerType, ActionType, User, Departement, Region,
+    SocialOrigin, FieldType, OwnerType, ActionType, User, Departement, Region, ClosingSolution,
 } = require('../../db/models');
 
 module.exports = {
@@ -11,6 +11,7 @@ module.exports = {
             social_origins: SocialOrigin.findAll(),
             departements: Departement.findAll(),
             regions: Region.findAll(),
+            closing_solutions: ClosingSolution.findAll(),
         };
 
         const promises = [];

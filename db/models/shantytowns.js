@@ -222,6 +222,11 @@ module.exports = function (sequelize, DataTypes) {
             as: 'socialOrigins',
             foreignKey: 'fk_shantytown',
         });
+        Shantytown.belongsToMany(models.ClosingSolution, {
+            through: models.ShantytownClosingSolution,
+            as: 'closingSolutions',
+            foreignKey: 'fk_shantytown',
+        });
         Shantytown.belongsTo(models.User, { foreignKey: 'created_by' });
         Shantytown.belongsTo(models.User, { foreignKey: 'updated_by' });
     };

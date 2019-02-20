@@ -2,6 +2,7 @@ const { sequelize } = require('../../db/models');
 const Cities = require('../../db/models').City;
 const ShantyTowns = require('../../db/models').Shantytown;
 const ShantyTownComments = require('../../db/models').ShantytownComment;
+const { ClosingSolution } = require('../../db/models');
 
 function addError(errors, field, error) {
     if (!Object.prototype.hasOwnProperty.call(errors, field)) {
@@ -77,6 +78,7 @@ function cleanParams(body) {
         police_requested_at,
         police_granted_at,
         bailiff,
+        solutions,
     } = body;
 
     return {
@@ -113,6 +115,11 @@ function cleanParams(body) {
         policeRequestedAt: police_requested_at !== '' ? police_requested_at : null,
         policeGrantedAt: police_granted_at !== '' ? police_granted_at : null,
         bailiff: trim(bailiff),
+        solutions: solutions ? solutions.map(solution => ({
+            id: parseInt(solution.id, 10),
+            peopleAffected: getIntOrNull(solution.peopleAffected),
+            householdsAffected: getIntOrNull(solution.householdsAffected),
+        })) : [],
     };
 }
 
@@ -709,22 +716,26 @@ module.exports = {
     },
 
     async close(req, res) {
-        // status
         const {
             status,
             closedAt,
+            solutions,
         } = cleanParams(req.body);
 
         const now = Date.now();
         const fieldErrors = {};
         const error = addError.bind(this, fieldErrors);
 
+        const closingSolutions = await ClosingSolution.findAll();
+
+        // validate the status
         if (status === null) {
             error('status', 'La cause de fermeture du site est obligatoire');
         } else if (['open', 'closed_by_justice', 'closed_by_admin', 'other', 'unknown'].indexOf(status) === -1) {
             error('status', 'La cause de fermeture du site fournie n\'est pas reconnue');
         }
 
+        // validate the closed-at date
         if (status !== 'open') {
             const timestamp = new Date(closedAt).getTime();
 
@@ -733,6 +744,34 @@ module.exports = {
             } else if (timestamp >= now) {
                 error('closed_at', 'La date de fermeture du site ne peut pas être future');
             }
+        }
+
+        // validate the list of solutions
+        const solutionErrors = {};
+        solutions.forEach((solution) => {
+            if (closingSolutions.some(s => s.id === solution.id) === false) {
+                addError(solutionErrors, solution.id, `Le dispositif d'identifiant ${solution.id} n'existe pas`);
+            }
+
+            if (solution.peopleAffected !== null) {
+                if (Number.isNaN(solution.peopleAffected)) {
+                    addError(solutionErrors, solution.id, 'Le nombre de personnes concernées par le dispositif est invalide');
+                } else if (solution.peopleAffected < 0) {
+                    addError(solutionErrors, solution.id, 'Le nombre de personnes concernées par le dispositif ne peut pas être négatif');
+                }
+            }
+
+            if (solution.householdsAffected !== null) {
+                if (Number.isNaN(solution.householdsAffected)) {
+                    addError(solutionErrors, solution.id, 'Le nombre de ménages concernés par le dispositif est invalide');
+                } else if (solution.householdsAffected < 0) {
+                    addError(solutionErrors, solution.id, 'Le nombre de ménages concernés par le dispositif ne peut pas être négatif');
+                }
+            }
+        });
+
+        if (Object.keys(solutionErrors).length > 0) {
+            fieldErrors.solutions = solutionErrors;
         }
 
         // check errors
@@ -764,10 +803,21 @@ module.exports = {
 
         // close the town
         try {
-            await town.update({
-                status,
-                closedAt,
-                updatedBy: req.decoded.userId,
+            await sequelize.transaction(async () => {
+                await town.update({
+                    status,
+                    closedAt,
+                    updatedBy: req.decoded.userId,
+                });
+
+                await Promise.all(
+                    solutions.map(solution => town.addClosingSolution(solution.id, {
+                        through: {
+                            peopleAffected: solution.peopleAffected,
+                            householdsAffected: solution.householdsAffected,
+                        },
+                    })),
+                );
             });
 
             return res.status(200).send(town);
