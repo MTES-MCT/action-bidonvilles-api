@@ -399,9 +399,9 @@ function parseTowns(towns) {
         }
 
         const parsed = used[town.id];
-        if (town.socialoriginid !== null && usedOrigins[town.socialoriginid] === undefined) {
-            usedOrigins[town.socialoriginid] = parseOrigin(town);
-            parsed.socialOrigins.push(usedOrigins[town.socialoriginid]);
+        if (town.socialoriginid !== null && usedOrigins[`${town.id}-${town.socialoriginid}`] === undefined) {
+            usedOrigins[`${town.id}-${town.socialoriginid}`] = true;
+            parsed.socialOrigins.push(parseOrigin(town));
         }
     }
 
