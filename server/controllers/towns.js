@@ -332,6 +332,14 @@ function parseTown(town) {
             code: town.citycode,
             name: town.city,
         },
+        epci: {
+            code: town.epcicode,
+            name: town.epci,
+        },
+        departement: {
+            code: town.departementcode,
+            name: town.departement,
+        },
         builtAt: town.builtat ? new Date(town.builtat).getTime() / 1000 : null,
         fieldType: {
             id: town.fieldtypeid,
@@ -448,15 +456,19 @@ async function fetchTowns(where = []) {
             + ' o.owner_type_id AS ownerTypeId, o.label AS ownerType,'
             // origins
             + ' social.social_origin_id AS socialOriginId, social.label AS socialOrigin,'
-            // city
-            + ' c.code AS cityCode, c.name AS city'
+            // geo
+            + ' c.code AS cityCode, c.name AS city,'
+            + ' epci.code AS epciCode, epci.name AS epci,'
+            + ' d.code AS departementCode, d.name AS departement'
 
             + ' FROM shantytowns s'
             + ' LEFT JOIN field_types f ON s.fk_field_type = f.field_type_id'
             + ' LEFT JOIN owner_types o ON s.fk_owner_type = o.owner_type_id'
             + ' LEFT JOIN shantytown_origins so ON so.fk_shantytown = s.shantytown_id'
             + ' LEFT JOIN social_origins social ON so.fk_social_origin = social.social_origin_id'
-            + ' LEFT JOIN cities c ON s.fk_city = c.code'}${
+            + ' LEFT JOIN cities c ON s.fk_city = c.code'
+            + ' LEFT JOIN epci ON c.fk_epci = epci.code'
+            + ' LEFT JOIN departements d ON epci.fk_departement = d.code'}${
                 where.length > 0 ? (` WHERE ${where.join(' AND ')}`) : ''}`,
             { type: sequelize.QueryTypes.SELECT },
         ),

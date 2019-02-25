@@ -34,6 +34,7 @@ app.post('/actions/:id/steps', checkToken, actionsController.addStep);
 app.delete('/actions/:id', checkToken, actionsController.delete);
 
 // geo
+app.get('/locations/search', checkToken, geoController.search);
 app.get('/cities/search', checkToken, geoController.searchCities);
 app.get('/epci/search', checkToken, geoController.searchEpci);
 
