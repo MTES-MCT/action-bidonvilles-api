@@ -16,6 +16,10 @@ app.post('/signin', userController.signin);
 app.get('/refreshToken', checkToken, userController.renewToken);
 app.get('/config', checkToken, configController.list);
 
+// user
+app.get('/me', checkToken, userController.me);
+app.post('/me', checkToken, userController.edit);
+
 // towns
 app.get('/towns', checkToken, townsController.list);
 app.get('/towns/:id', checkToken, townsController.find);
