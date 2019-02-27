@@ -468,7 +468,7 @@ async function fetchTowns(where = []) {
             + ' LEFT JOIN social_origins social ON so.fk_social_origin = social.social_origin_id'
             + ' LEFT JOIN cities c ON s.fk_city = c.code'
             + ' LEFT JOIN epci ON c.fk_epci = epci.code'
-            + ' LEFT JOIN departements d ON epci.fk_departement = d.code'}${
+            + ' LEFT JOIN departements d ON c.fk_departement = d.code'}${
                 where.length > 0 ? (` WHERE ${where.join(' AND ')}`) : ''}`,
             { type: sequelize.QueryTypes.SELECT },
         ),
@@ -502,7 +502,7 @@ async function fetchTowns(where = []) {
             + ' FROM shantytowns s'
             + ' LEFT JOIN cities c ON s.fk_city = c.code'
             + ' LEFT JOIN epci e ON c.fk_epci = e.code'
-            + ' LEFT JOIN departements d ON e.fk_departement = d.code'
+            + ' LEFT JOIN departements d ON c.fk_departement = d.code'
             + ' LEFT JOIN regions r ON d.fk_region = r.code'
             + ' RIGHT JOIN actions a ON a.fk_city = c.code OR a.fk_epci = e.code OR a.fk_departement = d.code OR a.fk_region = r.code'
             + ' LEFT JOIN action_types at ON a.fk_action_type = at.action_type_id'

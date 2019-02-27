@@ -52,9 +52,7 @@ module.exports = {
                 FROM
                     cities
                 LEFT JOIN
-                    epci ON cities.fk_epci = epci.code
-                LEFT JOIN
-                    departements ON epci.fk_departement = departements.code
+                    departements ON cities.fk_departement = departements.code
                 WHERE
                     REPLACE(cities.name, '-', ' ') ILIKE REPLACE(?, '-', ' ')
                 ORDER BY
@@ -100,12 +98,9 @@ module.exports = {
             const results = await sequelize.query(`
                 SELECT
                     epci.code,
-                    epci.name,
-                    departements.code AS departement
+                    epci.name
                 FROM
                     epci
-                LEFT JOIN
-                    departements ON epci.fk_departement = departements.code
                 WHERE
                     REPLACE(epci.name, '-', ' ') ILIKE REPLACE(?, '-', ' ')
                 ORDER BY

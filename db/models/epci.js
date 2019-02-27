@@ -9,15 +9,6 @@ module.exports = function (sequelize, DataTypes) {
             type: DataTypes.STRING,
             allowNull: false,
         },
-        departement: {
-            type: DataTypes.STRING(3),
-            allowNull: false,
-            references: {
-                model: 'departements',
-                key: 'code',
-            },
-            field: 'fk_departement',
-        },
         createdAt: {
             type: DataTypes.DATE,
             defaultValue: DataTypes.NOW,
@@ -35,10 +26,6 @@ module.exports = function (sequelize, DataTypes) {
         paranoid: false,
         timestamps: true,
     });
-
-    Epci.associate = (models) => {
-        Epci.belongsTo(models.Departement, { foreignKey: 'fk_departement' });
-    };
 
     return Epci;
 };

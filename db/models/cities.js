@@ -9,14 +9,14 @@ module.exports = function (sequelize, DataTypes) {
             type: DataTypes.STRING,
             allowNull: false,
         },
-        epci: {
-            type: DataTypes.STRING(9),
+        departement: {
+            type: DataTypes.STRING(3),
             allowNull: false,
             references: {
-                model: 'epci',
+                model: 'departements',
                 key: 'code',
             },
-            field: 'fk_epci',
+            field: 'fk_departement',
         },
         createdAt: {
             type: DataTypes.DATE,
@@ -37,7 +37,7 @@ module.exports = function (sequelize, DataTypes) {
     });
 
     City.associate = (models) => {
-        City.belongsTo(models.Epci, { foreignKey: 'fk_epci' });
+        City.belongsTo(models.Departement, { foreignKey: 'fk_departement' });
     };
 
     return City;
