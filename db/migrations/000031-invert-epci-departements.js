@@ -45,9 +45,16 @@ function fillCitiesWithDepartements() {
         },
     )
         .then(cities => cities.filter(city => city.epciName !== 'Sans objet'))
-        .then(cities => Promise.all(
-            cities.map(city => sequelize.query(`UPDATE "cities" SET fk_departement = '${city.departementCode}' WHERE code = '${city.code}'`)),
-        ))
+        .then(async (cities) => {
+            for (let i = 0; i < cities.length; i += 100) {
+                /* eslint-disable no-await-in-loop */
+                await Promise.all(
+                    cities.slice(i, i + 100).map(city => sequelize.query(`UPDATE "cities" SET fk_departement = '${city.departementCode}' WHERE code = '${city.code}'`)),
+                );
+            }
+
+            return cities;
+        })
         .then(() => sequelize.query('UPDATE cities SET fk_departement = main.fk_departement FROM cities AS main WHERE cities.fk_main = main.code;'));
 }
 
