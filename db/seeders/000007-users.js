@@ -8,6 +8,9 @@ function generate(email, password, fk_departement) {
         salt,
         password: crypto.pbkdf2Sync(password, salt, 10000, 512, 'sha512').toString('hex'),
         fk_departement,
+        first_name: 'inconnu',
+        last_name: 'inconnu',
+        company: 'inconnu',
     };
 }
 

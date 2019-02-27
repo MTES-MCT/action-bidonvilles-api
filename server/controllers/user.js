@@ -186,4 +186,58 @@ module.exports = {
             });
         }
     },
+
+    /**
+     *
+     */
+    async signup(req, res) {
+        // limit access to that api to a specific set of users
+        const { userId } = req.decoded;
+        const user = await User.findOne({
+            where: {
+                id: userId,
+            },
+        });
+
+        if (user === null || user.email !== 'anis@beta.gouv.fr') {
+            return res.status(400).send({
+                error: {
+                    user_message: 'Vous n\'avez pas accès à cette fonctionnalité',
+                },
+            });
+        }
+
+        // create the new user
+        const {
+            email,
+            password,
+            departement,
+            first_name,
+            last_name,
+            company,
+        } = req.body;
+
+        const salt = crypto.randomBytes(16).toString('hex');
+
+        try {
+            await User.create({
+                email,
+                salt,
+                password: crypto.pbkdf2Sync(password, salt, 10000, 512, 'sha512').toString('hex'),
+                departement,
+                first_name,
+                last_name,
+                company,
+            });
+
+            return res.status(200).send();
+        } catch (error) {
+            return res.status(500).send({
+                error: {
+                    user_message: 'Une erreur est survenue dans l\'enregistrement de l\'utilisateur en base de données',
+                    developer_message: error.message,
+                },
+            });
+        }
+    },
 };

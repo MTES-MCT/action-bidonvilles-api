@@ -19,6 +19,7 @@ app.get('/config', checkToken, configController.list);
 // user
 app.get('/me', checkToken, userController.me);
 app.post('/me', checkToken, userController.edit);
+app.post('/users', checkToken, userController.signup);
 
 // towns
 app.get('/towns', checkToken, townsController.list);
