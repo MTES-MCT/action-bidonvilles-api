@@ -1,10 +1,31 @@
 {
     "extends": "airbnb-base",
+    "env": {
+        "mocha": true
+    },
     "rules": {
         "indent": [ "error", 4 ],
         "import/no-extraneous-dependencies": false,
         "prefer-promise-reject-errors": 0,
         "max-len": "off",
         "camelcase": "off"
-    }
+    },
+    "settings": {
+        "import/resolver": {
+            "alias": {
+                "map": [
+                    ["#server", "./server"]
+                ],
+                "extensions": [".js"]
+            }
+        }
+    },
+    "overrides": [
+        {
+            "files": "test/**/*.spec.js",
+            "rules": {
+                "no-unused-expressions": "off"
+            }
+        }
+    ]
 }

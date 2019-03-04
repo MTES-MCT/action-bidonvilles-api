@@ -13,9 +13,12 @@
   "dependencies": {
     "body-parser": "^1.18.3",
     "cors": "^2.8.5",
+    "eslint-import-resolver-alias": "^1.1.2",
+    "eslint-plugin-import": "^2.16.0",
     "express": "^4.16.4",
     "forever": "^0.15.3",
     "jsonwebtoken": "^8.4.0",
+    "module-alias": "^2.2.0",
     "neat-csv": "^4.0.0",
     "pg": "^6.4.2",
     "pg-hstore": "^2.3.2",
@@ -26,11 +29,12 @@
     "sequelize-temporal": "^1.0.6"
   },
   "devDependencies": {
+    "chai": "^4.2.0",
     "eslint": "^5.10.0",
     "eslint-config-airbnb-base": "^13.1.0",
-    "eslint-plugin-import": "^2.14.0",
     "husky": "^1.2.0",
     "lint-staged": "^8.1.0",
+    "mocha": "^6.0.2",
     "nodemon": "^1.18.9"
   },
   "husky": {
@@ -47,6 +51,10 @@
     "db:create": "sequelize db:migrate && sequelize db:seed:all",
     "db:reset": "sequelize db:migrate:undo:all && sequelize db:migrate && sequelize db:seed:all",
     "start": "forever start server/index.js",
-    "dev": "nodemon server/index.js"
+    "dev": "nodemon server/index.js",
+    "test": "mocha --recursive --require ./test/bootstrap.js"
+  },
+  "_moduleAliases": {
+    "#server": "./server"
   }
 }
