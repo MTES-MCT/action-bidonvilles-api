@@ -1,5 +1,4 @@
-const crypto = require('crypto');
-const { generateAccessTokenFor, hashPassword } = require('#server/helpers/authHelper');
+const { generateAccessTokenFor, hashPassword, generateSalt } = require('#server/helpers/authHelper');
 const { User } = require('../../db/models');
 
 function trim(str) {
@@ -10,32 +9,7 @@ function trim(str) {
     return str.replace(/^\s*|\s*$/g, '');
 }
 
-/**
- * @typedef {Object} ErrorResponse
- * @property {false}  success                 Always false
- * @property {Object} error
- * @property {string} error.user_message      The error message that is user-friendly
- * @property {string} error.developer_message The detailed error message (for developers only)
- */
-
-/**
- * @typedef {Object} SigninResponse
- * @property {true}   success Always true
- * @property {string} token   The brand new and proudly generated access token
- */
-
 module.exports = {
-    /**
-     * Generates a new access token
-     *
-     * The good credentials (email/password) must be provided in order to
-     * get the token.
-     *
-     * @param {string} email
-     * @param {string} password
-     *
-     * @returns {ErrorResponse|SigninResponse}
-     */
     async signin(req, res) {
         const { email, password } = req.body;
 
@@ -252,7 +226,7 @@ module.exports = {
             company,
         } = req.body;
 
-        const salt = crypto.randomBytes(16).toString('hex');
+        const salt = generateSalt();
 
         try {
             await User.create({

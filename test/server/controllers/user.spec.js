@@ -1,7 +1,7 @@
 const chai = require('chai');
 const sinon = require('sinon');
 const sinonChai = require('sinon-chai');
-const { mockReq, mockRes } = require('sinon-express-mock');
+const { mockReq, mockRes } = require('sinon-express-mock');
 const { makeMockModels } = require('sequelize-test-helpers');
 const proxyquire = require('proxyquire');
 const crypto = require('crypto');
@@ -10,14 +10,14 @@ const { generateAccessTokenFor } = require('#server/helpers/authHelper');
 const mockModels = makeMockModels({
     User: {
         findOne: sinon.stub(),
-    }
+    },
 });
 
 const { signin } = proxyquire('#server/controllers/user', {
     '../../db/models': mockModels,
 });
 
-const { expect } = chai;  
+const { expect } = chai;
 chai.use(sinonChai);
 
 describe('Controllers/User', () => {
@@ -36,7 +36,7 @@ describe('Controllers/User', () => {
                 httpRes = mockRes();
 
                 await signin(httpReq, httpRes);
-                response = httpRes.send.getCalls()[0].args[0];
+                [response] = httpRes.send.getCalls()[0].args;
             });
 
             it('it responds with a 400', () => {
@@ -66,7 +66,7 @@ describe('Controllers/User', () => {
                 httpRes = mockRes();
 
                 await signin(httpReq, httpRes);
-                response = httpRes.send.getCalls()[0].args[0];
+                [response] = httpRes.send.getCalls()[0].args;
             });
 
             it('it responds with a 400', () => {
@@ -97,7 +97,7 @@ describe('Controllers/User', () => {
                 mockModels.User.findOne.resolves(null);
 
                 await signin(httpReq, httpRes);
-                response = httpRes.send.getCalls()[0].args[0];
+                [response] = httpRes.send.getCalls()[0].args;
             });
 
             it('it responds with a 403', () => {
@@ -136,7 +136,7 @@ describe('Controllers/User', () => {
                 });
 
                 await signin(httpReq, httpRes);
-                response = httpRes.send.getCalls()[0].args[0];
+                [response] = httpRes.send.getCalls()[0].args;
             });
 
             it('it responds with a 403', () => {
@@ -176,7 +176,7 @@ describe('Controllers/User', () => {
                 mockModels.User.findOne.withArgs({ where: { email: fakeUser.email } }).resolves(fakeUser);
 
                 await signin(httpReq, httpRes);
-                response = httpRes.send.getCalls()[0].args[0];
+                [response] = httpRes.send.getCalls()[0].args;
             });
 
             it('it responds with a 200', () => {
@@ -192,5 +192,4 @@ describe('Controllers/User', () => {
             });
         });
     });
-
 });

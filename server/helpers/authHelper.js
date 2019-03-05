@@ -34,4 +34,13 @@ module.exports = {
     hashPassword(password, salt) {
         return crypto.pbkdf2Sync(password, salt, 10000, 512, 'sha512').toString('hex');
     },
+
+    /**
+     * Generates a random salt
+     *
+     * @returns {string}
+     */
+    generateSalt() {
+        return crypto.randomBytes(16).toString('hex');
+    },
 };
