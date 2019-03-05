@@ -1,3 +1,6 @@
 module.exports = {
-    secret: 'secret used for generating authentication tokens',
+    auth: {
+        secret: 'secret used for generating authentication tokens',
+        expiresIn: '168h', // 7 days
+    },
 };

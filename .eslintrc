@@ -12,7 +12,7 @@
     },
     "settings": {
         "import/resolver": {
-            "alias": {
+            "alias": {
                 "map": [
                     ["#server", "./server"]
                 ],

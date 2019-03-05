@@ -35,7 +35,12 @@
     "husky": "^1.2.0",
     "lint-staged": "^8.1.0",
     "mocha": "^6.0.2",
-    "nodemon": "^1.18.9"
+    "nodemon": "^1.18.9",
+    "proxyquire": "^2.1.0",
+    "sequelize-test-helpers": "^1.0.10",
+    "sinon": "^7.2.7",
+    "sinon-chai": "^3.3.0",
+    "sinon-express-mock": "^2.1.0"
   },
   "husky": {
     "hooks": {
@@ -53,7 +58,7 @@
     "db:reset": "sequelize db:migrate:undo:all && sequelize db:migrate && sequelize db:seed:all",
     "start": "forever start server/index.js",
     "dev": "nodemon server/index.js",
-    "test": "mocha --recursive --require ./test/bootstrap.js"
+    "test": "mocha --recursive --require ./test/bootstrap.js --bail"
   },
   "_moduleAliases": {
     "#server": "./server"

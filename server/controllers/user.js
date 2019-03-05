@@ -1,18 +1,6 @@
 const crypto = require('crypto');
-const jwt = require('jsonwebtoken');
-const { secret } = require('../config');
+const { generateAccessTokenFor, hashPassword } = require('#server/helpers/authHelper');
 const { User } = require('../../db/models');
-
-/**
- * Generates a new token
- *
- * @param {Object} content
- *
- * @returns {string}
- */
-function generateToken(content) {
-    return jwt.sign(content, secret, { expiresIn: '168h' });
-}
 
 function trim(str) {
     if (typeof str !== 'string') {
@@ -22,11 +10,55 @@ function trim(str) {
     return str.replace(/^\s*|\s*$/g, '');
 }
 
+/**
+ * @typedef {Object} ErrorResponse
+ * @property {false}  success                 Always false
+ * @property {Object} error
+ * @property {string} error.user_message      The error message that is user-friendly
+ * @property {string} error.developer_message The detailed error message (for developers only)
+ */
+
+/**
+ * @typedef {Object} SigninResponse
+ * @property {true}   success Always true
+ * @property {string} token   The brand new and proudly generated access token
+ */
+
 module.exports = {
+    /**
+     * Generates a new access token
+     *
+     * The good credentials (email/password) must be provided in order to
+     * get the token.
+     *
+     * @param {string} email
+     * @param {string} password
+     *
+     * @returns {ErrorResponse|SigninResponse}
+     */
     async signin(req, res) {
         const { email, password } = req.body;
 
-        // ensure a user exists with that email
+        if (typeof email !== 'string') {
+            return res.status(400).send({
+                success: false,
+                error: {
+                    user_message: 'L\'adresse e-mail est invalide',
+                    developer_message: 'The email address must be a string',
+                },
+            });
+        }
+
+        if (typeof password !== 'string') {
+            return res.status(400).send({
+                success: false,
+                error: {
+                    user_message: 'Le mot de passe est invalide',
+                    developer_message: 'The password must be a string',
+                },
+            });
+        }
+
         const user = await User.findOne({
             where: {
                 email,
@@ -34,26 +66,29 @@ module.exports = {
         });
 
         if (user === null) {
-            return res.status(400).send({
+            return res.status(403).send({
+                success: false,
                 error: {
-                    user_message: 'Les identifiants sont incorrects',
+                    user_message: 'Ces identifiants sont incorrects',
+                    developer_message: 'The given credentials do not match an existing user',
                 },
             });
         }
 
-        // ensure the password is correct
-        const hash = crypto.pbkdf2Sync(password, user.salt, 10000, 512, 'sha512').toString('hex');
-        if (hash !== user.password) {
-            return res.status(400).send({
+        const hashedPassword = hashPassword(password, user.salt);
+        if (hashedPassword !== user.password) {
+            return res.status(403).send({
+                success: false,
                 error: {
-                    user_message: 'Les identifiants sont incorrects',
+                    user_message: 'Ces identifiants sont incorrects',
+                    developer_message: 'The given credentials do not match an existing user',
                 },
             });
         }
 
-        // congratulations
         return res.status(200).send({
-            token: generateToken({ userId: user.id, email }),
+            success: true,
+            token: generateAccessTokenFor(user),
         });
     },
 
@@ -61,7 +96,7 @@ module.exports = {
         const { userId, email } = req.decoded;
 
         return res.status(200).send({
-            token: generateToken({ userId, email }),
+            token: generateAccessTokenFor({ id: userId, email }),
         });
     },
 
@@ -164,7 +199,7 @@ module.exports = {
         };
 
         if (password !== null) {
-            data.password = crypto.pbkdf2Sync(password, user.salt, 10000, 512, 'sha512').toString('hex');
+            data.password = hashPassword(password, user.salt);
         }
 
         try {
@@ -223,7 +258,7 @@ module.exports = {
             await User.create({
                 email,
                 salt,
-                password: crypto.pbkdf2Sync(password, salt, 10000, 512, 'sha512').toString('hex'),
+                password: hashPassword(password, salt),
                 departement,
                 first_name,
                 last_name,
