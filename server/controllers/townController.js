@@ -318,220 +318,12 @@ async function validateInput(body) {
     return fieldErrors;
 }
 
-function parseTown(town) {
-    return {
-        id: town.id,
-        priority: town.priority,
-        status: town.status,
-        closedAt: town.closedat ? new Date(town.closedat).getTime() / 1000 : null,
-        latitude: town.latitude,
-        longitude: town.longitude,
-        address: town.address,
-        addressDetails: town.addressdetails,
-        city: {
-            code: town.citycode,
-            name: town.city,
-        },
-        epci: {
-            code: town.epcicode,
-            name: town.epci,
-        },
-        departement: {
-            code: town.departementcode,
-            name: town.departement,
-        },
-        builtAt: town.builtat ? new Date(town.builtat).getTime() / 1000 : null,
-        fieldType: {
-            id: town.fieldtypeid,
-            label: town.fieldtype,
-        },
-        ownerType: {
-            id: town.ownertypeid,
-            label: town.ownertype,
-        },
-        populationTotal: town.populationtotal,
-        populationCouples: town.populationcouples,
-        populationMinors: town.populationminors,
-        accessToElectricity: town.accesstoelectricity,
-        accessToWater: town.accesstowater,
-        trashEvacuation: town.trashevacuation,
-        actions: [],
-        comments: [],
-        socialOrigins: [],
-        closingSolutions: [],
-        owner: town.owner,
-        declaredAt: town.declared_at !== null ? new Date(town.declared_at).getTime() / 1000 : null,
-        censusStatus: town.census_status,
-        censusConductedAt: town.census_conducted_at !== null ? new Date(town.census_conducted_at).getTime() / 1000 : null,
-        censusConductedBy: town.census_conducted_by,
-        ownerComplaint: town.owner_complaint,
-        justiceProcedure: town.justice_procedure,
-        justiceRendered: town.justice_rendered,
-        justiceRenderedBy: town.justice_rendered_by,
-        justiceRenderedAt: town.justice_rendered_at !== null ? new Date(town.justice_rendered_at).getTime() / 1000 : null,
-        justiceChallenged: town.justice_challenged,
-        policeStatus: town.police_status,
-        policeRequestedAt: town.police_requested_at !== null ? new Date(town.police_requested_at).getTime() / 1000 : null,
-        policeGrantedAt: town.police_granted_at ? new Date(town.police_granted_at).getTime() / 1000 : null,
-        bailiff: town.bailiff,
-        updatedAt: Math.round(new Date(town.updatedat).getTime() / 1000),
-    };
-}
-
-function parseAction(town) {
-    return {
-        id: town.actionid,
-        startedAt: Math.round(new Date(town.actionstartedat).getTime() / 1000),
-        endedAt: town.actionendedat ? Math.round(new Date(town.actionstartedat).getTime() / 1000) : null,
-        name: town.actionname,
-        description: town.actiondescription,
-        type: town.actiontype,
-    };
-}
-
-function parseOrigin(town) {
-    return {
-        id: town.socialoriginid,
-        label: town.socialorigin,
-    };
-}
-
-function parseTowns(towns) {
-    const used = {};
-    const usedOrigins = {};
-
-    for (let i = 0, len = towns.length; i < len; i += 1) {
-        const town = towns[i];
-        if (used[town.id] === undefined) {
-            used[town.id] = parseTown(town);
-        }
-
-        const parsed = used[town.id];
-        if (town.socialoriginid !== null && usedOrigins[`${town.id}-${town.socialoriginid}`] === undefined) {
-            usedOrigins[`${town.id}-${town.socialoriginid}`] = true;
-            parsed.socialOrigins.push(parseOrigin(town));
-        }
-    }
-
-    return used;
-}
-
 function serializeComment(comment) {
     return {
         description: comment.description,
         createdAt: new Date(comment.createdat || comment.createdAt).getTime() / 1000,
         createdBy: comment.createdby || comment.createdBy,
     };
-}
-
-function serializeClosingSolution(solution) {
-    return {
-        id: solution.closing_solution_id,
-        peopleAffected: solution.people_affected || null,
-        householdsAffected: solution.households_affected || null,
-    };
-}
-
-async function fetchTowns(where = []) {
-    // get the towns with their related social origins
-    const towns = parseTowns(
-        await sequelize.query(
-            `${'SELECT'
-            // shantytown
-            + ' s.shantytown_id AS id, s.priority as priority, s.status as status, s.closed_at AS closedAt, s.latitude AS latitude,'
-            + ' s.longitude AS longitude, s.address AS address, s.address_details AS addressDetails,'
-            + ' s.declared_at,'
-            + ' s.built_at as builtAt, s.population_total as populationTotal, s.population_couples AS populationCouples,'
-            + ' s.population_minors AS populationMinors, s.access_to_electricity AS accessToElectricity,'
-            + ' s.access_to_water AS accessToWater, s.trash_evacuation AS trashEvacuation,'
-            + ' s.created_at AS createdAt, s.updated_at AS updatedAt,'
-            + ' s.owner AS owner, s.census_status, s.census_conducted_at, s.census_conducted_by,'
-            + ' s.owner_complaint,'
-            + ' s.justice_procedure, s.justice_rendered, s.justice_rendered_by, s.justice_rendered_at, s.justice_challenged,'
-            + ' s.police_status, s.police_requested_at, s.police_granted_at,'
-            + ' s.bailiff,'
-            // field_type
-            + ' f.field_type_id AS fieldTypeId, f.label AS fieldType,'
-            // owner_type
-            + ' o.owner_type_id AS ownerTypeId, o.label AS ownerType,'
-            // origins
-            + ' social.social_origin_id AS socialOriginId, social.label AS socialOrigin,'
-            // geo
-            + ' c.code AS cityCode, c.name AS city,'
-            + ' epci.code AS epciCode, epci.name AS epci,'
-            + ' d.code AS departementCode, d.name AS departement'
-
-            + ' FROM shantytowns s'
-            + ' LEFT JOIN field_types f ON s.fk_field_type = f.field_type_id'
-            + ' LEFT JOIN owner_types o ON s.fk_owner_type = o.owner_type_id'
-            + ' LEFT JOIN shantytown_origins so ON so.fk_shantytown = s.shantytown_id'
-            + ' LEFT JOIN social_origins social ON so.fk_social_origin = social.social_origin_id'
-            + ' LEFT JOIN cities c ON s.fk_city = c.code'
-            + ' LEFT JOIN epci ON c.fk_epci = epci.code'
-            + ' LEFT JOIN departements d ON c.fk_departement = d.code'}${
-                where.length > 0 ? (` WHERE ${where.join(' AND ')}`) : ''}`,
-            { type: sequelize.QueryTypes.SELECT },
-        ),
-    );
-
-    // get the related comments
-    if (Object.keys(towns).length > 0) {
-        const comments = await sequelize.query(
-            'SELECT'
-            // shantytown
-            + ' s.shantytown_id,'
-            // comment
-            + ' c.description, c.created_at AS createdAt, c.created_by AS createdBy'
-            + ' FROM shantytown_comments c'
-            + ' LEFT JOIN shantytowns s ON c.fk_shantytown = s.shantytown_id'
-            + ` WHERE c.fk_shantytown IN (${Object.keys(towns).join(',')})`,
-            { type: sequelize.QueryTypes.SELECT },
-        );
-
-        comments.forEach((comment) => {
-            towns[comment.shantytown_id].comments.push(serializeComment(comment));
-        });
-
-        // get the related actions
-        const actions = await sequelize.query(
-            'SELECT'
-            // shantytown
-            + ' s.shantytown_id,'
-            // action
-            + ' a.action_id AS actionId, a.started_at AS actionStartedAt, a.ended_at AS actionEndedAt, a.name AS actionName, a.description AS actionDescriptioon, at.label AS actiontype'
-            + ' FROM shantytowns s'
-            + ' LEFT JOIN cities c ON s.fk_city = c.code'
-            + ' LEFT JOIN epci e ON c.fk_epci = e.code'
-            + ' LEFT JOIN departements d ON c.fk_departement = d.code'
-            + ' LEFT JOIN regions r ON d.fk_region = r.code'
-            + ' RIGHT JOIN actions a ON a.fk_city = c.code OR a.fk_epci = e.code OR a.fk_departement = d.code OR a.fk_region = r.code'
-            + ' LEFT JOIN action_types at ON a.fk_action_type = at.action_type_id'
-            + ` WHERE s.shantytown_id IN (${Object.keys(towns).join(',')})`,
-            { type: sequelize.QueryTypes.SELECT },
-        );
-
-        actions.forEach((action) => {
-            towns[action.shantytown_id].actions.push(parseAction(action));
-        });
-
-        // get the related closing solutions
-        const solutions = await sequelize.query(
-            'SELECT'
-            + ' scs.fk_shantytown AS shantytown_id,'
-            + ' scs.fk_closing_solution AS closing_solution_id,'
-            + ' scs.number_of_people_affected AS people_affected,'
-            + ' scs.number_of_households_affected AS households_affected'
-            + ' FROM shantytown_closing_solutions scs'
-            + ` WHERE scs.fk_shantytown IN (${Object.keys(towns).join(',')})`,
-            { type: sequelize.QueryTypes.SELECT },
-        );
-
-        solutions.forEach((solution) => {
-            towns[solution.shantytown_id].closingSolutions.push(serializeClosingSolution(solution));
-        });
-    }
-
-    return Object.values(towns);
 }
 
 module.exports = dataAccess => ({
@@ -545,11 +337,9 @@ module.exports = dataAccess => ({
 
     async find(req, res) {
         try {
-            const towns = await fetchTowns([
-                `s.shantytown_id = ${parseInt(req.params.id, 10)}`,
-            ]);
+            const town = await dataAccess.shantytown.findOne(req.params.id);
 
-            if (towns.length !== 1) {
+            if (town === null) {
                 return res.status(404).send({
                     error: {
                         developer_message: 'The requested town does not exist',
@@ -558,9 +348,9 @@ module.exports = dataAccess => ({
                 });
             }
 
-            return res.status(200).send(towns.shift());
+            return res.status(200).send(town);
         } catch (error) {
-            return res.status(400).send(error);
+            return res.status(500).send(error.message);
         }
     },
 

@@ -81,158 +81,175 @@ function serializeShantytown(town) {
     return serializedTown;
 }
 
-module.exports = database => ({
-    findAll: async () => {
-        const towns = await database.query(
+/**
+ * Fetches a list of shantytowns from the database
+ *
+ * @param {Sequelize}      database
+ * @param {Array.<number>} ids      The list of towns to be fetched
+ *
+ * @returns {Array.<Object>}
+ */
+async function query(database, ids = []) {
+    const towns = await database.query(
+        `SELECT
+            shantytowns.shantytown_id AS id,
+            shantytowns.priority,
+            shantytowns.status,
+            shantytowns.declared_at AS "declaredAt",
+            shantytowns.built_at AS "builtAt",
+            shantytowns.closed_at AS "closedAt",
+            shantytowns.latitude,
+            shantytowns.longitude,
+            shantytowns.address,
+            shantytowns.address_details AS "addressDetails",
+            shantytowns.population_total AS "populationTotal",
+            shantytowns.population_couples AS "populationCouples",
+            shantytowns.population_minors AS "populationMinors",
+            shantytowns.access_to_electricity AS "accessToElectricity",
+            shantytowns.access_to_water AS "accessToWater",
+            shantytowns.trash_evacuation AS "trashEvacuation",
+            shantytowns.owner,
+            shantytowns.census_status AS "censusStatus",
+            shantytowns.census_conducted_by AS "censusConductedBy",
+            shantytowns.census_conducted_at AS "censusConductedAt",
+            shantytowns.owner_complaint AS "ownerComplaint",
+            shantytowns.justice_procedure AS "justiceProcedure",
+            shantytowns.justice_rendered AS "justiceRendered",
+            shantytowns.justice_rendered_at AS "justiceRenderedAt",
+            shantytowns.justice_rendered_by AS "justiceRenderedBy",
+            shantytowns.justice_challenged AS "justiceChallenged",
+            shantytowns.police_status AS "policeStatus",
+            shantytowns.police_requested_at AS "policeRequestedAt",
+            shantytowns.police_granted_at AS "policeGrantedAt",
+            shantytowns.bailiff,
+            shantytowns.updated_at AS "updatedAt",
+
+            cities.code AS "cityCode",
+            cities.name AS "cityName",
+
+            epci.code AS "epciCode",
+            epci.name AS "epciName",
+
+            departements.code AS "departementCode",
+            departements.name AS "departementName",
+
+            field_types.field_type_id AS "fieldTypeId",
+            field_types.label AS "fieldTypeLabel",
+
+            owner_types.owner_type_id AS "ownerTypeId",
+            owner_types.label AS "ownerTypeLabel"
+        FROM shantytowns
+        LEFT JOIN owner_types ON shantytowns.fk_owner_type = owner_types.owner_type_id
+        LEFT JOIN field_types ON shantytowns.fk_field_type = field_types.field_type_id
+        LEFT JOIN cities ON shantytowns.fk_city = cities.code
+        LEFT JOIN epci ON cities.fk_epci = epci.code
+        LEFT JOIN departements ON cities.fk_departement = departements.code
+        ${ids.length > 0 ? 'WHERE shantytowns.shantytown_id IN (:ids)' : ''}
+        ORDER BY id ASC`,
+        {
+            type: database.QueryTypes.SELECT,
+            replacements: { ids },
+        },
+    );
+
+    if (towns.length === 0) {
+        return [];
+    }
+
+    const serializedTowns = towns.reduce(
+        (object, town) => {
+            /* eslint-disable no-param-reassign */
+            object.hash[town.id] = serializeShantytown(town);
+            object.ordered.push(object.hash[town.id]);
+            /* eslint-enable no-param-reassign */
+            return object;
+        },
+        {
+            hash: {},
+            ordered: [],
+        },
+    );
+
+    const [socialOrigins, comments, closingSolutions] = await Promise.all([
+        // social orgins
+        database.query(
             `SELECT
-                shantytowns.shantytown_id AS id,
-                shantytowns.priority,
-                shantytowns.status,
-                shantytowns.declared_at AS "declaredAt",
-                shantytowns.built_at AS "builtAt",
-                shantytowns.closed_at AS "closedAt",
-                shantytowns.latitude,
-                shantytowns.longitude,
-                shantytowns.address,
-                shantytowns.address_details AS "addressDetails",
-                shantytowns.population_total AS "populationTotal",
-                shantytowns.population_couples AS "populationCouples",
-                shantytowns.population_minors AS "populationMinors",
-                shantytowns.access_to_electricity AS "accessToElectricity",
-                shantytowns.access_to_water AS "accessToWater",
-                shantytowns.trash_evacuation AS "trashEvacuation",
-                shantytowns.owner,
-                shantytowns.census_status AS "censusStatus",
-                shantytowns.census_conducted_by AS "censusConductedBy",
-                shantytowns.census_conducted_at AS "censusConductedAt",
-                shantytowns.owner_complaint AS "ownerComplaint",
-                shantytowns.justice_procedure AS "justiceProcedure",
-                shantytowns.justice_rendered AS "justiceRendered",
-                shantytowns.justice_rendered_at AS "justiceRenderedAt",
-                shantytowns.justice_rendered_by AS "justiceRenderedBy",
-                shantytowns.justice_challenged AS "justiceChallenged",
-                shantytowns.police_status AS "policeStatus",
-                shantytowns.police_requested_at AS "policeRequestedAt",
-                shantytowns.police_granted_at AS "policeGrantedAt",
-                shantytowns.bailiff,
-                shantytowns.updated_at AS "updatedAt",
-
-                cities.code AS "cityCode",
-                cities.name AS "cityName",
-
-                epci.code AS "epciCode",
-                epci.name AS "epciName",
-
-                departements.code AS "departementCode",
-                departements.name AS "departementName",
-
-                field_types.field_type_id AS "fieldTypeId",
-                field_types.label AS "fieldTypeLabel",
-
-                owner_types.owner_type_id AS "ownerTypeId",
-                owner_types.label AS "ownerTypeLabel"
-            FROM shantytowns
-            LEFT JOIN owner_types ON shantytowns.fk_owner_type = owner_types.owner_type_id
-            LEFT JOIN field_types ON shantytowns.fk_field_type = field_types.field_type_id
-            LEFT JOIN cities ON shantytowns.fk_city = cities.code
-            LEFT JOIN epci ON cities.fk_epci = epci.code
-            LEFT JOIN departements ON cities.fk_departement = departements.code
-            ORDER BY id ASC`,
+                shantytown_origins.fk_shantytown AS "shantytownId",
+                social_origins.social_origin_id AS "socialOriginId",
+                social_origins.label AS "socialOriginLabel"
+            FROM shantytown_origins
+            LEFT JOIN social_origins ON shantytown_origins.fk_social_origin = social_origins.social_origin_id
+            WHERE shantytown_origins.fk_shantytown IN (:ids)`,
             {
                 type: database.QueryTypes.SELECT,
+                replacements: { ids: Object.keys(serializedTowns.hash) },
             },
-        );
+        ),
 
-        if (towns.length === 0) {
-            return [];
-        }
-
-        const serializedTowns = towns.reduce(
-            (object, town) => {
-                /* eslint-disable no-param-reassign */
-                object.hash[town.id] = serializeShantytown(town);
-                object.ordered.push(object.hash[town.id]);
-                /* eslint-enable no-param-reassign */
-                return object;
-            },
+        // comments
+        database.query(
+            `SELECT
+                shantytown_comments.fk_shantytown AS "shantytownId",
+                shantytown_comments.description AS "commentDescription",
+                shantytown_comments.created_at AS "commentCreatedAt",
+                shantytown_comments.created_by AS "commentCreatedBy"
+            FROM shantytown_comments
+            WHERE shantytown_comments.fk_shantytown IN (:ids)`,
             {
-                hash: {},
-                ordered: [],
+                type: database.QueryTypes.SELECT,
+                replacements: { ids: Object.keys(serializedTowns.hash) },
             },
-        );
+        ),
 
-        const [socialOrigins, comments, closingSolutions] = await Promise.all([
-            // social orgins
-            database.query(
-                `SELECT
-                    shantytown_origins.fk_shantytown AS "shantytownId",
-                    social_origins.social_origin_id AS "socialOriginId",
-                    social_origins.label AS "socialOriginLabel"
-                FROM shantytown_origins
-                LEFT JOIN social_origins ON shantytown_origins.fk_social_origin = social_origins.social_origin_id
-                WHERE shantytown_origins.fk_shantytown IN (:ids)`,
-                {
-                    type: database.QueryTypes.SELECT,
-                    replacements: { ids: Object.keys(serializedTowns.hash) },
-                },
-            ),
+        // closing solutions
+        database.query(
+            `SELECT
+                shantytown_closing_solutions.fk_shantytown AS "shantytownId",
+                closing_solutions.closing_solution_id AS "closingSolutionId",
+                shantytown_closing_solutions.number_of_people_affected AS "peopleAffected",
+                shantytown_closing_solutions.number_of_households_affected AS "householdsAffected"
+            FROM shantytown_closing_solutions
+            LEFT JOIN closing_solutions ON shantytown_closing_solutions.fk_closing_solution = closing_solutions.closing_solution_id
+            WHERE shantytown_closing_solutions.fk_shantytown IN (:ids)`,
+            {
+                type: database.QueryTypes.SELECT,
+                replacements: { ids: Object.keys(serializedTowns.hash) },
+            },
+        ),
+    ]);
 
-            // comments
-            database.query(
-                `SELECT
-                    shantytown_comments.fk_shantytown AS "shantytownId",
-                    shantytown_comments.description AS "commentDescription",
-                    shantytown_comments.created_at AS "commentCreatedAt",
-                    shantytown_comments.created_by AS "commentCreatedBy"
-                FROM shantytown_comments
-                WHERE shantytown_comments.fk_shantytown IN (:ids)`,
-                {
-                    type: database.QueryTypes.SELECT,
-                    replacements: { ids: Object.keys(serializedTowns.hash) },
-                },
-            ),
-
-            // closing solutions
-            database.query(
-                `SELECT
-                    shantytown_closing_solutions.fk_shantytown AS "shantytownId",
-                    closing_solutions.closing_solution_id AS "closingSolutionId",
-                    shantytown_closing_solutions.number_of_people_affected AS "peopleAffected",
-                    shantytown_closing_solutions.number_of_households_affected AS "householdsAffected"
-                FROM shantytown_closing_solutions
-                LEFT JOIN closing_solutions ON shantytown_closing_solutions.fk_closing_solution = closing_solutions.closing_solution_id
-                WHERE shantytown_closing_solutions.fk_shantytown IN (:ids)`,
-                {
-                    type: database.QueryTypes.SELECT,
-                    replacements: { ids: Object.keys(serializedTowns.hash) },
-                },
-            ),
-        ]);
-
-        // @todo: move the serialization of these entities to their own data-access component
-        socialOrigins.forEach((socialOrigin) => {
-            serializedTowns.hash[socialOrigin.shantytownId].socialOrigins.push({
-                id: socialOrigin.socialOriginId,
-                label: socialOrigin.socialOriginLabel,
-            });
+    // @todo: move the serialization of these entities to their own data-access component
+    socialOrigins.forEach((socialOrigin) => {
+        serializedTowns.hash[socialOrigin.shantytownId].socialOrigins.push({
+            id: socialOrigin.socialOriginId,
+            label: socialOrigin.socialOriginLabel,
         });
+    });
 
-        comments.forEach((comment) => {
-            serializedTowns.hash[comment.shantytownId].comments.push({
-                description: comment.commentDescription,
-                createdAt: comment.commentCreatedAt !== null ? (comment.commentCreatedAt.getTime() / 1000) : null,
-                createdBy: comment.commentCreatedBy,
-            });
+    comments.forEach((comment) => {
+        serializedTowns.hash[comment.shantytownId].comments.push({
+            description: comment.commentDescription,
+            createdAt: comment.commentCreatedAt !== null ? (comment.commentCreatedAt.getTime() / 1000) : null,
+            createdBy: comment.commentCreatedBy,
         });
+    });
 
-        closingSolutions.forEach((closingSolution) => {
-            serializedTowns.hash[closingSolution.shantytownId].closingSolutions.push({
-                id: closingSolution.closingSolutionId,
-                peopleAffected: closingSolution.peopleAffected,
-                householdsAffected: closingSolution.householdsAffected,
-            });
+    closingSolutions.forEach((closingSolution) => {
+        serializedTowns.hash[closingSolution.shantytownId].closingSolutions.push({
+            id: closingSolution.closingSolutionId,
+            peopleAffected: closingSolution.peopleAffected,
+            householdsAffected: closingSolution.householdsAffected,
         });
+    });
 
-        return serializedTowns.ordered;
+    return serializedTowns.ordered;
+}
+
+module.exports = database => ({
+    findAll: () => query(database),
+
+    findOne: async (shantytownId) => {
+        const towns = await query(database, [shantytownId]);
+        return towns.length === 1 ? towns[0] : null;
     },
 });

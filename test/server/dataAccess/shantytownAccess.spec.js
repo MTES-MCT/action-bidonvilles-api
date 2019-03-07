@@ -3,9 +3,10 @@ const { expect } = require('chai');
 
 const {
     findAll,
+    findOne,
 } = require('#server/dataAccess/shantytownAccess')(global.db);
 
-const fixtures = require('./shantytownAccess.fixtures');
+const dataSets = require('./shantytownAccess.fixtures');
 
 /**
  * Inserts a set of rows into a table
@@ -37,6 +38,16 @@ async function insert(table, rows) {
     );
 }
 
+/**
+ * Inserts all the requested fixtures into the database
+ */
+async function insertFixtures(inputs) {
+    for (let i = 0; i < inputs.length; i += 1) {
+        /* eslint-disable-next-line */
+        await insert(inputs[i].table, inputs[i].rows);
+    }
+}
+
 // tests
 describe('[Data Access Layer] Shantytown', () => {
     beforeEach(async () => {
@@ -44,6 +55,10 @@ describe('[Data Access Layer] Shantytown', () => {
             global.db.query('DELETE FROM shantytowns'),
             global.db.query('ALTER SEQUENCE shantytowns_shantytown_id_seq RESTART WITH 1'),
         ]);
+    });
+
+    after(async () => {
+        await global.db.close();
     });
 
     describe('.findAll()', () => {
@@ -56,16 +71,32 @@ describe('[Data Access Layer] Shantytown', () => {
 
         describe('if the database is not empty', () => {
             beforeEach(async () => {
-                for (let i = 0; i < fixtures.findAll.input.length; i += 1) {
-                    const input = fixtures.findAll.input[i];
-                    // eslint-disable-next-line
-                    await insert(input.table, input.rows);
-                }
+                await insertFixtures(dataSets.findAll.inputs);
             });
 
             it('it returns all towns from the database', async () => {
                 const towns = await findAll();
-                expect(towns).to.eql(fixtures.findAll.expectedOutput);
+                expect(towns).to.eql(dataSets.findAll.output);
+            });
+        });
+    });
+
+    describe('.findOne()', () => {
+        describe('if the id matches an existing town', () => {
+            beforeEach(async () => {
+                await insertFixtures(dataSets.findOne.inputs);
+            });
+
+            it('it returns the proper town from the database', async () => {
+                const town = await findOne(1);
+                expect(town).to.eql(dataSets.findOne.output);
+            });
+        });
+
+        describe('if the id does not match an existing town', () => {
+            it('it returns null', async () => {
+                const town = await findOne(1);
+                expect(town).to.be.null;
             });
         });
     });
