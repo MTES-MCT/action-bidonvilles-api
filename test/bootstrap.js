@@ -1,8 +1,19 @@
 require('module-alias/register');
+const Sequelize = require('sequelize');
+
+global.db = new Sequelize({
+    username: 'fabnum',
+    password: 'fabnum',
+    database: 'action_bidonvilles_test',
+    host: 'localhost',
+    port: 5432,
+    dialect: 'postgres',
+    logging: false,
+});
 
 /**
  * A set of functions that can generate random values of a certain type
- * 
+ *
  * @type {Object.<string, Function>}
  */
 const generators = {
@@ -21,7 +32,7 @@ const generators = {
     object() {
         return {};
     },
-    function () {
+    function() {
         return () => {};
     },
     number() {
@@ -34,50 +45,46 @@ const generators = {
 
 /**
  * Returns a random value
- * 
+ *
  * @param {Array.<string>} types The type of values that can be generated
- * 
+ *
  * @returns {Object}
  */
 function getRandomValue(types) {
-    const values = types.map((type) => {
-        return generators[type]();
-    });
+    const values = types.map(type => generators[type]());
 
     return values[Math.round(Math.random() * (values.length - 1))];
 }
 
 /**
  * Returns all types that can be generated, except from the passed ones
- * 
+ *
  * @param {Array.<string>} types The forbidden types
- * 
+ *
  * @returns {Array.<string>}
  */
 function getAllTypesOtherThan(types) {
-    return Object.keys(generators).filter((type) => {
-        return types.indexOf(type) === -1;
-    });
+    return Object.keys(generators).filter(type => types.indexOf(type) === -1);
 }
 
 /**
  * Allows to generate a random value
- * 
+ *
  * This function allows you to either:
  * - generate a random value of a specific type, by using the "types" argument
  * - generate a random value that is NOT of a specific type, by letting the "types" argument undefined, and using the "not" function returned
- * 
+ *
  * I am not a fan of currying, but I believe it makes unit tests clearer, so let's say it is
  * an exception.
- * 
+ *
  * @param {string|Array.<string>|undefined} [types] The type of values that can be generated (the type 'any' matches all available types)
- * 
+ *
  * @returns {Object|Object.<Function>} Either your value, or a "not" function
  */
-global.generate = function (types) {
+global.generate = (types) => {
     if (types === undefined) {
         return {
-            not: function (types) {
+            not(types) {
                 return getRandomValue(getAllTypesOtherThan(Array.isArray(types) ? types : [types]));
             },
         };

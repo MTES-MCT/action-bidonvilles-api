@@ -534,12 +534,12 @@ async function fetchTowns(where = []) {
     return Object.values(towns);
 }
 
-module.exports = {
+module.exports = dataAccess => ({
     async list(req, res) {
         try {
-            return res.status(200).send(await fetchTowns());
+            return res.status(200).send(await dataAccess.shantytown.findAll());
         } catch (error) {
-            return res.status(400).send(error);
+            return res.status(500).send(error.message);
         }
     },
 
@@ -1010,4 +1010,4 @@ module.exports = {
             });
         }
     },
-};
+});

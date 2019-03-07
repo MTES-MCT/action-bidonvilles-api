@@ -1,10 +1,12 @@
 const express = require('express');
 const cors = require('cors');
 const bodyParser = require('body-parser');
+
+const dataAccess = require('#server/dataAccess');
 const { checkToken } = require('./auth');
-const userController = require('./controllers/user');
+const userController = require('./controllers/userController');
 const configController = require('./controllers/config');
-const townsController = require('./controllers/towns');
+const townsController = require('./controllers/townController')(dataAccess);
 const actionsController = require('./controllers/actions');
 const geoController = require('./controllers/geo');
 
