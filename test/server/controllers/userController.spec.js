@@ -13,7 +13,7 @@ const mockModels = makeMockModels({
     },
 });
 
-const { signin } = proxyquire('#server/controllers/user', {
+const { signin } = proxyquire('#server/controllers/userController', {
     '../../db/models': mockModels,
 });
 
