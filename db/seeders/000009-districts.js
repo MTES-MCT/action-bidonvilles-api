@@ -41,11 +41,14 @@ module.exports = {
                 },
             });
 
-            const data = {};
-            data.departements = mainCities.reduce((obj, city) => {
-                obj[city.code] = city.fk_departement;
-                return obj;
-            }, {});
+            const data = {
+                departements: {},
+                epci: {},
+            };
+            mainCities.forEach((city) => {
+                data.departements[city.code] = city.fk_departement;
+                data.epci[city.code] = city.fk_epci;
+            });
             data.cities = cities.filter(city => data.departements[city.POLE] !== undefined);
 
             return data;
@@ -55,6 +58,7 @@ module.exports = {
             data.cities.map(city => ({
                 code: `${city.DEP}${city.COM}`,
                 name: city.NCCENR,
+                fk_epci: data.epci[city.POLE],
                 fk_departement: data.departements[city.POLE],
                 fk_main: city.POLE,
             })),

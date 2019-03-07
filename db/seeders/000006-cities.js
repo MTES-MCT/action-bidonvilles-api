@@ -20,18 +20,17 @@ module.exports = {
                 };
             });
 
-            return Promise.all([
-                queryInterface.bulkInsert('epci', Object.values(epci)),
-                queryInterface.bulkInsert(
-                    'cities',
-                    cities.map(city => ({
-                        code: city.code,
-                        name: city.name,
-                        fk_departement: city.departementCode,
-                    })),
-                ),
-            ]);
-        }),
+            return queryInterface.bulkInsert('epci', Object.values(epci)).then(() => cities);
+        })
+        .then(cities => queryInterface.bulkInsert(
+            'cities',
+            cities.map(city => ({
+                code: city.code,
+                name: city.name,
+                fk_epci: city.epciCode,
+                fk_departement: city.departementCode,
+            })),
+        )),
 
     down: queryInterface => queryInterface.bulkDelete('cities')
         .then(() => queryInterface.bulkDelete('epci')),

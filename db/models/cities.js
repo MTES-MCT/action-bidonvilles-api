@@ -18,6 +18,15 @@ module.exports = function (sequelize, DataTypes) {
             },
             field: 'fk_departement',
         },
+        epci: {
+            type: DataTypes.STRING(9),
+            allowNull: false,
+            references: {
+                model: 'epci',
+                key: 'code',
+            },
+            field: 'fk_epci',
+        },
         createdAt: {
             type: DataTypes.DATE,
             defaultValue: DataTypes.NOW,
@@ -38,6 +47,7 @@ module.exports = function (sequelize, DataTypes) {
 
     City.associate = (models) => {
         City.belongsTo(models.Departement, { foreignKey: 'fk_departement' });
+        City.belongsTo(models.Epci, { foreignKey: 'fk_epci' });
     };
 
     return City;
