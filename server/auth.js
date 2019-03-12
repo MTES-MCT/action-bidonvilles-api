@@ -1,12 +1,12 @@
 const jwt = require('jsonwebtoken');
-const { secret } = require('./config');
+const { auth: authConfig } = require('#server/config');
 
 module.exports = {
     checkToken: (req, res, next) => {
         const token = req.headers['x-access-token'];
 
         if (token) {
-            jwt.verify(token, secret, (err, decoded) => {
+            jwt.verify(token, authConfig.secret, (err, decoded) => {
                 if (err) {
                     return res.status(400).send({
                         error: {
