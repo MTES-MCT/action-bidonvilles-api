@@ -3,7 +3,8 @@ const express = require('express');
 const cors = require('cors');
 const bodyParser = require('body-parser');
 
-const dataAccess = require('#server/dataAccess');
+const { sequelize } = require('../db/models');
+const dataAccess = require('#server/dataAccess')(sequelize);
 const { checkToken } = require('./auth');
 const userController = require('./controllers/userController');
 const configController = require('./controllers/config');

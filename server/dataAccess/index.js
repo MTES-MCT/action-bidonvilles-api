@@ -1,14 +1,17 @@
 const fs = require('fs');
 const path = require('path');
 
-const basename = path.basename(module.filename);
-const dataAccess = {};
+module.exports = (database) => {
+    const basename = path.basename(module.filename);
+    const dataAccess = {};
 
-fs
-    .readdirSync(__dirname)
-    .filter(file => (file.indexOf('.') !== 0) && (file !== basename) && (file.slice(-3) === '.js'))
-    .forEach((file) => {
-        dataAccess[file.replace('Access.js')] = path.join(__dirname, file);
-    });
+    fs
+        .readdirSync(__dirname)
+        .filter(file => (file.indexOf('.') !== 0) && (file !== basename) && (file.slice(-3) === '.js'))
+        .forEach((file) => {
+            /* eslint-disable-next-line */
+            dataAccess[file.replace('Access.js', '')] = require(path.join(__dirname, file))(database);
+        });
 
-module.exports = dataAccess;
+    return dataAccess;
+};
