@@ -1,5 +1,6 @@
 require('module-alias/register');
 
+const { port } = require('#server/config');
 const { sequelize } = require('../db/models');
 const dataAccess = require('#server/dataAccess')(sequelize);
 
@@ -19,6 +20,6 @@ const app = require('#server/app')({
     geo: geoController,
 });
 
-app.listen(process.env.API_PORT || 5000, () => {
+app.listen(process.env.API_PORT || port, () => {
     console.log('Server is now running! :)');
 });
