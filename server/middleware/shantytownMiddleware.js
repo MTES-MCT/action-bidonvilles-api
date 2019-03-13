@@ -218,7 +218,7 @@ async function query(database, ids = []) {
         ),
     ]);
 
-    // @todo: move the serialization of these entities to their own data-access component
+    // @todo: move the serialization of these entities to their own middleware component
     socialOrigins.forEach((socialOrigin) => {
         serializedTowns.hash[socialOrigin.shantytownId].socialOrigins.push({
             id: socialOrigin.socialOriginId,

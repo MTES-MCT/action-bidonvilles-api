@@ -326,10 +326,10 @@ function serializeComment(comment) {
     };
 }
 
-module.exports = dataAccess => ({
+module.exports = middleware => ({
     async list(req, res) {
         try {
-            return res.status(200).send(await dataAccess.shantytown.findAll());
+            return res.status(200).send(await middleware.shantytown.findAll());
         } catch (error) {
             return res.status(500).send(error.message);
         }
@@ -337,7 +337,7 @@ module.exports = dataAccess => ({
 
     async find(req, res) {
         try {
-            const town = await dataAccess.shantytown.findOne(req.params.id);
+            const town = await middleware.shantytown.findOne(req.params.id);
 
             if (town === null) {
                 return res.status(404).send({

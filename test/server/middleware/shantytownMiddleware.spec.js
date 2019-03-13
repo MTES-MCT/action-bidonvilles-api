@@ -4,9 +4,9 @@ const { expect } = require('chai');
 const {
     findAll,
     findOne,
-} = require('#server/dataAccess/shantytownAccess')(global.db);
+} = require('#server/middleware/shantytownMiddleware')(global.db);
 
-const dataSets = require('./shantytownAccess.fixtures');
+const dataSets = require('./shantytownMiddleware.fixtures');
 
 /**
  * Inserts a set of rows into a table
@@ -49,7 +49,7 @@ async function insertFixtures(inputs) {
 }
 
 // tests
-describe('[Data Access Layer] Shantytown', () => {
+describe('[Middleware] Shantytown', () => {
     beforeEach(async () => {
         await Promise.all([
             global.db.query('DELETE FROM shantytowns'),
