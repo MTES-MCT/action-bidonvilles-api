@@ -10,6 +10,16 @@ function mockController() {
     return sinon.stub().callsFake((req, res) => res.status(200).send({}));
 }
 
+function getFakeMiddlewares() {
+    return {
+        auth: {
+            checkToken: sinon.stub().callsFake((req, res, next) => {
+                next();
+            }),
+        },
+    };
+}
+
 function getFakeControllers() {
     return {
         user: {
@@ -18,11 +28,6 @@ function getFakeControllers() {
             renewToken: mockController(),
             signin: mockController(),
             signup: mockController(),
-        },
-        auth: {
-            checkToken: sinon.stub().callsFake((req, res, next) => {
-                next();
-            }),
         },
         config: {
             list: mockController(),
@@ -52,18 +57,20 @@ function getFakeControllers() {
     };
 }
 
-function getFakeApp(controllers) {
-    return appConstructor(controllers);
+function getFakeApp(middlewares, controllers) {
+    return appConstructor(middlewares, controllers);
 }
 
 describe('app', () => {
     let app;
+    let middlewares;
     let controllers;
 
     describe('POST /signin', () => {
         beforeEach(async () => {
+            middlewares = getFakeMiddlewares();
             controllers = getFakeControllers();
-            app = getFakeApp(controllers);
+            app = getFakeApp(middlewares, controllers);
 
             await chai.request(app).post('/signin');
         });
@@ -75,14 +82,15 @@ describe('app', () => {
 
     describe('GET /towns', () => {
         beforeEach(async () => {
+            middlewares = getFakeMiddlewares();
             controllers = getFakeControllers();
-            app = getFakeApp(controllers);
+            app = getFakeApp(middlewares, controllers);
 
             await chai.request(app).get('/towns');
         });
 
         it('it should require a token', () => {
-            expect(controllers.auth.checkToken).to.have.been.calledOnce;
+            expect(middlewares.auth.checkToken).to.have.been.calledOnce;
         });
 
         it('it should map to townController.list', () => {
@@ -92,14 +100,15 @@ describe('app', () => {
 
     describe('GET /towns/:id', () => {
         beforeEach(async () => {
+            middlewares = getFakeMiddlewares();
             controllers = getFakeControllers();
-            app = getFakeApp(controllers);
+            app = getFakeApp(middlewares, controllers);
 
             await chai.request(app).get('/towns/123');
         });
 
         it('it should require a token', () => {
-            expect(controllers.auth.checkToken).to.have.been.calledOnce;
+            expect(middlewares.auth.checkToken).to.have.been.calledOnce;
         });
 
         it('it should map to townController.find', () => {

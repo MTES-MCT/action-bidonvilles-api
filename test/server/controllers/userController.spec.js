@@ -5,7 +5,7 @@ const { mockReq, mockRes } = require('sinon-express-mock');
 const { makeMockModels } = require('sequelize-test-helpers');
 const proxyquire = require('proxyquire');
 const crypto = require('crypto');
-const { generateAccessTokenFor } = require('#server/util/auth');
+const { generateAccessTokenFor } = require('#server/utils/auth');
 
 const mockModels = makeMockModels({
     User: {

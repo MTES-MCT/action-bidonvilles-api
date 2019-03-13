@@ -326,10 +326,10 @@ function serializeComment(comment) {
     };
 }
 
-module.exports = middleware => ({
+module.exports = models => ({
     async list(req, res) {
         try {
-            return res.status(200).send(await middleware.shantytown.findAll());
+            return res.status(200).send(await models.shantytown.findAll());
         } catch (error) {
             return res.status(500).send(error.message);
         }
@@ -337,7 +337,7 @@ module.exports = middleware => ({
 
     async find(req, res) {
         try {
-            const town = await middleware.shantytown.findOne(req.params.id);
+            const town = await models.shantytown.findOne(req.params.id);
 
             if (town === null) {
                 return res.status(404).send({

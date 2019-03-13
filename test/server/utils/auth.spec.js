@@ -7,13 +7,13 @@ const fakeAuthConfig = {
     secret: global.generate('string'),
     expiresIn: `${global.generate('number')}h`,
 };
-const { generateAccessTokenFor, hashPassword, generateSalt } = proxyquire('#server/util/auth', {
+const { generateAccessTokenFor, hashPassword, generateSalt } = proxyquire('#server/utils/auth', {
     '#server/config': {
         auth: fakeAuthConfig,
     },
 });
 
-describe('server/util/auth', () => {
+describe('[Utils] Auth', () => {
     describe('.generateAccessTokenFor()', () => {
         it('it should return a valid token for the given user', () => {
             const fakeUser = {

@@ -3,7 +3,7 @@ const chaiSubset = require('chai-subset');
 const sinon = require('sinon');
 const jwt = require('jsonwebtoken');
 const sinonChai = require('sinon-chai');
-const { checkToken } = require('#server/controllers/authController')();
+const { checkToken } = require('#server/middlewares/authMiddleware')();
 const { mockReq, mockRes } = require('sinon-express-mock');
 const { auth: authConfig } = require('#server/config');
 
