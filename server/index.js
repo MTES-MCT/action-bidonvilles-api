@@ -1,51 +1,23 @@
 require('module-alias/register');
-const express = require('express');
-const cors = require('cors');
-const bodyParser = require('body-parser');
 
 const { sequelize } = require('../db/models');
 const dataAccess = require('#server/dataAccess')(sequelize);
-const { checkToken } = require('./auth');
-const userController = require('./controllers/userController');
-const configController = require('./controllers/config');
-const townsController = require('./controllers/townController')(dataAccess);
-const actionsController = require('./controllers/actions');
-const geoController = require('./controllers/geo');
 
-const app = express();
-app.use(cors());
-app.use(bodyParser.json());
+const userController = require('#server/controllers/userController');
+const authController = require('#server/auth');
+const configController = require('#server/controllers/config');
+const townController = require('#server/controllers/townController')(dataAccess);
+const actionController = require('#server/controllers/actions');
+const geoController = require('#server/controllers/geo');
 
-app.post('/signin', userController.signin);
-app.get('/refreshToken', checkToken, userController.renewToken);
-app.get('/config', checkToken, configController.list);
-
-// user
-app.get('/me', checkToken, userController.me);
-app.post('/me', checkToken, userController.edit);
-app.post('/users', checkToken, userController.signup);
-
-// towns
-app.get('/towns', checkToken, townsController.list);
-app.get('/towns/:id', checkToken, townsController.find);
-app.post('/towns', checkToken, townsController.add);
-app.post('/towns/:id', checkToken, townsController.edit);
-app.post('/towns/:id/close', checkToken, townsController.close);
-app.delete('/towns/:id', checkToken, townsController.delete);
-app.post('/towns/:id/comments', checkToken, townsController.addComment);
-
-// actions
-app.get('/actions', checkToken, actionsController.list);
-app.get('/actions/:id', checkToken, actionsController.find);
-app.post('/actions', checkToken, actionsController.add);
-app.post('/actions/:id', checkToken, actionsController.edit);
-app.post('/actions/:id/steps', checkToken, actionsController.addStep);
-app.delete('/actions/:id', checkToken, actionsController.delete);
-
-// geo
-app.get('/locations/search', checkToken, geoController.search);
-app.get('/cities/search', checkToken, geoController.searchCities);
-app.get('/epci/search', checkToken, geoController.searchEpci);
+const app = require('#server/app')({
+    user: userController,
+    auth: authController,
+    config: configController,
+    town: townController,
+    action: actionController,
+    geo: geoController,
+});
 
 app.listen(process.env.API_PORT || 5000, () => {
     console.log('Server is now running! :)');
