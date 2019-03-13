@@ -3,7 +3,7 @@ const { auth: authConfig } = require('#server/config');
 
 module.exports = {
     checkToken: (req, res, next) => {
-        const token = req.headers['x-access-token'];
+        const token = req.headers && req.headers['x-access-token'];
 
         if (token) {
             jwt.verify(token, authConfig.secret, (err, decoded) => {
