@@ -9,7 +9,7 @@ function trim(str) {
     return str.replace(/^\s*|\s*$/g, '');
 }
 
-module.exports = {
+module.exports = () => ({
     async signin(req, res) {
         const { email, password } = req.body;
 
@@ -249,4 +249,4 @@ module.exports = {
             });
         }
     },
-};
+});

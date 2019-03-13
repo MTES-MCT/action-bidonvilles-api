@@ -2,7 +2,7 @@ const {
     SocialOrigin, FieldType, OwnerType, ActionType, User, Departement, Region, ClosingSolution,
 } = require('../../db/models');
 
-module.exports = {
+module.exports = () => ({
     async list(req, res) {
         const queries = {
             action_types: ActionType.findAll(),
@@ -48,4 +48,4 @@ module.exports = {
             })
             .catch(error => res.status(400).send(error));
     },
-};
+});

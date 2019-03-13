@@ -14,7 +14,8 @@
         "import/resolver": {
             "alias": {
                 "map": [
-                    ["#server", "./server"]
+                    ["#server", "./server"],
+                    ["#db", "./db"]
                 ],
                 "extensions": [".js"]
             }

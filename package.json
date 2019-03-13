@@ -63,6 +63,7 @@
     "test": "mocha --recursive --require ./test/bootstrap.js --bail"
   },
   "_moduleAliases": {
-    "#server": "./server"
+    "#server": "./server",
+    "#db": "./db"
   }
 }

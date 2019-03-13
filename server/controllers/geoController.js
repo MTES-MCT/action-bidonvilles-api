@@ -29,7 +29,7 @@ function generateSearch(table, label) {
     LIMIT 2`;
 }
 
-module.exports = {
+module.exports = () => ({
     async searchCities(req, res) {
         const { query: { q } } = url.parse(req.url, true);
 
@@ -168,4 +168,4 @@ module.exports = {
             });
         }
     },
-};
+});

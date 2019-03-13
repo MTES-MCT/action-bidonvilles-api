@@ -1,7 +1,7 @@
 const jwt = require('jsonwebtoken');
 const { auth: authConfig } = require('#server/config');
 
-module.exports = {
+module.exports = () => ({
     checkToken: (req, res, next) => {
         const token = req.headers && req.headers['x-access-token'];
 
@@ -33,4 +33,4 @@ module.exports = {
             },
         });
     },
-};
+});

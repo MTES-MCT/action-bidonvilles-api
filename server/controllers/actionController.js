@@ -157,7 +157,7 @@ async function validateInput(body, mode = 'create') {
     return fieldErrors;
 }
 
-module.exports = {
+module.exports = () => ({
     list(req, res) {
         try {
             return Actions
@@ -435,4 +435,4 @@ module.exports = {
             });
         }
     },
-};
+});

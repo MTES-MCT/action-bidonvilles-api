@@ -15,7 +15,7 @@ const mockModels = makeMockModels({
 
 const { signin } = proxyquire('#server/controllers/userController', {
     '../../db/models': mockModels,
-});
+})();
 
 const { expect } = chai;
 chai.use(sinonChai);
