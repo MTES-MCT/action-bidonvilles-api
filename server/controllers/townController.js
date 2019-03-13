@@ -1,8 +1,8 @@
-const { sequelize } = require('../../db/models');
-const Cities = require('../../db/models').City;
-const ShantyTowns = require('../../db/models').Shantytown;
-const ShantyTownComments = require('../../db/models').ShantytownComment;
-const { ClosingSolution } = require('../../db/models');
+const { sequelize } = require('#db/models');
+const Cities = require('#db/models').City;
+const ShantyTowns = require('#db/models').Shantytown;
+const ShantyTownComments = require('#db/models').ShantytownComment;
+const { ClosingSolution } = require('#db/models');
 
 function addError(errors, field, error) {
     if (!Object.prototype.hasOwnProperty.call(errors, field)) {

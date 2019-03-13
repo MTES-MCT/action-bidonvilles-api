@@ -1,10 +1,10 @@
-const Actions = require('../../db/models').Action;
-const ActionTypes = require('../../db/models').ActionType;
-const ActionSteps = require('../../db/models').ActionStep;
-const Cities = require('../../db/models').City;
-const { Epci } = require('../../db/models');
-const Departements = require('../../db/models').Departement;
-const Regions = require('../../db/models').Region;
+const Actions = require('#db/models').Action;
+const ActionTypes = require('#db/models').ActionType;
+const ActionSteps = require('#db/models').ActionStep;
+const Cities = require('#db/models').City;
+const { Epci } = require('#db/models');
+const Departements = require('#db/models').Departement;
+const Regions = require('#db/models').Region;
 
 function getTerritory(action) {
     const territories = ['City', 'Epci', 'Departement', 'Region'];

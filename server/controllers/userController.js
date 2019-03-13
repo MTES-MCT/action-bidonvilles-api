@@ -1,5 +1,5 @@
 const { generateAccessTokenFor, hashPassword, generateSalt } = require('#server/util/auth');
-const { User } = require('../../db/models');
+const { User } = require('#db/models');
 
 function trim(str) {
     if (typeof str !== 'string') {

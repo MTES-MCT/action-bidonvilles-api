@@ -1,6 +1,6 @@
 const {
     SocialOrigin, FieldType, OwnerType, ActionType, User, Departement, Region, ClosingSolution,
-} = require('../../db/models');
+} = require('#db/models');
 
 module.exports = () => ({
     async list(req, res) {

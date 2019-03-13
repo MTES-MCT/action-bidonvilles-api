@@ -23,7 +23,7 @@ const mockShantytownAccess = {
 };
 
 const { list, find } = proxyquire('#server/controllers/townController', {
-    '../../db/models': mockModels,
+    '#db/models': mockModels,
 })({
     shantytown: mockShantytownAccess,
 });
