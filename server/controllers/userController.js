@@ -1,4 +1,4 @@
-const { generateAccessTokenFor, hashPassword, generateSalt } = require('#server/helpers/authHelper');
+const { generateAccessTokenFor, hashPassword, generateSalt } = require('#server/util/auth');
 const { User } = require('../../db/models');
 
 function trim(str) {
