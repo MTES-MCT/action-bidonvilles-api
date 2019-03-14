@@ -33,12 +33,12 @@ module.exports = () => ({
         return Promise.all(promises)
             .then((results) => {
                 const response = {
-                    user: {
+                    user: Object.assign(req.user, {
                         map_center: [
                             user.Departement.latitude,
                             user.Departement.longitude,
                         ],
-                    },
+                    }),
                 };
                 names.forEach((name, index) => {
                     response[name] = results[index];
