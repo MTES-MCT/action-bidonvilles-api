@@ -5,6 +5,7 @@ module.exports = {
             { type: 'feature', name: 'createTown' },
             { type: 'feature', name: 'updateTown' },
             { type: 'feature', name: 'deleteTown' },
+            { type: 'feature', name: 'readComment' },
             { type: 'feature', name: 'createComment' },
             { type: 'feature', name: 'updateComment' },
             { type: 'feature', name: 'deleteComment' },
@@ -47,6 +48,7 @@ module.exports = {
                     'createTown',
                     'updateTown',
                     'deleteTown',
+                    'readComment',
                     'createComment',
                     'updateComment',
                     'deleteComment',
@@ -54,6 +56,7 @@ module.exports = {
                 admin: [
                     'createTown',
                     'updateTown',
+                    'readComment',
                     'createComment',
                     'updateComment',
                     'deleteComment',
