@@ -1,7 +1,7 @@
 require('module-alias/register');
 const Sequelize = require('sequelize');
 
-global.db = new Sequelize({
+global.db = () => new Sequelize({
     username: 'fabnum',
     password: 'fabnum',
     database: 'action_bidonvilles_test',

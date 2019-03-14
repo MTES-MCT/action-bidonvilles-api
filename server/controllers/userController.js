@@ -67,7 +67,7 @@ module.exports = () => ({
     },
 
     renewToken(req, res) {
-        const { userId, email } = req.decoded;
+        const { id: userId, email } = req.user;
 
         return res.status(200).send({
             token: generateAccessTokenFor({ id: userId, email }),
@@ -78,33 +78,7 @@ module.exports = () => ({
      * Returns information about... yourself!
      */
     async me(req, res) {
-        const { userId, email } = req.decoded;
-
-        try {
-            const {
-                id, first_name, last_name, company, departement,
-            } = await User.findOne({
-                where: {
-                    id: userId,
-                },
-            });
-
-            return res.status(200).send({
-                id,
-                email,
-                first_name,
-                last_name,
-                company,
-                departement,
-            });
-        } catch (error) {
-            return res.status(500).send({
-                error: {
-                    user_message: 'Une erreur est survenue dans la lecture de vos informations en base de données.',
-                    developer_message: error.message,
-                },
-            });
-        }
+        return res.status(200).send(req.user);
     },
 
     /**
@@ -112,7 +86,7 @@ module.exports = () => ({
      */
     async edit(req, res) {
         // find the user
-        const { userId } = req.decoded;
+        const { id: userId } = req.user;
         const user = await User.findOne({
             where: {
                 id: userId,
@@ -201,7 +175,7 @@ module.exports = () => ({
      */
     async signup(req, res) {
         // limit access to that api to a specific set of users
-        const { userId } = req.decoded;
+        const { id: userId } = req.user;
         const user = await User.findOne({
             where: {
                 id: userId,

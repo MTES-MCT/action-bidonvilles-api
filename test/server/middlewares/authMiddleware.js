@@ -3,7 +3,14 @@ const chaiSubset = require('chai-subset');
 const sinon = require('sinon');
 const jwt = require('jsonwebtoken');
 const sinonChai = require('sinon-chai');
-const { checkToken } = require('#server/middlewares/authMiddleware')();
+
+const fakeModels = {
+    user: {
+        findOne: sinon.stub(),
+    },
+};
+
+const { checkToken } = require('#server/middlewares/authMiddleware')(fakeModels);
 const { mockReq, mockRes } = require('sinon-express-mock');
 const { auth: authConfig } = require('#server/config');
 
@@ -22,7 +29,7 @@ describe('auth', () => {
                 httpReq = mockReq({});
                 httpRes = mockRes();
 
-                checkToken(httpReq, httpRes);
+                await checkToken(httpReq, httpRes);
                 [response] = httpRes.send.getCalls()[0].args;
             });
 
@@ -50,7 +57,7 @@ describe('auth', () => {
                 });
                 httpRes = mockRes();
 
-                checkToken(httpReq, httpRes);
+                await checkToken(httpReq, httpRes);
                 [response] = httpRes.send.getCalls()[0].args;
             });
 
@@ -80,7 +87,7 @@ describe('auth', () => {
                 });
                 httpRes = mockRes();
 
-                checkToken(httpReq, httpRes);
+                await checkToken(httpReq, httpRes);
                 [response] = httpRes.send.getCalls()[0].args;
             });
 
@@ -100,32 +107,80 @@ describe('auth', () => {
         });
 
         describe('if the token is fully valid', () => {
-            let nextRequestHandler;
-            let token;
-            beforeEach(async () => {
-                token = {
-                    data: global.generate('string'),
-                };
+            describe('if the user related to the token does not actually exist', () => {
+                let token;
+                beforeEach(async () => {
+                    const fakeUserId = global.generate('number');
+                    token = {
+                        userId: fakeUserId,
+                    };
 
-                httpReq = mockReq({
-                    headers: {
-                        'x-access-token': jwt.sign(token, authConfig.secret, {
-                            expiresIn: '1s',
-                        }),
-                    },
+                    fakeModels.user.findOne.withArgs(fakeUserId).returns(null);
+
+                    httpReq = mockReq({
+                        headers: {
+                            'x-access-token': jwt.sign(token, authConfig.secret, {
+                                expiresIn: '1s',
+                            }),
+                        },
+                    });
+                    httpRes = mockRes();
+
+                    await checkToken(httpReq, httpRes);
+                    [response] = httpRes.send.getCalls()[0].args;
                 });
-                httpRes = mockRes();
-                nextRequestHandler = sinon.stub();
 
-                checkToken(httpReq, httpRes, nextRequestHandler);
+                it('it responds with a 400', () => {
+                    expect(httpRes.status).to.have.been.calledWith(400);
+                });
+
+                it('it responds with the proper error messages', () => {
+                    expect(response).to.be.eql({
+                        error: {
+                            code: 3,
+                            user_message: 'Votre session a expiré',
+                            developer_message: 'The access token is either invalid or expired',
+                        },
+                    });
+                });
             });
 
-            it('it includes the decoded token into the request', () => {
-                expect(httpReq.decoded).to.containSubset(token);
-            });
+            describe('if the user related to the token actually exists', () => {
+                let nextRequestHandler;
+                let token;
+                let fakeUser;
+                beforeEach(async () => {
+                    fakeUser = {
+                        id: global.generate('number'),
+                        email: global.generate('string'),
+                    };
 
-            it('it triggers the next request handler', () => {
-                expect(nextRequestHandler).to.have.been.calledOnce;
+                    token = {
+                        userId: fakeUser.id,
+                    };
+
+                    fakeModels.user.findOne.withArgs(fakeUser.id).returns(fakeUser);
+
+                    httpReq = mockReq({
+                        headers: {
+                            'x-access-token': jwt.sign(token, authConfig.secret, {
+                                expiresIn: '1s',
+                            }),
+                        },
+                    });
+                    httpRes = mockRes();
+                    nextRequestHandler = sinon.stub();
+
+                    await checkToken(httpReq, httpRes, nextRequestHandler);
+                });
+
+                it('it includes the user into the request', () => {
+                    expect(httpReq.user).to.containSubset(fakeUser);
+                });
+
+                it('it triggers the next request handler', () => {
+                    expect(nextRequestHandler).to.have.been.calledOnce;
+                });
             });
         });
     });

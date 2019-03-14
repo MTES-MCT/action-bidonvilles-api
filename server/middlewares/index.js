@@ -1,7 +1,7 @@
 const fs = require('fs');
 const path = require('path');
 
-module.exports = () => {
+module.exports = (models) => {
     const basename = path.basename(module.filename);
     const middlewares = {};
 
@@ -11,7 +11,7 @@ module.exports = () => {
         .filter(file => (file.indexOf('.') !== 0) && (file !== basename) && (file.slice(-3) === '.js'))
         .forEach((file) => {
             /* eslint-disable-next-line */
-            middlewares[file.replace('Middleware.js', '')] = require(path.join(__dirname, file))();
+            middlewares[file.replace('Middleware.js', '')] = require(path.join(__dirname, file))(models);
         });
 
     return middlewares;

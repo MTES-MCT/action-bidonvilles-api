@@ -17,7 +17,7 @@ const mockModels = Object.assign(
     },
 );
 
-const mockShantytownAccess = {
+const mockShantytownModel = {
     findAll: sinon.stub(),
     findOne: sinon.stub(),
 };
@@ -25,7 +25,7 @@ const mockShantytownAccess = {
 const { list, find } = proxyquire('#server/controllers/townController', {
     '#db/models': mockModels,
 })({
-    shantytown: mockShantytownAccess,
+    shantytown: mockShantytownModel,
 });
 
 const { expect } = chai;
@@ -43,7 +43,7 @@ describe('Controllers/Shantytown', () => {
                 httpReq = mockReq({});
                 httpRes = mockRes();
                 towns = [global.generate('string'), global.generate('string'), global.generate('string')];
-                mockShantytownAccess.findAll.resolves(towns);
+                mockShantytownModel.findAll.resolves(towns);
 
                 await list(httpReq, httpRes);
                 [response] = httpRes.send.getCalls()[0].args;
@@ -64,7 +64,7 @@ describe('Controllers/Shantytown', () => {
                 httpReq = mockReq({});
                 httpRes = mockRes();
                 error = global.generate('string');
-                mockShantytownAccess.findAll.rejects(new Error(error));
+                mockShantytownModel.findAll.rejects(new Error(error));
 
                 await list(httpReq, httpRes);
                 [response] = httpRes.send.getCalls()[0].args;
@@ -91,7 +91,7 @@ describe('Controllers/Shantytown', () => {
                         },
                     });
                     httpRes = mockRes();
-                    mockShantytownAccess.findOne.withArgs(randomId).resolves(null);
+                    mockShantytownModel.findOne.withArgs(randomId).resolves(null);
 
                     await find(httpReq, httpRes);
                     [response] = httpRes.send.getCalls()[0].args;
@@ -124,7 +124,7 @@ describe('Controllers/Shantytown', () => {
                         },
                     });
                     httpRes = mockRes();
-                    mockShantytownAccess.findOne.withArgs(randomId).resolves(town);
+                    mockShantytownModel.findOne.withArgs(randomId).resolves(town);
 
                     await find(httpReq, httpRes);
                     [response] = httpRes.send.getCalls()[0].args;
@@ -146,7 +146,7 @@ describe('Controllers/Shantytown', () => {
                 httpReq = mockReq({});
                 httpRes = mockRes();
                 error = global.generate('string');
-                mockShantytownAccess.findOne.rejects(new Error(error));
+                mockShantytownModel.findOne.rejects(new Error(error));
 
                 await find(httpReq, httpRes);
                 [response] = httpRes.send.getCalls()[0].args;

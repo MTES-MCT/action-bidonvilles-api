@@ -1,26 +1,36 @@
 const jwt = require('jsonwebtoken');
 const { auth: authConfig } = require('#server/config');
 
-module.exports = () => ({
-    checkToken: (req, res, next) => {
+module.exports = models => ({
+    async checkToken(req, res, next) {
         const token = req.headers && req.headers['x-access-token'];
 
         if (token) {
-            jwt.verify(token, authConfig.secret, (err, decoded) => {
-                if (err) {
+            try {
+                const decoded = jwt.verify(token, authConfig.secret);
+
+                const user = await models.user.findOne(decoded.userId);
+                if (user === null) {
                     return res.status(400).send({
                         error: {
-                            code: 2,
+                            code: 3,
                             user_message: 'Votre session a expiré',
                             developer_message: 'The access token is either invalid or expired',
                         },
                     });
                 }
 
-                req.decoded = decoded;
+                req.user = user;
                 next();
-                return undefined;
-            });
+            } catch (error) {
+                return res.status(400).send({
+                    error: {
+                        code: 2,
+                        user_message: 'Votre session a expiré',
+                        developer_message: 'The access token is either invalid or expired',
+                    },
+                });
+            }
 
             return undefined;
         }

@@ -26,7 +26,7 @@ module.exports = () => ({
                 Departement,
             ],
             where: {
-                id: req.decoded.userId,
+                id: req.user.id,
             },
         });
 

@@ -427,7 +427,7 @@ module.exports = models => ({
                     fieldType,
                     ownerType,
                     city: citycode,
-                    createdBy: req.decoded.userId,
+                    createdBy: req.user.id,
                     owner,
                     declaredAt,
                     censusStatus,
@@ -556,7 +556,7 @@ module.exports = models => ({
                     ownerType,
                     owner,
                     city: citycode,
-                    updatedBy: req.decoded.userId,
+                    updatedBy: req.user.id,
                     ownerComplaint: toBool(ownerComplaint),
                     justiceProcedure: toBool(justiceProcedure),
                     justiceRendered: toBool(justiceRendered),
@@ -675,7 +675,7 @@ module.exports = models => ({
                 await town.update({
                     status,
                     closedAt,
-                    updatedBy: req.decoded.userId,
+                    updatedBy: req.user.id,
                 });
 
                 await Promise.all(
@@ -780,7 +780,7 @@ module.exports = models => ({
             await ShantyTownComments.create({
                 shantytown: shantytown.id,
                 description: trimmedDescription,
-                createdBy: req.decoded.userId,
+                createdBy: req.user.id,
             });
 
             const comments = await ShantyTownComments.findAll({

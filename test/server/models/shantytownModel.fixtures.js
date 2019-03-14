@@ -227,6 +227,21 @@ module.exports = {
     findAll: {
         inputs: [
             {
+                table: 'users',
+                rows: [
+                    {
+                        email: randomStr,
+                        password: randomStr,
+                        salt: randomStr,
+                        fk_departement: '75',
+                        first_name: randomStr,
+                        last_name: randomStr,
+                        company: randomStr,
+                        fk_role: 1,
+                    },
+                ],
+            },
+            {
                 table: 'shantytowns',
                 rows: [
                     getEmptyTownInput(),

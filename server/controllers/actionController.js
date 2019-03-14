@@ -236,7 +236,7 @@ module.exports = () => ({
                 epci: territoryType === 'epci' ? territoryCode : null,
                 departement: territoryType === 'departement' ? territoryCode : null,
                 region: territoryType === 'region' ? territoryCode : null,
-                createdBy: req.decoded.userId,
+                createdBy: req.user.id,
             });
 
             return res.status(200).send(action);
@@ -319,7 +319,7 @@ module.exports = () => ({
                 endedAt,
                 name,
                 description,
-                updatedBy: req.decoded.userId,
+                updatedBy: req.user.id,
             });
 
             return res.status(200).send(serializeAction(action));

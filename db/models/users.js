@@ -31,6 +31,15 @@ module.exports = function (sequelize, DataTypes) {
             type: DataTypes.STRING,
             allowNull: false,
         },
+        role: {
+            type: DataTypes.INTEGER,
+            allowNull: false,
+            references: {
+                model: 'roles',
+                key: 'role_id',
+            },
+            field: 'fk_role',
+        },
         departement: {
             type: DataTypes.STRING(3),
             allowNull: false,
@@ -60,6 +69,7 @@ module.exports = function (sequelize, DataTypes) {
 
     User.associate = (models) => {
         User.belongsTo(models.Departement, { foreignKey: 'fk_departement' });
+        User.belongsTo(models.Role, { foreignKey: 'fk_role' });
     };
 
     return User;

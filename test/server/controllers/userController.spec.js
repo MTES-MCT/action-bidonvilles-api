@@ -13,7 +13,7 @@ const mockModels = makeMockModels({
     },
 });
 
-const { signin } = proxyquire('#server/controllers/userController', {
+const { signin, me } = proxyquire('#server/controllers/userController', {
     '#db/models': mockModels,
 })();
 
@@ -190,6 +190,34 @@ describe('Controllers/User', () => {
             it('it responds with a new JWT token', () => {
                 expect(response.token).to.be.eql(generateAccessTokenFor(fakeUser));
             });
+        });
+    });
+
+    describe('.me()', () => {
+        let fakeUser;
+        beforeEach(async () => {
+            const fakeId = global.generate('number');
+            fakeUser = {
+                id: fakeId,
+                email: global.generate('string'),
+                salt: global.generate('string'),
+                password: global.generate('string'),
+            };
+            httpReq = mockReq({
+                user: fakeUser,
+            });
+            httpRes = mockRes();
+
+            await me(httpReq, httpRes);
+            [response] = httpRes.send.getCalls()[0].args;
+        });
+
+        it('it responds with a 200', () => {
+            expect(httpRes.status).to.have.been.calledWith(200);
+        });
+
+        it('it responds with the current user', () => {
+            expect(response).to.be.eql(fakeUser);
         });
     });
 });

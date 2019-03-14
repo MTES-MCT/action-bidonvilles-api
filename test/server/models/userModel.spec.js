@@ -3,11 +3,10 @@ const { expect } = require('chai');
 
 const db = global.db();
 const {
-    findAll,
     findOne,
-} = require('#server/models/shantytownModel')(db);
+} = require('#server/models/userModel')(db);
 
-const dataSets = require('./shantytownModel.fixtures');
+const dataSets = require('./userModel.fixtures');
 
 /**
  * Inserts a set of rows into a table
@@ -50,7 +49,7 @@ async function insertFixtures(inputs) {
 }
 
 // tests
-describe('[Models] Shantytown', () => {
+describe('[Models] User', () => {
     before(async () => {
         await db.authenticate();
     });
@@ -61,47 +60,27 @@ describe('[Models] Shantytown', () => {
 
     beforeEach(async () => {
         await Promise.all([
-            db.query('DELETE FROM shantytowns'),
-            db.query('ALTER SEQUENCE shantytowns_shantytown_id_seq RESTART WITH 1'),
+            db.query('DELETE FROM users'),
+            db.query('ALTER SEQUENCE users_user_id_seq RESTART WITH 1'),
         ]);
     });
 
-    describe('.findAll()', () => {
-        describe('if the database is empty', () => {
-            it('it returns an empty array', async () => {
-                const towns = await findAll();
-                expect(towns).to.eql([]);
-            });
-        });
-
-        describe('if the database is not empty', () => {
-            beforeEach(async () => {
-                await insertFixtures(dataSets.findAll.inputs);
-            });
-
-            it('it returns all towns from the database', async () => {
-                const towns = await findAll();
-                expect(towns).to.eql(dataSets.findAll.output);
-            });
-        });
-    });
-
     describe('.findOne()', () => {
-        describe('if the id matches an existing town', () => {
+        describe('if the id matches an existing user', () => {
             beforeEach(async () => {
                 await insertFixtures(dataSets.findOne.inputs);
             });
 
-            it('it returns the proper town from the database', async () => {
-                const town = await findOne(1);
-                expect(town).to.eql(dataSets.findOne.output);
+            it('it returns the proper user from the database', async () => {
+                const user = await findOne(1);
+                expect(user).to.eql(dataSets.findOne.output);
             });
         });
 
-        describe('if the id does not match an existing town', () => {
+        describe('if the id does not match an existing user', () => {
             it('it returns null', async () => {
-                const town = await findOne(1);
-                expect(town).to.be.null;
+                const user = await findOne(1);
+                expect(user).to.be.null;
             });
         });
     });
