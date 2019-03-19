@@ -10,7 +10,7 @@ const fakeModels = {
     },
 };
 
-const { checkToken } = require('#server/middlewares/authMiddleware')(fakeModels);
+const { authenticate, checkPermissions } = require('#server/middlewares/authMiddleware')(fakeModels);
 const { mockReq, mockRes } = require('sinon-express-mock');
 const { auth: authConfig } = require('#server/config');
 
@@ -23,13 +23,13 @@ describe('auth', () => {
     let httpReq;
     let response;
 
-    it('.checkToken()', () => {
+    it('.autenticate()', () => {
         describe('if there is no token in the request', () => {
             beforeEach(async () => {
                 httpReq = mockReq({});
                 httpRes = mockRes();
 
-                await checkToken(httpReq, httpRes);
+                await authenticate(httpReq, httpRes);
                 [response] = httpRes.send.getCalls()[0].args;
             });
 
@@ -57,7 +57,7 @@ describe('auth', () => {
                 });
                 httpRes = mockRes();
 
-                await checkToken(httpReq, httpRes);
+                await authenticate(httpReq, httpRes);
                 [response] = httpRes.send.getCalls()[0].args;
             });
 
@@ -87,7 +87,7 @@ describe('auth', () => {
                 });
                 httpRes = mockRes();
 
-                await checkToken(httpReq, httpRes);
+                await authenticate(httpReq, httpRes);
                 [response] = httpRes.send.getCalls()[0].args;
             });
 
@@ -126,7 +126,7 @@ describe('auth', () => {
                     });
                     httpRes = mockRes();
 
-                    await checkToken(httpReq, httpRes);
+                    await authenticate(httpReq, httpRes);
                     [response] = httpRes.send.getCalls()[0].args;
                 });
 
@@ -171,7 +171,7 @@ describe('auth', () => {
                     httpRes = mockRes();
                     nextRequestHandler = sinon.stub();
 
-                    await checkToken(httpReq, httpRes, nextRequestHandler);
+                    await authenticate(httpReq, httpRes, nextRequestHandler);
                 });
 
                 it('it includes the user into the request', () => {
@@ -181,6 +181,99 @@ describe('auth', () => {
                 it('it triggers the next request handler', () => {
                     expect(nextRequestHandler).to.have.been.calledOnce;
                 });
+            });
+        });
+    });
+
+    describe('.checkPermissions()', () => {
+        const dataSets = [
+            { name: 'there is no user in the request', req: {}, requiredPermissions: [] },
+            { name: 'the user has no permission', req: { user: {} }, requiredPermissions: [] },
+            { name: 'the list of required permissions is not defined', req: { user: { permissions: [] } }, requiredPermissions: undefined },
+        ];
+
+        dataSets.forEach(({ name, req, requiredPermissions }) => {
+            describe(`if ${name}`, () => {
+                beforeEach(() => {
+                    httpReq = mockReq(req);
+                    httpRes = mockRes();
+                    checkPermissions(requiredPermissions, httpReq, httpRes);
+                    [response] = httpRes.send.getCalls()[0].args;
+                });
+
+                it('it responds with a 500', () => {
+                    expect(httpRes.status).to.have.been.calledWith(500);
+                });
+
+                it('it responds with the proper error messages', () => {
+                    expect(response).to.be.eql({
+                        error: {
+                            code: 4,
+                            user_message: 'Vous n\'avez pas accès à ces données',
+                            developer_message: 'Tried to access a secured page without authentication',
+                        },
+                    });
+                });
+            });
+        });
+
+        describe('if the user does not have all required permissions', () => {
+            beforeEach(() => {
+                httpReq = mockReq({
+                    user: {
+                        permissions: [],
+                    },
+                });
+                httpRes = mockRes();
+                checkPermissions([
+                    {
+                        type: 'feature',
+                        name: global.generate('string'),
+                    }], httpReq, httpRes);
+                [response] = httpRes.send.getCalls()[0].args;
+            });
+
+            it('it responds with a 400', () => {
+                expect(httpRes.status).to.have.been.calledWith(400);
+            });
+
+            it('it responds with the proper error messages', () => {
+                expect(response).to.be.eql({
+                    error: {
+                        code: 5,
+                        user_message: 'Vous n\'avez pas accès à ces données',
+                        developer_message: 'Tried to access a secured page without all required permissions',
+                    },
+                });
+            });
+        });
+
+        describe('if the user has all required permissions', () => {
+            let nextRequestHandler;
+            beforeEach(() => {
+                const randomType = global.generate('string');
+                const randomName = global.generate('string');
+                const randomPermission = {
+                    type: randomType,
+                    name: randomName,
+                };
+
+                httpReq = mockReq({
+                    user: {
+                        permissions: [{
+                            type: randomType,
+                            name: randomName,
+                        }],
+                    },
+                });
+                httpRes = mockRes();
+                nextRequestHandler = sinon.stub();
+
+                checkPermissions([randomPermission], httpReq, httpRes, nextRequestHandler);
+            });
+
+            it('it triggers the next request handler', () => {
+                expect(nextRequestHandler).to.have.been.calledOnce;
             });
         });
     });

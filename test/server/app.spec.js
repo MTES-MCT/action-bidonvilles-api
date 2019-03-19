@@ -13,7 +13,10 @@ function mockController() {
 function getFakeMiddlewares() {
     return {
         auth: {
-            checkToken: sinon.stub().callsFake((req, res, next) => {
+            authenticate: sinon.stub().callsFake((req, res, next) => {
+                next();
+            }),
+            checkPermissions: sinon.stub().callsFake((permissions, req, res, next) => {
                 next();
             }),
         },
@@ -58,7 +61,10 @@ function getFakeControllers() {
 }
 
 function getFakeApp(middlewares, controllers) {
-    return appConstructor(middlewares, controllers);
+    return appConstructor(
+        middlewares,
+        controllers,
+    );
 }
 
 describe('app', () => {
@@ -66,53 +72,118 @@ describe('app', () => {
     let middlewares;
     let controllers;
 
-    describe('POST /signin', () => {
+    describe('POST /towns', () => {
         beforeEach(async () => {
             middlewares = getFakeMiddlewares();
             controllers = getFakeControllers();
             app = getFakeApp(middlewares, controllers);
 
-            await chai.request(app).post('/signin');
-        });
-
-        it('it should map to userController.signin', () => {
-            expect(controllers.user.signin).to.have.been.calledOnce;
-        });
-    });
-
-    describe('GET /towns', () => {
-        beforeEach(async () => {
-            middlewares = getFakeMiddlewares();
-            controllers = getFakeControllers();
-            app = getFakeApp(middlewares, controllers);
-
-            await chai.request(app).get('/towns');
+            await chai.request(app).post('/towns');
         });
 
         it('it should require a token', () => {
-            expect(middlewares.auth.checkToken).to.have.been.calledOnce;
+            expect(middlewares.auth.authenticate).to.have.been.calledOnce;
+            expect(middlewares.auth.checkPermissions).to.have.been.calledOnce;
         });
 
-        it('it should map to townController.list', () => {
-            expect(controllers.town.list).to.have.been.calledOnce;
+        it('it should map to townController.add', () => {
+            expect(controllers.town.add).to.have.been.calledOnce;
         });
     });
 
-    describe('GET /towns/:id', () => {
+    describe('POST /towns/:id', () => {
         beforeEach(async () => {
             middlewares = getFakeMiddlewares();
             controllers = getFakeControllers();
             app = getFakeApp(middlewares, controllers);
 
-            await chai.request(app).get('/towns/123');
+            await chai.request(app).post('/towns/123');
         });
 
         it('it should require a token', () => {
-            expect(middlewares.auth.checkToken).to.have.been.calledOnce;
+            expect(middlewares.auth.authenticate).to.have.been.calledOnce;
+            expect(middlewares.auth.checkPermissions).to.have.been.calledOnceWith([
+                {
+                    type: 'feature',
+                    name: 'updateTown',
+                },
+            ]);
         });
 
-        it('it should map to townController.find', () => {
-            expect(controllers.town.find).to.have.been.calledOnce;
+        it('it should map to townController.edit', () => {
+            expect(controllers.town.edit).to.have.been.calledOnce;
+        });
+    });
+
+    describe('POST /towns/:id/close', () => {
+        beforeEach(async () => {
+            middlewares = getFakeMiddlewares();
+            controllers = getFakeControllers();
+            app = getFakeApp(middlewares, controllers);
+
+            await chai.request(app).post('/towns/123/close');
+        });
+
+        it('it should require a token', () => {
+            expect(middlewares.auth.authenticate).to.have.been.calledOnce;
+            expect(middlewares.auth.checkPermissions).to.have.been.calledOnceWith([
+                {
+                    type: 'feature',
+                    name: 'closeTown',
+                },
+            ]);
+        });
+
+        it('it should map to townController.close', () => {
+            expect(controllers.town.close).to.have.been.calledOnce;
+        });
+    });
+
+    describe('DELETE /towns/:id', () => {
+        beforeEach(async () => {
+            middlewares = getFakeMiddlewares();
+            controllers = getFakeControllers();
+            app = getFakeApp(middlewares, controllers);
+
+            await chai.request(app).delete('/towns/123');
+        });
+
+        it('it should require a token', () => {
+            expect(middlewares.auth.authenticate).to.have.been.calledOnce;
+            expect(middlewares.auth.checkPermissions).to.have.been.calledOnceWith([
+                {
+                    type: 'feature',
+                    name: 'deleteTown',
+                },
+            ]);
+        });
+
+        it('it should map to townController.delete', () => {
+            expect(controllers.town.delete).to.have.been.calledOnce;
+        });
+    });
+
+    describe('POST /towns/:id/comments', () => {
+        beforeEach(async () => {
+            middlewares = getFakeMiddlewares();
+            controllers = getFakeControllers();
+            app = getFakeApp(middlewares, controllers);
+
+            await chai.request(app).post('/towns/123/comments');
+        });
+
+        it('it should require a token', () => {
+            expect(middlewares.auth.authenticate).to.have.been.calledOnce;
+            expect(middlewares.auth.checkPermissions).to.have.been.calledOnceWith([
+                {
+                    type: 'feature',
+                    name: 'createComment',
+                },
+            ]);
+        });
+
+        it('it should map to townController.addComment', () => {
+            expect(controllers.town.addComment).to.have.been.calledOnce;
         });
     });
 });
