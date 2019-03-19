@@ -198,6 +198,7 @@ module.exports = () => ({
             first_name,
             last_name,
             company,
+            role,
         } = req.body;
 
         const salt = generateSalt();
@@ -211,6 +212,7 @@ module.exports = () => ({
                 first_name,
                 last_name,
                 company,
+                fk_role: role,
             });
 
             return res.status(200).send();
