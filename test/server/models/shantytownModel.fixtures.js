@@ -121,16 +121,23 @@ function getSolutionsFor(townId) {
     ];
 }
 
-function getEmptyTownOutput(townId) {
-    return {
+function getEmptyTownOutput(townId, version = 'unfiltered') {
+    const baseOutput = {
         id: townId,
-        priority: 1,
         status: 'open',
+        latitude: 2.5,
+        longitude: 1.0,
+    };
+
+    if (version === 'filtered') {
+        return baseOutput;
+    }
+
+    return Object.assign(baseOutput, {
+        priority: 1,
         declaredAt: null,
         builtAt: null,
         closedAt: null,
-        latitude: 2.5,
-        longitude: 1.0,
         address: randomStr,
         addressDetails: null,
         populationTotal: null,
@@ -178,11 +185,22 @@ function getEmptyTownOutput(townId) {
         },
         actions: [],
         updatedAt: closedDate.getTime() / 1000,
-    };
+    });
 }
 
-function getFullTownOutput(townId) {
-    return Object.assign({}, getEmptyTownOutput(townId), {
+function getFullTownOutput(townId, version = 'unfiltered') {
+    const baseOutput = {
+        id: townId,
+        status: 'closed_by_justice',
+        latitude: 2.5,
+        longitude: 1.0,
+    };
+
+    if (version === 'filtered') {
+        return baseOutput;
+    }
+
+    return Object.assign({}, getEmptyTownOutput(townId, 'unfiltered'), {
         status: 'closed_by_justice',
         declaredAt: builtDate.getTime() / 1000,
         builtAt: builtDate.getTime() / 1000,
@@ -267,14 +285,33 @@ module.exports = {
                 ],
             },
         ],
-        output: [
+        outputWithAllPermissions: [
             getEmptyTownOutput(1),
             getFullTownOutput(2),
+        ],
+        outputWithNoPermissions: [
+            getEmptyTownOutput(1, 'filtered'),
+            getFullTownOutput(2, 'filtered'),
         ],
     },
 
     findOne: {
         inputs: [
+            {
+                table: 'users',
+                rows: [
+                    {
+                        email: randomStr,
+                        password: randomStr,
+                        salt: randomStr,
+                        fk_departement: '75',
+                        first_name: randomStr,
+                        last_name: randomStr,
+                        company: randomStr,
+                        fk_role: 1,
+                    },
+                ],
+            },
             {
                 table: 'shantytowns',
                 rows: [
@@ -300,6 +337,7 @@ module.exports = {
                 ],
             },
         ],
-        output: getFullTownOutput(1),
+        outputWithAllPermissions: getFullTownOutput(1),
+        outputWithNoPermissions: getFullTownOutput(1, 'filtered'),
     },
 };

@@ -50,7 +50,46 @@ async function insertFixtures(inputs) {
 }
 
 // tests
-describe('[Models] Shantytown', () => {
+describe.only('[Models] Shantytown', () => {
+    const allPermissions = [
+        'priority',
+        'declaredAt',
+        'builtAt',
+        'closedAt',
+        'address',
+        'addressDetails',
+        'populationTotal',
+        'populationCouples',
+        'populationMinors',
+        'accessToElectricity',
+        'accessToWater',
+        'trashEvacuation',
+        'owner',
+        'censusStatus',
+        'censusConductedBy',
+        'censusConductedAt',
+        'ownerComplaint',
+        'justiceProcedure',
+        'justiceRendered',
+        'justiceRenderedAt',
+        'justiceRenderedBy',
+        'justiceChallenged',
+        'policeStatus',
+        'policeRequestedAt',
+        'policeGrantedAt',
+        'bailiff',
+        'socialOrigins',
+        'comments',
+        'closingSolutions',
+        'city',
+        'epci',
+        'departement',
+        'fieldType',
+        'ownerType',
+        'actions',
+        'updatedAt',
+    ];
+
     before(async () => {
         await db.authenticate();
     });
@@ -62,6 +101,8 @@ describe('[Models] Shantytown', () => {
     beforeEach(async () => {
         await Promise.all([
             db.query('DELETE FROM shantytowns'),
+            db.query('DELETE FROM users'),
+            db.query('ALTER SEQUENCE users_user_id_seq RESTART WITH 1'),
             db.query('ALTER SEQUENCE shantytowns_shantytown_id_seq RESTART WITH 1'),
         ]);
     });
@@ -79,9 +120,18 @@ describe('[Models] Shantytown', () => {
                 await insertFixtures(dataSets.findAll.inputs);
             });
 
-            it('it returns all towns from the database', async () => {
-                const towns = await findAll();
-                expect(towns).to.eql(dataSets.findAll.output);
+            describe('if all permissions are passed', () => {
+                it('it returns all towns from the database, with all details', async () => {
+                    const towns = await findAll(allPermissions);
+                    expect(towns).to.eql(dataSets.findAll.outputWithAllPermissions);
+                });
+            });
+
+            describe('if no permissions are passed', () => {
+                it('it returns all towns from the database, without details', async () => {
+                    const towns = await findAll();
+                    expect(towns).to.eql(dataSets.findAll.outputWithNoPermissions);
+                });
             });
         });
     });
@@ -92,9 +142,18 @@ describe('[Models] Shantytown', () => {
                 await insertFixtures(dataSets.findOne.inputs);
             });
 
-            it('it returns the proper town from the database', async () => {
-                const town = await findOne(1);
-                expect(town).to.eql(dataSets.findOne.output);
+            describe('if all permissions are passed', () => {
+                it('it returns the proper town from the database, with all details', async () => {
+                    const town = await findOne(1, allPermissions);
+                    expect(town).to.eql(dataSets.findOne.outputWithAllPermissions);
+                });
+            });
+
+            describe('if no permissions are passed', () => {
+                it('it returns the proper town from the database, without details', async () => {
+                    const towns = await findOne(1);
+                    expect(towns).to.eql(dataSets.findOne.outputWithNoPermissions);
+                });
             });
         });
 
