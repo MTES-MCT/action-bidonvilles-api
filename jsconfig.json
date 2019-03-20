@@ -3,7 +3,8 @@
         "baseUrl": ".",
         "paths": {
             "#server/*": [ "./server/*" ],
-            "#db/*": [ "./db/*" ]
+            "#db/*": [ "./db/*" ],
+            "#fixtures/*": [ "./test/fixtures/*" ]
         }
     },
     "exclude": [

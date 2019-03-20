@@ -64,6 +64,7 @@
   },
   "_moduleAliases": {
     "#server": "./server",
-    "#db": "./db"
+    "#db": "./db",
+    "#fixtures": "./test/fixtures"
   }
 }

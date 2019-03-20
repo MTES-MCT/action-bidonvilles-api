@@ -1,44 +1,21 @@
-const {
-    SocialOrigin, FieldType, OwnerType, ActionType, User, Departement, Region, ClosingSolution,
-} = require('#db/models');
-
-module.exports = () => ({
+module.exports = models => ({
     async list(req, res) {
         const queries = {
-            action_types: ActionType.findAll(),
-            field_types: FieldType.findAll(),
-            owner_types: OwnerType.findAll(),
-            social_origins: SocialOrigin.findAll(),
-            departements: Departement.findAll(),
-            regions: Region.findAll(),
-            closing_solutions: ClosingSolution.findAll(),
+            field_types: models.fieldType.findAll(),
+            owner_types: models.ownerType.findAll(),
+            social_origins: models.socialOrigin.findAll(),
+            departements: models.departement.findAll(),
+            regions: models.region.findAll(),
+            closing_solutions: models.closingSolution.findAll(),
         };
 
-        const promises = [];
-        const names = [];
-        Object.keys(queries).forEach((key) => {
-            names.push(key);
-            promises.push(queries[key]);
-        });
-
-        const user = await User.findOne({
-            include: [
-                Departement,
-            ],
-            where: {
-                id: req.user.id,
-            },
-        });
+        const promises = Object.values(queries);
+        const names = Object.keys(queries);
 
         return Promise.all(promises)
             .then((results) => {
                 const response = {
-                    user: Object.assign(req.user, {
-                        map_center: [
-                            user.Departement.latitude,
-                            user.Departement.longitude,
-                        ],
-                    }),
+                    user: req.user,
                 };
                 names.forEach((name, index) => {
                     response[name] = results[index];
@@ -46,6 +23,6 @@ module.exports = () => ({
 
                 return res.status(200).send(response);
             })
-            .catch(error => res.status(400).send(error));
+            .catch(error => res.status(500).send(error.message));
     },
 });

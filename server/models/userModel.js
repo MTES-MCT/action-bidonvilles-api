@@ -10,10 +10,14 @@ function serializeUser(user) {
         id: user.id,
         email: user.email,
         departement: user.departement,
+        map_center: [user.latitude, user.longitude],
         first_name: user.first_name,
         last_name: user.last_name,
         company: user.company,
-        permissions: [],
+        permissions: {
+            feature: [],
+            data: [],
+        },
     };
 }
 
@@ -27,8 +31,11 @@ module.exports = database => ({
                 users.first_name AS first_name,
                 users.last_name AS last_name,
                 users.company AS company,
-                users.fk_role AS "roleId"
+                users.fk_role AS "roleId",
+                departements.latitude AS latitude,
+                departements.longitude AS longitude
             FROM users
+            LEFT JOIN departements ON users.fk_departement = departements.code
             WHERE users.user_id = :id`,
             {
                 type: database.QueryTypes.SELECT,
@@ -59,10 +66,7 @@ module.exports = database => ({
         );
 
         permissions.forEach((permission) => {
-            user.permissions.push({
-                type: permission.type,
-                name: permission.name,
-            });
+            user.permissions[permission.type].push(permission.name);
         });
 
         return user;

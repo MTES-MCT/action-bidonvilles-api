@@ -189,7 +189,7 @@ describe('auth', () => {
         const dataSets = [
             { name: 'there is no user in the request', req: {}, requiredPermissions: [] },
             { name: 'the user has no permission', req: { user: {} }, requiredPermissions: [] },
-            { name: 'the list of required permissions is not defined', req: { user: { permissions: [] } }, requiredPermissions: undefined },
+            { name: 'the list of required permissions is not defined', req: { user: { permissions: {} } }, requiredPermissions: undefined },
         ];
 
         dataSets.forEach(({ name, req, requiredPermissions }) => {
@@ -221,7 +221,7 @@ describe('auth', () => {
             beforeEach(() => {
                 httpReq = mockReq({
                     user: {
-                        permissions: [],
+                        permissions: {},
                     },
                 });
                 httpRes = mockRes();
@@ -260,10 +260,9 @@ describe('auth', () => {
 
                 httpReq = mockReq({
                     user: {
-                        permissions: [{
-                            type: randomType,
-                            name: randomName,
-                        }],
+                        permissions: {
+                            [randomType]: [randomName],
+                        },
                     },
                 });
                 httpRes = mockRes();

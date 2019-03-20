@@ -1,6 +1,7 @@
 const builtDate = new Date('1987-08-11T00:00:00');
 const closedDate = new Date('1989-10-25T00:00:00');
 const randomStr = global.generate('string');
+const commonInputs = require('#fixtures/common.fixtures')(randomStr);
 
 function getEmptyTownInput() {
     return {
@@ -244,21 +245,7 @@ function getFullTownOutput(townId, version = 'unfiltered') {
 module.exports = {
     findAll: {
         inputs: [
-            {
-                table: 'users',
-                rows: [
-                    {
-                        email: randomStr,
-                        password: randomStr,
-                        salt: randomStr,
-                        fk_departement: '75',
-                        first_name: randomStr,
-                        last_name: randomStr,
-                        company: randomStr,
-                        fk_role: 1,
-                    },
-                ],
-            },
+            ...commonInputs,
             {
                 table: 'shantytowns',
                 rows: [
@@ -297,21 +284,7 @@ module.exports = {
 
     findOne: {
         inputs: [
-            {
-                table: 'users',
-                rows: [
-                    {
-                        email: randomStr,
-                        password: randomStr,
-                        salt: randomStr,
-                        fk_departement: '75',
-                        first_name: randomStr,
-                        last_name: randomStr,
-                        company: randomStr,
-                        fk_role: 1,
-                    },
-                ],
-            },
+            ...commonInputs,
             {
                 table: 'shantytowns',
                 rows: [

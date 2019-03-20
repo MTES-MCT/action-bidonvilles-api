@@ -43,14 +43,7 @@ module.exports = (models) => {
     }
 
     function hasPermission(permissions, permission) {
-        for (let i = 0; i < permissions.length; i += 1) {
-            if (Object.keys(permissions[i]).join('') === Object.keys(permission).join('')
-                && Object.values(permissions[i]).join('') === Object.values(permission).join('')) {
-                return true;
-            }
-        }
-
-        return false;
+        return permissions[permission.type] && permissions[permission.type].indexOf(permission.name) !== -1;
     }
 
     const authMiddleware = {};
