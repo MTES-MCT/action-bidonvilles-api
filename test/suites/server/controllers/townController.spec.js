@@ -40,7 +40,11 @@ describe('Controllers/Shantytown', () => {
         describe('if the query succeeds', () => {
             let towns;
             beforeEach(async () => {
-                httpReq = mockReq({});
+                httpReq = mockReq({
+                    user: {
+                        permissions: {},
+                    },
+                });
                 httpRes = mockRes();
                 towns = [global.generate('string'), global.generate('string'), global.generate('string')];
                 mockShantytownModel.findAll.resolves(towns);
@@ -61,7 +65,11 @@ describe('Controllers/Shantytown', () => {
         describe('if the query fails', () => {
             let error;
             beforeEach(async () => {
-                httpReq = mockReq({});
+                httpReq = mockReq({
+                    user: {
+                        permissions: {},
+                    },
+                });
                 httpRes = mockRes();
                 error = global.generate('string');
                 mockShantytownModel.findAll.rejects(new Error(error));
@@ -78,6 +86,25 @@ describe('Controllers/Shantytown', () => {
                 expect(response).to.be.eql(error);
             });
         });
+
+        it('it responds with data matching the user\'s permissions', async () => {
+            const fakePermissions = [global.generate('string'), global.generate('string')];
+            httpReq = mockReq({
+                user: {
+                    permissions: {
+                        data: fakePermissions,
+                    },
+                },
+            });
+            httpRes = mockRes();
+            const towns = [global.generate('string'), global.generate('string'), global.generate('string')];
+            mockShantytownModel.findAll.withArgs(fakePermissions).resolves(towns);
+
+            await list(httpReq, httpRes);
+            [response] = httpRes.send.getCalls()[0].args;
+
+            expect(response).to.be.eql(towns);
+        });
     });
 
     describe('.find()', () => {
@@ -88,6 +115,9 @@ describe('Controllers/Shantytown', () => {
                     httpReq = mockReq({
                         params: {
                             id: randomId,
+                        },
+                        user: {
+                            permissions: {},
                         },
                     });
                     httpRes = mockRes();
@@ -122,6 +152,9 @@ describe('Controllers/Shantytown', () => {
                         params: {
                             id: randomId,
                         },
+                        user: {
+                            permissions: {},
+                        },
                     });
                     httpRes = mockRes();
                     mockShantytownModel.findOne.withArgs(randomId).resolves(town);
@@ -143,7 +176,11 @@ describe('Controllers/Shantytown', () => {
         describe('if the query fails', () => {
             let error;
             beforeEach(async () => {
-                httpReq = mockReq({});
+                httpReq = mockReq({
+                    user: {
+                        permissions: {},
+                    },
+                });
                 httpRes = mockRes();
                 error = global.generate('string');
                 mockShantytownModel.findOne.rejects(new Error(error));
@@ -159,6 +196,31 @@ describe('Controllers/Shantytown', () => {
             it('it responds with the proper error messages', () => {
                 expect(response).to.be.eql(error);
             });
+        });
+
+        it('it responds with data matching the user\'s permissions', async () => {
+            const randomId = global.generate('number');
+            const town = {
+                id: randomId,
+            };
+            const fakePermissions = [global.generate('string'), global.generate('string')];
+            httpReq = mockReq({
+                params: {
+                    id: randomId,
+                },
+                user: {
+                    permissions: {
+                        data: fakePermissions,
+                    },
+                },
+            });
+            httpRes = mockRes();
+            mockShantytownModel.findOne.withArgs(randomId, fakePermissions).resolves(town);
+
+            await find(httpReq, httpRes);
+            [response] = httpRes.send.getCalls()[0].args;
+
+            expect(response).to.be.eql(town);
         });
     });
 });

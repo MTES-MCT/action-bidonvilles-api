@@ -329,7 +329,7 @@ function serializeComment(comment) {
 module.exports = models => ({
     async list(req, res) {
         try {
-            return res.status(200).send(await models.shantytown.findAll());
+            return res.status(200).send(await models.shantytown.findAll(req.user.permissions.data));
         } catch (error) {
             return res.status(500).send(error.message);
         }
@@ -337,7 +337,7 @@ module.exports = models => ({
 
     async find(req, res) {
         try {
-            const town = await models.shantytown.findOne(req.params.id);
+            const town = await models.shantytown.findOne(req.params.id, req.user.permissions.data);
 
             if (town === null) {
                 return res.status(404).send({
