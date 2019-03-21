@@ -25,6 +25,18 @@ function serializeShantytown(town, permissions) {
         status: town.status,
         latitude: town.latitude,
         longitude: town.longitude,
+        city: {
+            code: town.cityCode,
+            name: town.cityName,
+        },
+        epci: {
+            code: town.epciCode,
+            name: town.epciName,
+        },
+        departement: {
+            code: town.departementCode,
+            name: town.departementName,
+        },
     };
 
     // @todo: alter all dates to a datetime so it can be easily serialized (just like closed_at)
@@ -55,18 +67,6 @@ function serializeShantytown(town, permissions) {
         policeRequestedAt: fromDateToTimestamp(town.policeRequestedAt),
         policeGrantedAt: fromDateToTimestamp(town.policeGrantedAt),
         bailiff: town.bailiff,
-        city: {
-            code: town.cityCode,
-            name: town.cityName,
-        },
-        epci: {
-            code: town.epciCode,
-            name: town.epciName,
-        },
-        departement: {
-            code: town.departementCode,
-            name: town.departementName,
-        },
         fieldType: {
             id: town.fieldTypeId,
             label: town.fieldTypeLabel,

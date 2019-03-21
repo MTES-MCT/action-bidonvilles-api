@@ -128,6 +128,18 @@ function getEmptyTownOutput(townId, version = 'unfiltered') {
         status: 'open',
         latitude: 2.5,
         longitude: 1.0,
+        city: {
+            code: '75056',
+            name: 'Paris',
+        },
+        epci: {
+            code: '200054781',
+            name: 'Métropole du Grand Paris',
+        },
+        departement: {
+            code: '75',
+            name: 'Paris',
+        },
     };
 
     if (version === 'filtered') {
@@ -164,18 +176,6 @@ function getEmptyTownOutput(townId, version = 'unfiltered') {
         socialOrigins: [],
         comments: [],
         closingSolutions: [],
-        city: {
-            code: '75056',
-            name: 'Paris',
-        },
-        epci: {
-            code: '200054781',
-            name: 'Métropole du Grand Paris',
-        },
-        departement: {
-            code: '75',
-            name: 'Paris',
-        },
         fieldType: {
             id: 1,
             label: 'Inconnu',
@@ -195,6 +195,18 @@ function getFullTownOutput(townId, version = 'unfiltered') {
         status: 'closed_by_justice',
         latitude: 2.5,
         longitude: 1.0,
+        city: {
+            code: '75056',
+            name: 'Paris',
+        },
+        epci: {
+            code: '200054781',
+            name: 'Métropole du Grand Paris',
+        },
+        departement: {
+            code: '75',
+            name: 'Paris',
+        },
     };
 
     if (version === 'filtered') {
