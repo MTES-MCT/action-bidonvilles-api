@@ -8,10 +8,12 @@ module.exports = {
             {
                 id: 1,
                 label: 'Inconnu',
+                color: '#cccccc',
             },
             {
                 id: 2,
                 label: 'Immeuble bâti',
+                color: '#cccccc',
             },
         ],
     },

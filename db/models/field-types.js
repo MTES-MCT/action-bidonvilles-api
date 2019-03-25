@@ -12,6 +12,10 @@ module.exports = function (sequelize, DataTypes) {
             allowNull: false,
             unique: true,
         },
+        color: {
+            type: DataTypes.STRING(6),
+            allowNull: false,
+        },
         createdAt: {
             type: DataTypes.DATE,
             defaultValue: DataTypes.NOW,
@@ -20,7 +24,7 @@ module.exports = function (sequelize, DataTypes) {
         updatedAt: {
             type: DataTypes.DATE,
             defaultValue: DataTypes.NOW,
-            onUpdate : DataTypes.NOW,
+            onUpdate: DataTypes.NOW,
             field: 'updated_at',
         },
     }, {
