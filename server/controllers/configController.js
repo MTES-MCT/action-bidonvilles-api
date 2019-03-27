@@ -7,6 +7,7 @@ module.exports = models => ({
             departements: models.departement.findAll(),
             regions: models.region.findAll(),
             closing_solutions: models.closingSolution.findAll(),
+            action_types: models.actionType.findAll(),
         };
 
         const promises = Object.values(queries);

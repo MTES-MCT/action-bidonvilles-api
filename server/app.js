@@ -115,32 +115,68 @@ module.exports = (middlewares, controllers) => {
     // actions
     app.get(
         '/actions',
-        middlewares.auth.authenticate,
+        [
+            middlewares.auth.authenticate,
+            (...args) => middlewares.auth.checkPermissions([{
+                type: 'feature',
+                name: 'readAction',
+            }], ...args),
+        ],
         controllers.action.list,
     );
     app.get(
         '/actions/:id',
-        middlewares.auth.authenticate,
+        [
+            middlewares.auth.authenticate,
+            (...args) => middlewares.auth.checkPermissions([{
+                type: 'feature',
+                name: 'readAction',
+            }], ...args),
+        ],
         controllers.action.find,
     );
     app.post(
         '/actions',
-        middlewares.auth.authenticate,
+        [
+            middlewares.auth.authenticate,
+            (...args) => middlewares.auth.checkPermissions([{
+                type: 'feature',
+                name: 'createAction',
+            }], ...args),
+        ],
         controllers.action.add,
     );
     app.post(
         '/actions/:id',
-        middlewares.auth.authenticate,
+        [
+            middlewares.auth.authenticate,
+            (...args) => middlewares.auth.checkPermissions([{
+                type: 'feature',
+                name: 'createAction',
+            }], ...args),
+        ],
         controllers.action.edit,
     );
     app.post(
         '/actions/:id/steps',
-        middlewares.auth.authenticate,
+        [
+            middlewares.auth.authenticate,
+            (...args) => middlewares.auth.checkPermissions([{
+                type: 'feature',
+                name: 'createAction',
+            }], ...args),
+        ],
         controllers.action.addStep,
     );
     app.delete(
         '/actions/:id',
-        middlewares.auth.authenticate,
+        [
+            middlewares.auth.authenticate,
+            (...args) => middlewares.auth.checkPermissions([{
+                type: 'feature',
+                name: 'deleteAction',
+            }], ...args),
+        ],
         controllers.action.delete,
     );
 

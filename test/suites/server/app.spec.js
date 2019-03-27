@@ -205,4 +205,148 @@ describe('app', () => {
             expect(controllers.user.setDefaultExport).to.have.been.calledOnce;
         });
     });
+
+    describe('GET /actions', () => {
+        beforeEach(async () => {
+            middlewares = getFakeMiddlewares();
+            controllers = getFakeControllers();
+            app = getFakeApp(middlewares, controllers);
+
+            await chai.request(app).get('/actions');
+        });
+
+        it('it should require a token', () => {
+            expect(middlewares.auth.authenticate).to.have.been.calledOnce;
+            expect(middlewares.auth.checkPermissions).to.have.been.calledOnceWith([
+                {
+                    type: 'feature',
+                    name: 'readAction',
+                },
+            ]);
+        });
+
+        it('it should map to actionController.list', () => {
+            expect(controllers.action.list).to.have.been.calledOnce;
+        });
+    });
+
+    describe('GET /actions/:id', () => {
+        beforeEach(async () => {
+            middlewares = getFakeMiddlewares();
+            controllers = getFakeControllers();
+            app = getFakeApp(middlewares, controllers);
+
+            await chai.request(app).get('/actions/1');
+        });
+
+        it('it should require a token', () => {
+            expect(middlewares.auth.authenticate).to.have.been.calledOnce;
+            expect(middlewares.auth.checkPermissions).to.have.been.calledOnceWith([
+                {
+                    type: 'feature',
+                    name: 'readAction',
+                },
+            ]);
+        });
+
+        it('it should map to actionController.find', () => {
+            expect(controllers.action.find).to.have.been.calledOnce;
+        });
+    });
+
+    describe('POST /actions', () => {
+        beforeEach(async () => {
+            middlewares = getFakeMiddlewares();
+            controllers = getFakeControllers();
+            app = getFakeApp(middlewares, controllers);
+
+            await chai.request(app).post('/actions');
+        });
+
+        it('it should require a token', () => {
+            expect(middlewares.auth.authenticate).to.have.been.calledOnce;
+            expect(middlewares.auth.checkPermissions).to.have.been.calledOnceWith([
+                {
+                    type: 'feature',
+                    name: 'createAction',
+                },
+            ]);
+        });
+
+        it('it should map to actionController.add', () => {
+            expect(controllers.action.add).to.have.been.calledOnce;
+        });
+    });
+
+    describe('POST /actions/:id', () => {
+        beforeEach(async () => {
+            middlewares = getFakeMiddlewares();
+            controllers = getFakeControllers();
+            app = getFakeApp(middlewares, controllers);
+
+            await chai.request(app).post('/actions/:id');
+        });
+
+        it('it should require a token', () => {
+            expect(middlewares.auth.authenticate).to.have.been.calledOnce;
+            expect(middlewares.auth.checkPermissions).to.have.been.calledOnceWith([
+                {
+                    type: 'feature',
+                    name: 'createAction',
+                },
+            ]);
+        });
+
+        it('it should map to actionController.edit', () => {
+            expect(controllers.action.edit).to.have.been.calledOnce;
+        });
+    });
+
+    describe('POST /actions/:id/steps', () => {
+        beforeEach(async () => {
+            middlewares = getFakeMiddlewares();
+            controllers = getFakeControllers();
+            app = getFakeApp(middlewares, controllers);
+
+            await chai.request(app).post('/actions/:id/steps');
+        });
+
+        it('it should require a token', () => {
+            expect(middlewares.auth.authenticate).to.have.been.calledOnce;
+            expect(middlewares.auth.checkPermissions).to.have.been.calledOnceWith([
+                {
+                    type: 'feature',
+                    name: 'createAction',
+                },
+            ]);
+        });
+
+        it('it should map to actionController.addStep', () => {
+            expect(controllers.action.addStep).to.have.been.calledOnce;
+        });
+    });
+
+    describe('DELETE /actions/:id', () => {
+        beforeEach(async () => {
+            middlewares = getFakeMiddlewares();
+            controllers = getFakeControllers();
+            app = getFakeApp(middlewares, controllers);
+
+            await chai.request(app).delete('/actions/:id');
+        });
+
+        it('it should require a token', () => {
+            expect(middlewares.auth.authenticate).to.have.been.calledOnce;
+            expect(middlewares.auth.checkPermissions).to.have.been.calledOnceWith([
+                {
+                    type: 'feature',
+                    name: 'deleteAction',
+                },
+            ]);
+        });
+
+        it('it should map to actionController.delete', () => {
+            expect(controllers.action.delete).to.have.been.calledOnce;
+        });
+    });
 });

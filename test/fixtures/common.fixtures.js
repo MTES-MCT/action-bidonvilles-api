@@ -127,6 +127,17 @@ module.exports = randomStr => [
         ],
     },
     {
+        table: 'action_types',
+        rows: [
+            {
+                label: 'A',
+            },
+            {
+                label: 'B',
+            },
+        ],
+    },
+    {
         table: 'social_origins',
         rows: [
             {
