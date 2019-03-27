@@ -9,7 +9,7 @@ function trim(str) {
     return str.replace(/^\s*|\s*$/g, '');
 }
 
-module.exports = () => ({
+module.exports = models => ({
     async signin(req, res) {
         const { email, password } = req.body;
 
@@ -224,5 +224,35 @@ module.exports = () => ({
                 },
             });
         }
+    },
+
+    async setDefaultExport(req, res) {
+        const { export: exportValue } = req.body;
+
+        if (exportValue === undefined) {
+            return res.status(400).send({
+                success: false,
+                error: {
+                    user_message: 'Les nouvelles préférences d\'export sont manquantes',
+                    developer_message: 'The new default export value is missing',
+                },
+            });
+        }
+
+        try {
+            await models.user.setDefaultExport(req.user.id, exportValue);
+        } catch (error) {
+            return res.status(500).send({
+                success: false,
+                error: {
+                    user_message: 'La sauvegarde de vos préférences a échoué',
+                    developer_message: `Failed to store the new default-export into database: ${error.message}`,
+                },
+            });
+        }
+
+        return res.status(200).send({
+            success: true,
+        });
     },
 });

@@ -31,6 +31,7 @@ function getFakeControllers() {
             renewToken: mockController(),
             signin: mockController(),
             signup: mockController(),
+            setDefaultExport: mockController(),
         },
         config: {
             list: mockController(),
@@ -184,6 +185,24 @@ describe('app', () => {
 
         it('it should map to townController.addComment', () => {
             expect(controllers.town.addComment).to.have.been.calledOnce;
+        });
+    });
+
+    describe('POST /me/default-export', () => {
+        beforeEach(async () => {
+            middlewares = getFakeMiddlewares();
+            controllers = getFakeControllers();
+            app = getFakeApp(middlewares, controllers);
+
+            await chai.request(app).post('/me/default-export');
+        });
+
+        it('it should require a token', () => {
+            expect(middlewares.auth.authenticate).to.have.been.calledOnce;
+        });
+
+        it('it should map to userController.setDefaultExport', () => {
+            expect(controllers.user.setDefaultExport).to.have.been.calledOnce;
         });
     });
 });

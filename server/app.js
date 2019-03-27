@@ -34,6 +34,11 @@ module.exports = (middlewares, controllers) => {
         controllers.user.edit,
     );
     app.post(
+        '/me/default-export',
+        middlewares.auth.authenticate,
+        controllers.user.setDefaultExport,
+    );
+    app.post(
         '/users',
         middlewares.auth.authenticate,
         controllers.user.signup,

@@ -13,9 +13,16 @@ const mockModels = makeMockModels({
     },
 });
 
-const { signin, me } = proxyquire('#server/controllers/userController', {
+// @todo: i promise this madness of "mockModels" here, "otherMockModels" there won't last for long...
+const otherMockModels = {
+    user: {
+        setDefaultExport: sinon.stub(),
+    },
+};
+
+const { signin, me, setDefaultExport } = proxyquire('#server/controllers/userController', {
     '#db/models': mockModels,
-})();
+})(otherMockModels);
 
 const { expect } = chai;
 chai.use(sinonChai);
@@ -218,6 +225,98 @@ describe('Controllers/User', () => {
 
         it('it responds with the current user', () => {
             expect(response).to.be.eql(fakeUser);
+        });
+    });
+
+    describe('.setDefaultExport()', () => {
+        let fakeUser;
+        beforeEach(async () => {
+            const fakeId = global.generate('number');
+            fakeUser = {
+                id: fakeId,
+                email: global.generate('string'),
+                salt: global.generate('string'),
+                password: global.generate('string'),
+            };
+        });
+
+        async function request(body) {
+            httpReq = mockReq({
+                user: fakeUser,
+                body,
+            });
+            httpRes = mockRes();
+
+            await setDefaultExport(httpReq, httpRes);
+            [response] = httpRes.send.getCalls()[0].args;
+        }
+
+        describe('if there is not export value in the body', () => {
+            beforeEach(async () => {
+                await request({});
+            });
+
+            it('it responds with a 400', () => {
+                expect(httpRes.status).to.have.been.calledWith(400);
+            });
+
+            it('it responds with a success = false', () => {
+                expect(response.success).to.be.false;
+            });
+
+            it('it responds with the proper error messages', () => {
+                expect(response.error).to.be.eql({
+                    user_message: 'Les nouvelles préférences d\'export sont manquantes',
+                    developer_message: 'The new default export value is missing',
+                });
+            });
+        });
+
+        describe('if the query fails', () => {
+            let error;
+            beforeEach(async () => {
+                const fakeExport = global.generate('string');
+                error = global.generate('string');
+                otherMockModels.user.setDefaultExport.withArgs(fakeUser.id, fakeExport).rejects(new Error(error));
+
+                await request({
+                    export: fakeExport,
+                });
+            });
+
+            it('it responds with a 500', () => {
+                expect(httpRes.status).to.have.been.calledWith(500);
+            });
+
+            it('it responds with a success = false', () => {
+                expect(response.success).to.be.false;
+            });
+
+            it('it responds with the proper error messages', () => {
+                expect(response.error).to.be.eql({
+                    user_message: 'La sauvegarde de vos préférences a échoué',
+                    developer_message: `Failed to store the new default-export into database: ${error}`,
+                });
+            });
+        });
+
+        describe('if the query succeeds', () => {
+            beforeEach(async () => {
+                const fakeExport = global.generate('string');
+                otherMockModels.user.setDefaultExport.withArgs(fakeUser.id, fakeExport).resolves();
+
+                await request({
+                    export: fakeExport,
+                });
+            });
+
+            it('it responds with a 200', () => {
+                expect(httpRes.status).to.have.been.calledWith(200);
+            });
+
+            it('it responds with a success = true', () => {
+                expect(response.success).to.be.true;
+            });
         });
     });
 });
