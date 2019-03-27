@@ -10,7 +10,7 @@ const {
 const fixtures = require('#fixtures/server/models/shantytownModel.fixtures');
 
 // tests
-describe('[Models] Shantytown', () => {
+describe('[/server/models] shantytownModel', () => {
     const allPermissions = [
         'priority',
         'declaredAt',
