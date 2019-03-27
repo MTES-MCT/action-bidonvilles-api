@@ -23,6 +23,33 @@ module.exports = {
                 ],
                 data: [],
             },
+            default_export: [randomStr, randomStr, randomStr],
         },
+    },
+
+    findOneWithoutDefaultExport: {
+        inputs: [
+            ...commonInputs,
+            {
+                table: 'users',
+                rows: [
+                    {
+                        email: global.generate('string'),
+                        password: randomStr,
+                        salt: randomStr,
+                        fk_departement: '75',
+                        first_name: randomStr,
+                        last_name: randomStr,
+                        company: randomStr,
+                        default_export: null,
+                        fk_role: 1,
+                    },
+                ],
+            },
+        ],
+    },
+
+    setDefaultExport: {
+        inputs: commonInputs,
     },
 };

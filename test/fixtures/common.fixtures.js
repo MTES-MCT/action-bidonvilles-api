@@ -99,6 +99,7 @@ module.exports = randomStr => [
                 first_name: randomStr,
                 last_name: randomStr,
                 company: randomStr,
+                default_export: `${randomStr},${randomStr},${randomStr}`,
                 fk_role: 1,
             },
         ],

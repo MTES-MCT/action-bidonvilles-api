@@ -18,6 +18,7 @@ function serializeUser(user) {
             feature: [],
             data: [],
         },
+        default_export: user.default_export ? user.default_export.split(',') : [],
     };
 }
 
@@ -32,6 +33,7 @@ module.exports = database => ({
                 users.last_name AS last_name,
                 users.company AS company,
                 users.fk_role AS "roleId",
+                users.default_export AS default_export,
                 departements.latitude AS latitude,
                 departements.longitude AS longitude
             FROM users
@@ -70,5 +72,34 @@ module.exports = database => ({
         });
 
         return user;
+    },
+
+    setDefaultExport: async (userId, newDefaultExport) => {
+        if (userId === undefined) {
+            throw new Error('The user id is missing');
+        }
+
+        if (newDefaultExport === undefined) {
+            throw new Error('The new default-export value is missing');
+        }
+
+        const [, { rowCount }] = await database.query(
+            `UPDATE
+                users
+            SET
+                default_export = :defaultExport
+            WHERE
+                users.user_id = :userId`,
+            {
+                replacements: {
+                    defaultExport: newDefaultExport ? newDefaultExport.replace(/\s/g, '') : newDefaultExport,
+                    userId,
+                },
+            },
+        );
+
+        if (rowCount === 0) {
+            throw new Error(`The user #${userId} does not exist`);
+        }
     },
 });
