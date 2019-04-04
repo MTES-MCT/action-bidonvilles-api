@@ -46,6 +46,9 @@ module.exports = randomStr => [
             {
                 name: 'superadmin',
             },
+            {
+                name: 'admin',
+            },
         ],
     },
     {
@@ -101,6 +104,7 @@ module.exports = randomStr => [
                 company: randomStr,
                 default_export: `${randomStr},${randomStr},${randomStr}`,
                 fk_role: 1,
+                active: true,
             },
         ],
     },

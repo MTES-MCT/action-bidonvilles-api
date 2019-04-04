@@ -6,8 +6,12 @@ module.exports = {
         inputs: commonInputs,
         output: [
             {
-                code: '75',
-                name: 'Paris',
+                id: 1,
+                name: 'superadmin',
+            },
+            {
+                id: 2,
+                name: 'admin',
             },
         ],
     },
@@ -15,8 +19,8 @@ module.exports = {
     findOne: {
         inputs: commonInputs,
         output: {
-            code: '75',
-            name: 'Paris',
+            id: 1,
+            name: 'superadmin',
         },
     },
 };

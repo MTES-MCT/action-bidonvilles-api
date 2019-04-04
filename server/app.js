@@ -24,6 +24,17 @@ module.exports = (middlewares, controllers) => {
 
     // user
     app.get(
+        '/users',
+        [
+            middlewares.auth.authenticate,
+            (...args) => middlewares.auth.checkPermissions([{
+                type: 'feature',
+                name: 'readUser',
+            }], ...args),
+        ],
+        controllers.user.list,
+    );
+    app.get(
         '/me',
         middlewares.auth.authenticate,
         controllers.user.me,
@@ -40,8 +51,33 @@ module.exports = (middlewares, controllers) => {
     );
     app.post(
         '/users',
-        middlewares.auth.authenticate,
-        controllers.user.signup,
+        [
+            middlewares.auth.authenticate,
+            (...args) => middlewares.auth.checkPermissions([{
+                type: 'feature',
+                name: 'createUser',
+            }], ...args),
+        ],
+        controllers.user.create,
+    );
+    app.get(
+        '/users/:id/activate',
+        [
+            middlewares.auth.authenticate,
+            (...args) => middlewares.auth.checkPermissions([{
+                type: 'feature',
+                name: 'createUser',
+            }], ...args),
+        ],
+        controllers.user.getActivationLink,
+    );
+    app.post(
+        '/users/:id/activate',
+        controllers.user.activate,
+    );
+    app.get(
+        '/activation-tokens/:token/check',
+        controllers.user.checkActivationToken,
     );
 
     // towns

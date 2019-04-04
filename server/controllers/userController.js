@@ -1,4 +1,8 @@
-const { generateAccessTokenFor, hashPassword, generateSalt } = require('#server/utils/auth');
+const {
+    generateAccessTokenFor, hashPassword, generateSalt, getAccountActivationLink,
+} = require('#server/utils/auth');
+const jwt = require('jsonwebtoken');
+const { auth: authConfig } = require('#server/config');
 const { User } = require('#db/models');
 
 function trim(str) {
@@ -10,6 +14,30 @@ function trim(str) {
 }
 
 module.exports = models => ({
+    async list(req, res) {
+        try {
+            const users = await models.user.findAll();
+            res.status(200).send(users.map(({
+                id, email, departement, first_name, last_name, company, active,
+            }) => ({
+                id,
+                email,
+                departement,
+                first_name,
+                last_name,
+                company,
+                active,
+            })));
+        } catch (error) {
+            res.status(500).send({
+                error: {
+                    user_message: 'Une erreur est survenue lors de la récupération des données en base',
+                    developer_message: error.message,
+                },
+            });
+        }
+    },
+
     async signin(req, res) {
         const { email, password } = req.body;
 
@@ -33,11 +61,7 @@ module.exports = models => ({
             });
         }
 
-        const user = await User.findOne({
-            where: {
-                email,
-            },
-        });
+        const user = await models.user.findOneByEmail(email, true);
 
         if (user === null) {
             return res.status(403).send({
@@ -45,6 +69,16 @@ module.exports = models => ({
                 error: {
                     user_message: 'Ces identifiants sont incorrects',
                     developer_message: 'The given credentials do not match an existing user',
+                },
+            });
+        }
+
+        if (user.active !== true) {
+            return res.status(400).send({
+                success: false,
+                error: {
+                    user_message: 'Votre compte doit être activé avant utilisation',
+                    developer_message: 'The user is not activated yet',
                 },
             });
         }
@@ -173,57 +207,149 @@ module.exports = models => ({
     /**
      *
      */
-    async signup(req, res) {
-        // limit access to that api to a specific set of users
-        const { id: userId } = req.user;
-        const user = await User.findOne({
-            where: {
-                id: userId,
-            },
-        });
+    async create(req, res) {
+        // create the new user
+        const {
+            email: rawEmail,
+            departement: departementCode,
+            firstName: rawFirstName,
+            lastName: rawLastName,
+            company: rawCompany,
+            role: roleId,
+            dataOwnerAgreement,
+        } = req.body;
 
-        if (user === null || user.email !== 'anis@beta.gouv.fr') {
+        const errors = {};
+        function addError(fieldName, error) {
+            if (!errors[fieldName]) {
+                errors[fieldName] = [];
+            }
+
+            errors[fieldName].push(error);
+        }
+
+        // validate email
+        const email = trim(rawEmail);
+        if (!rawEmail || email === '') {
+            addError('email', 'L\'adresse e-mail est obligatoire');
+        } else {
+            let user;
+            try {
+                user = await models.user.findOneByEmail(email);
+            } catch (error) {
+                return res.status(500).send({
+                    error: {
+                        user_message: 'Une erreur est survenue lors de la lecture de la base de données',
+                        developer_message: 'Failed checking email\'s unicity',
+                    },
+                });
+            }
+
+            if (user !== null) {
+                addError('email', 'Cette adresse e-mail est déjà utilisée');
+            }
+        }
+
+        const firstName = trim(rawFirstName);
+        if (!rawFirstName || firstName === '') {
+            addError('firstName', 'Le prénom est obligatoire');
+        }
+
+        const lastName = trim(rawLastName);
+        if (!rawLastName || lastName === '') {
+            addError('lastName', 'Le nom de famille est obligatoire');
+        }
+
+        const company = trim(rawCompany);
+        if (!rawCompany || company === '') {
+            addError('company', 'La structure est obligatoire');
+        }
+
+        if (!departementCode) {
+            addError('departement', 'Le département est obligatoire');
+        } else {
+            let departement;
+            try {
+                departement = await models.departement.findOne(departementCode);
+            } catch (error) {
+                return res.status(500).send({
+                    error: {
+                        user_message: 'Une erreur est survenue lors de la lecture de la base de données',
+                        developer_message: 'Failed checking departement\'s existence',
+                    },
+                });
+            }
+
+            if (departement === null) {
+                addError('departement', 'Ce département n\'est pas reconnu');
+            }
+        }
+
+        if (!roleId) {
+            addError('role', 'Le rôle est obligatoire');
+        } else {
+            let role;
+            try {
+                role = await models.role.findOne(roleId);
+            } catch (error) {
+                return res.status(500).send({
+                    error: {
+                        user_message: 'Une erreur est survenue lors de la lecture de la base de données',
+                        developer_message: 'Failed checking role\'s existence',
+                    },
+                });
+            }
+
+            if (role === null) {
+                addError('role', 'Ce rôle n\'existe pas');
+            }
+        }
+
+        if (dataOwnerAgreement === undefined) {
+            addError('dataOwnerAgreement', 'L\'accord du propriétaire des données doit être confirmée');
+        } else if (dataOwnerAgreement !== true) {
+            addError('dataOwnerAgreement', 'L\'accord du propriétaire des données est obligatoire');
+        }
+
+        if (Object.keys(errors).length > 0) {
             return res.status(400).send({
                 error: {
-                    user_message: 'Vous n\'avez pas accès à cette fonctionnalité',
+                    user_message: 'Certaines informations saisies sont incorrectes',
+                    developer_message: 'Input data is invalid',
+                    fields: errors,
                 },
             });
         }
 
-        // create the new user
-        const {
-            email,
-            password,
-            departement,
-            first_name,
-            last_name,
-            company,
-            role,
-        } = req.body;
-
-        const salt = generateSalt();
-
+        let userId;
         try {
-            await User.create({
+            userId = await models.user.create({
                 email,
-                salt,
-                password: hashPassword(password, salt),
-                departement,
-                first_name,
-                last_name,
+                departement: departementCode,
+                firstName,
+                lastName,
                 company,
-                fk_role: role,
+                role: roleId,
+                salt: generateSalt(),
+                password: null,
             });
-
-            return res.status(200).send();
         } catch (error) {
             return res.status(500).send({
                 error: {
-                    user_message: 'Une erreur est survenue dans l\'enregistrement de l\'utilisateur en base de données',
-                    developer_message: error.message,
+                    user_message: 'Une erreur est survenue lors de l\'écriture en base de données',
+                    developer_message: 'Failed inserting the new user into database',
                 },
             });
         }
+
+        const activationLink = getAccountActivationLink({
+            id: userId,
+            email,
+        });
+
+        return res.status(200).send({
+            activationLink,
+        });
     },
 
     async setDefaultExport(req, res) {
@@ -240,7 +366,7 @@ module.exports = models => ({
         }
 
         try {
-            await models.user.setDefaultExport(req.user.id, exportValue);
+            await models.user.update(req.user.id, exportValue);
         } catch (error) {
             return res.status(500).send({
                 success: false,
@@ -254,5 +380,168 @@ module.exports = models => ({
         return res.status(200).send({
             success: true,
         });
+    },
+
+    async getActivationLink(req, res) {
+        let user;
+        try {
+            user = await models.user.findOne(req.params.id);
+        } catch (error) {
+            return res.status(500).send({
+                error: {
+                    user_message: 'Une erreur est survenue lors de la lecture de la base de données',
+                    developer_message: 'Failed retrieving the user from database',
+                },
+            });
+        }
+
+        if (user === null) {
+            return res.status(404).send({
+                error: {
+                    user_message: 'L\'utilisateur à activer n\'existe pas',
+                    developer_message: 'The user to be activated does not exist',
+                },
+            });
+        }
+
+        if (user.active === true) {
+            return res.status(403).send({
+                error: {
+                    user_message: 'Cet utilisateur est déjà activé',
+                    developer_message: 'The user is already activates',
+                },
+            });
+        }
+
+        const activationLink = getAccountActivationLink({
+            id: user.id,
+            email: user.email,
+        });
+
+        return res.status(200).send({
+            activationLink,
+        });
+    },
+
+    async checkActivationToken(req, res) {
+        if (!req.params.token) {
+            return res.status(400).send({
+                error: {
+                    user_message: 'Le jeton d\'activation est manquant',
+                    developer_message: 'The activation token is missing',
+                },
+            });
+        }
+
+        let decoded;
+        try {
+            decoded = jwt.verify(req.params.token, authConfig.secret);
+        } catch (error) {
+            return res.status(400).send({
+                error: {
+                    user_message: 'Le jeton d\'activation est invalide ou expiré',
+                    developer_message: 'The activation token is either invalid or expired',
+                },
+            });
+        }
+
+        const user = await models.user.findOne(decoded.userId);
+        if (user === null) {
+            return res.status(400).send({
+                error: {
+                    user_message: 'Le jeton d\'activation ne correspond à aucun utilisateur',
+                    developer_message: 'The activation token does not match a real user',
+                },
+            });
+        }
+
+        if (user.active === true) {
+            return res.status(400).send({
+                error: {
+                    user_message: 'Ce compte utilisateur est déjà activé',
+                    developer_message: 'The user is already activated',
+                },
+            });
+        }
+
+        return res.status(200).send({
+            userId: user.id,
+        });
+    },
+
+    async activate(req, res) {
+        if (!req.body.token) {
+            return res.status(400).send({
+                error: {
+                    user_message: 'Le jeton d\'activation est manquant',
+                    developer_message: 'The activation token is missing',
+                },
+            });
+        }
+
+        let decoded;
+        try {
+            decoded = jwt.verify(req.body.token, authConfig.secret);
+        } catch (error) {
+            return res.status(400).send({
+                error: {
+                    user_message: 'Le jeton d\'activation est invalide ou expiré',
+                    developer_message: 'The activation token is either invalid or expired',
+                },
+            });
+        }
+
+        const user = await models.user.findOne(decoded.userId, true);
+        if (user === null) {
+            return res.status(400).send({
+                error: {
+                    user_message: 'Le jeton d\'activation ne correspond à aucun utilisateur',
+                    developer_message: 'The activation token does not match a real user',
+                },
+            });
+        }
+
+        if (user.id !== parseInt(req.params.id, 10)) {
+            return res.status(400).send({
+                error: {
+                    user_message: 'Le jeton d\'activation n\'est pas valide',
+                    developer_message: 'The activation token does not match the user id',
+                },
+            });
+        }
+
+        if (user.active === true) {
+            return res.status(400).send({
+                error: {
+                    user_message: 'Ce compte utilisateur est déjà activé',
+                    developer_message: 'The user is already activated',
+                },
+            });
+        }
+
+        if (!req.body.password) {
+            return res.status(400).send({
+                error: {
+                    user_message: 'Le mot de passe est obligatoire',
+                    developer_message: 'Input data is invalid',
+                },
+            });
+        }
+
+        try {
+            await models.user.update(user.id, {
+                password: hashPassword(req.body.password, user.salt),
+                active: true,
+            });
+        } catch (error) {
+            return res.status(500).send({
+                error: {
+                    user_message: 'Une erreur est survenue lors de l\'écriture en base de données',
+                    developer_message: 'Failed updating the user',
+                },
+            });
+        }
+
+        return res.status(200).send({});
     },
 });

@@ -25,6 +25,9 @@ const mockModels = {
     actionType: {
         findAll: sinon.stub(),
     },
+    role: {
+        findAll: sinon.stub(),
+    },
 };
 
 const { list } = require('#server/controllers/configController')(mockModels);
@@ -47,6 +50,7 @@ describe('[server/controllers] configController', () => {
             let closingSolutions;
             let user;
             let actionTypes;
+            let roles;
             beforeEach(async () => {
                 user = {
                     [global.generate('string')]: global.generate('string'),
@@ -63,6 +67,7 @@ describe('[server/controllers] configController', () => {
                 regions = [global.generate('string'), global.generate('string')];
                 closingSolutions = [global.generate('string'), global.generate('string')];
                 actionTypes = [global.generate('string'), global.generate('string')];
+                roles = [global.generate('string'), global.generate('string')];
 
                 mockModels.fieldType.findAll.resolves(fieldTypes);
                 mockModels.ownerType.findAll.resolves(ownerTypes);
@@ -71,6 +76,7 @@ describe('[server/controllers] configController', () => {
                 mockModels.region.findAll.resolves(regions);
                 mockModels.closingSolution.findAll.resolves(closingSolutions);
                 mockModels.actionType.findAll.resolves(actionTypes);
+                mockModels.role.findAll.resolves(roles);
 
                 await list(httpReq, httpRes);
                 [response] = httpRes.send.getCalls()[0].args;
@@ -90,6 +96,7 @@ describe('[server/controllers] configController', () => {
                     regions,
                     closing_solutions: closingSolutions,
                     action_types: actionTypes,
+                    roles,
                 });
             });
         });

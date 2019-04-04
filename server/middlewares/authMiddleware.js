@@ -39,6 +39,14 @@ module.exports = (models) => {
             });
         }
 
+        if (user.active !== true) {
+            throw new AuthenticateError({
+                code: 4,
+                user_message: 'Votre session a expiré',
+                developer_message: 'The access token is either invalid or expired',
+            });
+        }
+
         return user;
     }
 

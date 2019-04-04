@@ -1,7 +1,9 @@
 module.exports = {
+    frontUrl: 'http://localhost:1234',
     port: 810,
     auth: {
         secret: 'secret used for generating authentication tokens',
         expiresIn: '168h', // 7 days
     },
+    activationTokenExpiresIn: '48h',
 };

@@ -26,12 +26,16 @@ function getFakeMiddlewares() {
 function getFakeControllers() {
     return {
         user: {
+            list: mockController(),
             edit: mockController(),
             me: mockController(),
             renewToken: mockController(),
             signin: mockController(),
-            signup: mockController(),
+            create: mockController(),
             setDefaultExport: mockController(),
+            getActivationLink: mockController(),
+            checkActivationToken: mockController(),
+            activate: mockController(),
         },
         config: {
             list: mockController(),
@@ -72,6 +76,116 @@ describe('app', () => {
     let app;
     let middlewares;
     let controllers;
+
+    describe('GET /users', () => {
+        beforeEach(async () => {
+            middlewares = getFakeMiddlewares();
+            controllers = getFakeControllers();
+            app = getFakeApp(middlewares, controllers);
+
+            await chai.request(app).get('/users');
+        });
+
+        it('it should require a token', () => {
+            expect(middlewares.auth.authenticate).to.have.been.calledOnce;
+            expect(middlewares.auth.checkPermissions).to.have.been.calledOnceWith([
+                {
+                    type: 'feature',
+                    name: 'readUser',
+                },
+            ]);
+        });
+
+        it('it should map to userController.list', () => {
+            expect(controllers.user.list).to.have.been.calledOnce;
+        });
+    });
+
+    describe('POST /users', () => {
+        beforeEach(async () => {
+            middlewares = getFakeMiddlewares();
+            controllers = getFakeControllers();
+            app = getFakeApp(middlewares, controllers);
+
+            await chai.request(app).post('/users');
+        });
+
+        it('it should require a token', () => {
+            expect(middlewares.auth.authenticate).to.have.been.calledOnce;
+            expect(middlewares.auth.checkPermissions).to.have.been.calledOnceWith([
+                {
+                    type: 'feature',
+                    name: 'createUser',
+                },
+            ]);
+        });
+
+        it('it should map to userController.create', () => {
+            expect(controllers.user.create).to.have.been.calledOnce;
+        });
+    });
+
+    describe('GET /users/:id/activate', () => {
+        beforeEach(async () => {
+            middlewares = getFakeMiddlewares();
+            controllers = getFakeControllers();
+            app = getFakeApp(middlewares, controllers);
+
+            await chai.request(app).get('/users/123/activate');
+        });
+
+        it('it should require a token', () => {
+            expect(middlewares.auth.authenticate).to.have.been.calledOnce;
+            expect(middlewares.auth.checkPermissions).to.have.been.calledOnceWith([
+                {
+                    type: 'feature',
+                    name: 'createUser',
+                },
+            ]);
+        });
+
+        it('it should map to userController.getActivationLink', () => {
+            expect(controllers.user.getActivationLink).to.have.been.calledOnce;
+        });
+    });
+
+    describe('POST /users/:id/activate', () => {
+        beforeEach(async () => {
+            middlewares = getFakeMiddlewares();
+            controllers = getFakeControllers();
+            app = getFakeApp(middlewares, controllers);
+
+            await chai.request(app).post('/users/123/activate');
+        });
+
+        it('it should require to be anonymous', () => {
+            expect(middlewares.auth.authenticate).not.to.have.been.called;
+            expect(middlewares.auth.checkPermissions).not.to.have.been.called;
+        });
+
+        it('it should map to userController.activate', () => {
+            expect(controllers.user.activate).to.have.been.calledOnce;
+        });
+    });
+
+    describe('GET /activation-tokens/:token/check', () => {
+        beforeEach(async () => {
+            middlewares = getFakeMiddlewares();
+            controllers = getFakeControllers();
+            app = getFakeApp(middlewares, controllers);
+
+            await chai.request(app).get('/activation-tokens/whatever/check');
+        });
+
+        it('it should require to be anonymous', () => {
+            expect(middlewares.auth.authenticate).not.to.have.been.called;
+            expect(middlewares.auth.checkPermissions).not.to.have.been.called;
+        });
+
+        it('it should map to userController.checkActivationToken', () => {
+            expect(controllers.user.checkActivationToken).to.have.been.calledOnce;
+        });
+    });
 
     describe('POST /towns', () => {
         beforeEach(async () => {

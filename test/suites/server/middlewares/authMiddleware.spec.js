@@ -146,40 +146,87 @@ describe('auth', () => {
             });
 
             describe('if the user related to the token actually exists', () => {
-                let nextRequestHandler;
-                let token;
-                let fakeUser;
-                beforeEach(async () => {
-                    fakeUser = {
-                        id: global.generate('number'),
-                        email: global.generate('string'),
-                    };
+                describe('if that user is not active', () => {
+                    beforeEach(async () => {
+                        const fakeUser = {
+                            id: global.generate('number'),
+                            email: global.generate('string'),
+                            active: false,
+                        };
 
-                    token = {
-                        userId: fakeUser.id,
-                    };
+                        const token = {
+                            userId: fakeUser.id,
+                        };
 
-                    fakeModels.user.findOne.withArgs(fakeUser.id).returns(fakeUser);
+                        fakeModels.user.findOne.withArgs(fakeUser.id).returns(fakeUser);
 
-                    httpReq = mockReq({
-                        headers: {
-                            'x-access-token': jwt.sign(token, authConfig.secret, {
-                                expiresIn: '1s',
-                            }),
-                        },
+                        const nextRequestHandler = sinon.stub();
+
+                        httpReq = mockReq({
+                            headers: {
+                                'x-access-token': jwt.sign(token, authConfig.secret, {
+                                    expiresIn: '1s',
+                                }),
+                            },
+                        });
+                        httpRes = mockRes();
+
+                        await authenticate(httpReq, httpRes, nextRequestHandler);
+                        [response] = httpRes.send.getCalls()[0].args;
                     });
-                    httpRes = mockRes();
-                    nextRequestHandler = sinon.stub();
 
-                    await authenticate(httpReq, httpRes, nextRequestHandler);
+                    it('it responds with a 400', () => {
+                        expect(httpRes.status).to.have.been.calledWith(400);
+                    });
+
+                    it('it responds with the proper error messages', () => {
+                        expect(response).to.be.eql({
+                            error: {
+                                code: 4,
+                                user_message: 'Votre session a expiré',
+                                developer_message: 'The access token is either invalid or expired',
+                            },
+                        });
+                    });
                 });
 
-                it('it includes the user into the request', () => {
-                    expect(httpReq.user).to.containSubset(fakeUser);
-                });
+                describe('if that user is active', () => {
+                    let nextRequestHandler;
+                    let token;
+                    let fakeUser;
+                    beforeEach(async () => {
+                        fakeUser = {
+                            id: global.generate('number'),
+                            email: global.generate('string'),
+                            active: true,
+                        };
 
-                it('it triggers the next request handler', () => {
-                    expect(nextRequestHandler).to.have.been.calledOnce;
+                        token = {
+                            userId: fakeUser.id,
+                        };
+
+                        fakeModels.user.findOne.withArgs(fakeUser.id).returns(fakeUser);
+
+                        httpReq = mockReq({
+                            headers: {
+                                'x-access-token': jwt.sign(token, authConfig.secret, {
+                                    expiresIn: '1s',
+                                }),
+                            },
+                        });
+                        httpRes = mockRes();
+                        nextRequestHandler = sinon.stub();
+
+                        await authenticate(httpReq, httpRes, nextRequestHandler);
+                    });
+
+                    it('it includes the user into the request', () => {
+                        expect(httpReq.user).to.containSubset(fakeUser);
+                    });
+
+                    it('it triggers the next request handler', () => {
+                        expect(nextRequestHandler).to.have.been.calledOnce;
+                    });
                 });
             });
         });
