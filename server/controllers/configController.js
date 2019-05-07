@@ -9,6 +9,8 @@ module.exports = models => ({
             closing_solutions: models.closingSolution.findAll(),
             action_types: models.actionType.findAll(),
             roles: models.role.findAll(),
+            funding_types: models.fundingType.findAll(),
+            plan_types: models.planType.findAll(),
         };
 
         const promises = Object.values(queries);

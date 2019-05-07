@@ -80,6 +80,68 @@ module.exports = (middlewares, controllers) => {
         controllers.user.checkActivationToken,
     );
 
+    // ngos
+    app.get(
+        '/ngos',
+        middlewares.auth.authenticate,
+        (...args) => middlewares.auth.checkPermissions([{
+            type: 'feature',
+            name: 'readNgo',
+        }], ...args),
+        controllers.ngo.list,
+    );
+    app.get(
+        '/ngos/search',
+        middlewares.auth.authenticate,
+        (...args) => middlewares.auth.checkPermissions([{
+            type: 'feature',
+            name: 'readNgo',
+        }], ...args),
+        controllers.ngo.search,
+    );
+    app.post(
+        '/ngos',
+        [
+            middlewares.auth.authenticate,
+            (...args) => middlewares.auth.checkPermissions([{
+                type: 'feature',
+                name: 'createNgo',
+            }], ...args),
+        ],
+        controllers.ngo.create,
+    );
+
+    // plans
+    app.get(
+        '/plans',
+        middlewares.auth.authenticate,
+        (...args) => middlewares.auth.checkPermissions([{
+            type: 'feature',
+            name: 'readPlan',
+        }], ...args),
+        controllers.plan.list,
+    );
+    app.get(
+        '/plans/:id',
+        middlewares.auth.authenticate,
+        (...args) => middlewares.auth.checkPermissions([{
+            type: 'feature',
+            name: 'readPlan',
+        }], ...args),
+        controllers.plan.find,
+    );
+    app.post(
+        '/plans',
+        [
+            middlewares.auth.authenticate,
+            (...args) => middlewares.auth.checkPermissions([{
+                type: 'feature',
+                name: 'createPlan',
+            }], ...args),
+        ],
+        controllers.plan.create,
+    );
+
     // towns
     app.get(
         '/towns',

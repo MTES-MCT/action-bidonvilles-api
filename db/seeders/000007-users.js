@@ -21,6 +21,7 @@ module.exports = {
             generate('anis@beta.gouv.fr', 'fabnum', '78'),
             generate('clement.chapalain@beta.gouv.fr', 'fabnum', '75'),
             generate('sophie.jacquemont@developpement-durable.gouv.fr', 'fabnum', '75'),
+            generate('robot@action-bidonvilles.beta.gouv.fr', null, '75'),
         ],
     ),
 
