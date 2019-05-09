@@ -329,7 +329,14 @@ function serializeComment(comment) {
 module.exports = models => ({
     async list(req, res) {
         try {
-            return res.status(200).send(await models.shantytown.findAll(req.user.permissions.data));
+            const filters = {};
+            if (req.query.status) {
+                filters.status = req.query.status.split(',');
+            }
+
+            return res.status(200).send(
+                await models.shantytown.findAll(req.user.permissions.data, filters),
+            );
         } catch (error) {
             return res.status(500).send(error.message);
         }

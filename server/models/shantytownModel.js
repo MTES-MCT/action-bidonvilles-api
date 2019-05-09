@@ -92,13 +92,18 @@ function serializeShantytown(town, permissions) {
 /**
  * Fetches a list of shantytowns from the database
  *
- * @param {Sequelize}      database
- * @param {Array.<number>} ids         The list of towns to be fetched
- * @param {Array.<string>} permissions The list of granted permissions
+ * @param {Sequelize}             database
+ * @param {Object.<string,Array>} filters     The list of towns to be fetched
+ * @param {Array.<string>}        permissions The list of granted permissions
  *
  * @returns {Array.<Object>}
  */
-async function query(database, ids = [], permissions) {
+async function query(database, filters = {}, permissions) {
+    const filterParts = [];
+    Object.keys(filters).forEach((column) => {
+        filterParts.push(`shantytowns.${column} IN (:${column})`);
+    });
+
     const towns = await database.query(
         `SELECT
             shantytowns.shantytown_id AS id,
@@ -153,11 +158,11 @@ async function query(database, ids = [], permissions) {
         LEFT JOIN cities ON shantytowns.fk_city = cities.code
         LEFT JOIN epci ON cities.fk_epci = epci.code
         LEFT JOIN departements ON cities.fk_departement = departements.code
-        ${ids.length > 0 ? 'WHERE shantytowns.shantytown_id IN (:ids)' : ''}
+        ${filterParts.length > 0 ? `WHERE ${filterParts.join(' OR ')}` : ''}
         ORDER BY id ASC`,
         {
             type: database.QueryTypes.SELECT,
-            replacements: { ids },
+            replacements: filters,
         },
     );
 
@@ -277,10 +282,10 @@ async function query(database, ids = [], permissions) {
 }
 
 module.exports = database => ({
-    findAll: (permissions = []) => query(database, [], permissions),
+    findAll: (permissions = [], filters = []) => query(database, filters, permissions),
 
     findOne: async (shantytownId, permissions = []) => {
-        const towns = await query(database, [shantytownId], permissions);
+        const towns = await query(database, { shantytown_id: [shantytownId] }, permissions);
         return towns.length === 1 ? towns[0] : null;
     },
 });
