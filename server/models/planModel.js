@@ -191,6 +191,15 @@ module.exports = (database) => {
             return null;
         },
 
+        delete: planId => database.query(
+            'DELETE FROM plans WHERE plan_id = :planId',
+            {
+                replacements: {
+                    planId,
+                },
+            },
+        ),
+
         create: async (data) => {
             const response = await database.query(
                 `INSERT INTO

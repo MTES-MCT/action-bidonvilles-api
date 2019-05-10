@@ -130,6 +130,15 @@ module.exports = (middlewares, controllers) => {
         }], ...args),
         controllers.plan.find,
     );
+    app.delete(
+        '/plans/:id',
+        middlewares.auth.authenticate,
+        (...args) => middlewares.auth.checkPermissions([{
+            type: 'feature',
+            name: 'deletePlan',
+        }], ...args),
+        controllers.plan.delete,
+    );
     app.post(
         '/plans',
         [
