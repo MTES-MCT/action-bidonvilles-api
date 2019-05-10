@@ -111,17 +111,17 @@ plans "0..N" - "1" departements: "         "
 plans "0..N" -up- "1" ngo
 plans "1" -left- "0..N" fundings: "         "
 ngo "0..1" -right- "0..N" users: "             "
-plans "0..N" - "0..N" shantytowns: "             "
+plans "1" -down- "1..N" plan_details: "             "
+plan_details "0..N" -right- "0..1" shantytowns: "             "
+accompagnement_social -up-> plan_details
+espace_insertion -up-> plan_details
+accompagnement_emploi -up-> plan_details
+diagnostic_social -up-> plan_details
+accompagnement_scolaire -up-> plan_details
+accompagnement_sanitaire -up-> plan_details
+protection_enfance -up-> plan_details
 
 ' for layout only:
-shantytowns -[hidden]down- departements
-accompagnement_social -up-> plans
-espace_insertion -up-> plans
-accompagnement_emploi -up-> plans
-diagnostic_social -up-> plans
-accompagnement_scolaire -up-> plans
-accompagnement_sanitaire -up-> plans
-protection_enfance -up-> plans
 espace_insertion -[hidden]up-> accompagnement_social
 accompagnement_scolaire -[hidden]up-> accompagnement_social
 accompagnement_sanitaire -[hidden]up-> accompagnement_social

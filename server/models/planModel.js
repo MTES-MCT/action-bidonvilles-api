@@ -10,40 +10,8 @@ function serializePlan(plan) {
         id: plan.id,
         startedAt: plan.startedAt ? (plan.startedAt.getTime() / 1000) : null,
         endedAt: plan.endedAt ? (plan.endedAt.getTime() / 1000) : null,
+        targetedOnTowns: plan.targetedOnTowns === true,
         name: plan.name,
-        householdsAffected: plan.householdsAffected,
-        peopleAffected: plan.peopleAffected,
-        childrenSchoolable: plan.childrenSchoolable,
-        householdsWhoGotHousingWithHelp: plan.householdsWhoGotHousingWithHelp,
-        householdsWhoGotHousingWithoutHelp: plan.householdsWhoGotHousingWithoutHelp,
-        householdsWhoWereHosted: plan.householdsWhoWereHosted,
-        childrenSchooled: plan.childrenSchooled,
-        peopleAccessingHealth: plan.peopleAccessingHealth,
-        peopleHelpedForEmployment: plan.peopleHelpedForEmployment,
-        peopleWhoGotEmployment: plan.peopleWhoGotEmployment,
-        householdsDomiciled: plan.householdsDomiciled,
-        peopleIncluded: plan.peopleIncluded,
-        peopleSuccessfullyHelped: plan.peopleSuccessfullyHelped,
-        peopleExcluded: plan.peopleExcluded,
-        peopleWhoResigned: plan.peopleWhoResigned,
-        peoplePoleEmploi: plan.peoplePoleEmploi,
-        peopleMissionLocale: plan.peopleMissionLocale,
-        peopleWithBankAccount: plan.peopleWithBankAccount,
-        peopleTrainee: plan.peopleTrainee,
-        averageDuration: plan.averageDuration,
-        comment: plan.comment,
-        households: plan.households,
-        people: plan.people,
-        europeanPeople: plan.europeanPeople,
-        frenchPeople: plan.frenchPeople,
-        nonEuropeanPeople: plan.nonEuropeanPeople,
-        youngKids: plan.youngKids,
-        otherKids: plan.otherKids,
-        schooledKids: plan.schooledKids,
-        peopleAskingForCmu: plan.peopleAskingForCmu,
-        peopleWithCmu: plan.peopleWithCmu,
-        minorsWithAdminProcedure: plan.minorsWithAdminProcedure,
-        minorsWithJusticeProcedure: plan.minorsWithJusticeProcedure,
         createdBy: plan.createdBy,
         updatedBy: plan.updatedBy,
         type: {
@@ -55,6 +23,7 @@ function serializePlan(plan) {
             name: plan.ngoName,
         },
         towns: [],
+        details: null,
         departement: {
             id: plan.departementId,
             name: plan.departementName,
@@ -70,39 +39,7 @@ module.exports = (database) => {
                 plans.name AS "name",
                 plans.started_at AS "startedAt",
                 plans.ended_at AS "endedAt",
-                plans.households_affected AS "householdsAffected",
-                plans.people_affected AS "peopleAffected",
-                plans.children_schoolable AS "childrenSchoolable",
-                plans.households_who_got_housing_with_help AS "householdsWhoGotHousingWithHelp",
-                plans.households_who_got_housing_without_help AS "householdsWhoGotHousingWithoutHelp",
-                plans.households_who_were_hosted AS "householdsWhoWereHosted",
-                plans.children_schooled AS "childrenSchooled",
-                plans.people_accessing_health AS "peopleAccessingHealth",
-                plans.people_helped_for_employment AS "peopleHelpedForEmployment",
-                plans.people_who_got_employment AS "peopleWhoGotEmployment",
-                plans.households_domiciled AS "householdsDomiciled",
-                plans.people_included AS "peopleIncluded",
-                plans.people_successfully_helped AS "peopleSuccessfullyHelped",
-                plans.people_excluded AS "peopleExcluded",
-                plans.people_who_resigned AS "peopleWhoResigned",
-                plans.people_pole_emploi AS "peoplePoleEmploi",
-                plans.people_mission_locale AS "peopleMissionLocale",
-                plans.people_with_bank_account AS "peopleWithBankAccount",
-                plans.people_trainee AS "peopleTrainee",
-                plans.average_duration AS "averageDuration",
-                plans.comment AS "comment",
-                plans.households AS "households",
-                plans.people AS "people",
-                plans.european_people AS "europeanPeople",
-                plans.french_people AS "frenchPeople",
-                plans.non_european_people AS "nonEuropeanPeople",
-                plans.young_kids AS "youngKids",
-                plans.other_kids AS "otherKids",
-                plans.schooled_kids AS "schooledKids",
-                plans.people_asking_for_cmu AS "peopleAskingForCmu",
-                plans.people_with_cmu AS "peopleWithCmu",
-                plans.minors_with_admin_procedure AS "minorsWithAdminProcedure",
-                plans.minors_with_justice_procedure AS "minorsWithJusticeProcedure",
+                plans.targeted_on_towns AS "targetedOnTowns",
                 plans.created_by AS "createdBy",
                 plans.updated_by AS "updatedBy",
                 ngos.ngo_id AS "ngoId",
@@ -134,14 +71,47 @@ module.exports = (database) => {
         if (plans.length > 0) {
             const planIds = rows.map(({ id: planId }) => planId);
 
-            const towns = await database.query(
+            const details = await database.query(
                 `SELECT
-                    plan_shantytowns.fk_plan AS "planId",
+                    plan_details.fk_plan AS "planId",
+                    plan_details.households_affected AS "householdsAffected",
+                    plan_details.people_affected AS "peopleAffected",
+                    plan_details.children_schoolable AS "childrenSchoolable",
+                    plan_details.households_who_got_housing_with_help AS "householdsWhoGotHousingWithHelp",
+                    plan_details.households_who_got_housing_without_help AS "householdsWhoGotHousingWithoutHelp",
+                    plan_details.households_who_were_hosted AS "householdsWhoWereHosted",
+                    plan_details.children_schooled AS "childrenSchooled",
+                    plan_details.people_accessing_health AS "peopleAccessingHealth",
+                    plan_details.people_helped_for_employment AS "peopleHelpedForEmployment",
+                    plan_details.people_who_got_employment AS "peopleWhoGotEmployment",
+                    plan_details.households_domiciled AS "householdsDomiciled",
+                    plan_details.people_included AS "peopleIncluded",
+                    plan_details.people_successfully_helped AS "peopleSuccessfullyHelped",
+                    plan_details.people_excluded AS "peopleExcluded",
+                    plan_details.people_who_resigned AS "peopleWhoResigned",
+                    plan_details.people_pole_emploi AS "peoplePoleEmploi",
+                    plan_details.people_mission_locale AS "peopleMissionLocale",
+                    plan_details.people_with_bank_account AS "peopleWithBankAccount",
+                    plan_details.people_trainee AS "peopleTrainee",
+                    plan_details.average_duration AS "averageDuration",
+                    plan_details.comment AS "comment",
+                    plan_details.households AS "households",
+                    plan_details.people AS "people",
+                    plan_details.european_people AS "europeanPeople",
+                    plan_details.french_people AS "frenchPeople",
+                    plan_details.non_european_people AS "nonEuropeanPeople",
+                    plan_details.young_kids AS "youngKids",
+                    plan_details.other_kids AS "otherKids",
+                    plan_details.schooled_kids AS "schooledKids",
+                    plan_details.people_asking_for_cmu AS "peopleAskingForCmu",
+                    plan_details.people_with_cmu AS "peopleWithCmu",
+                    plan_details.minors_with_admin_procedure AS "minorsWithAdminProcedure",
+                    plan_details.minors_with_justice_procedure AS "minorsWithJusticeProcedure",
                     shantytowns.shantytown_id AS "townId",
                     shantytowns.address
-                FROM plan_shantytowns
-                LEFT JOIN shantytowns ON plan_shantytowns.fk_shantytown = shantytowns.shantytown_id
-                WHERE plan_shantytowns.fk_plan IN (:planIds)`,
+                FROM plan_details
+                LEFT JOIN shantytowns ON plan_details.fk_shantytown = shantytowns.shantytown_id
+                WHERE plan_details.fk_plan IN (:planIds)`,
                 {
                     type: database.QueryTypes.SELECT,
                     replacements: {
@@ -150,11 +120,59 @@ module.exports = (database) => {
                 },
             );
 
-            towns.forEach((town) => {
-                plansHash[town.planId].towns.push({
-                    id: town.townId,
-                    address: town.address,
-                });
+            details.forEach((row) => {
+                const rowDetails = {
+                    householdsAffected: row.householdsAffected,
+                    peopleAffected: row.peopleAffected,
+                    childrenSchoolable: row.childrenSchoolable,
+                    householdsWhoGotHousingWithHelp: row.householdsWhoGotHousingWithHelp,
+                    householdsWhoGotHousingWithoutHelp: row.householdsWhoGotHousingWithoutHelp,
+                    householdsWhoWereHosted: row.householdsWhoWereHosted,
+                    childrenSchooled: row.childrenSchooled,
+                    peopleAccessingHealth: row.peopleAccessingHealth,
+                    peopleHelpedForEmployment: row.peopleHelpedForEmployment,
+                    peopleWhoGotEmployment: row.peopleWhoGotEmployment,
+                    householdsDomiciled: row.householdsDomiciled,
+                    peopleIncluded: row.peopleIncluded,
+                    peopleSuccessfullyHelped: row.peopleSuccessfullyHelped,
+                    peopleExcluded: row.peopleExcluded,
+                    peopleWhoResigned: row.peopleWhoResigned,
+                    peoplePoleEmploi: row.peoplePoleEmploi,
+                    peopleMissionLocale: row.peopleMissionLocale,
+                    peopleWithBankAccount: row.peopleWithBankAccount,
+                    peopleTrainee: row.peopleTrainee,
+                    averageDuration: row.averageDuration,
+                    comment: row.comment,
+                    households: row.households,
+                    people: row.people,
+                    europeanPeople: row.europeanPeople,
+                    frenchPeople: row.frenchPeople,
+                    nonEuropeanPeople: row.nonEuropeanPeople,
+                    youngKids: row.youngKids,
+                    otherKids: row.otherKids,
+                    schooledKids: row.schooledKids,
+                    peopleAskingForCmu: row.peopleAskingForCmu,
+                    peopleWithCmu: row.peopleWithCmu,
+                    minorsWithAdminProcedure: row.minorsWithAdminProcedure,
+                    minorsWithJusticeProcedure: row.minorsWithJusticeProcedure,
+                };
+
+                if (plansHash[row.planId].targetedOnTowns === true) {
+                    if (row.townId === null) {
+                        return;
+                    }
+
+                    plansHash[row.planId].towns.push(Object.assign({}, rowDetails, {
+                        id: row.townId,
+                        address: row.address,
+                    }));
+                } else {
+                    if (row.townId !== null) {
+                        return;
+                    }
+
+                    plansHash[row.planId].details = rowDetails;
+                }
             });
         }
 
@@ -179,84 +197,20 @@ module.exports = (database) => {
                     plans(
                         name,
                         started_at,
+                        targeted_on_towns,
                         fk_ngo,
                         fk_type,
                         fk_departement,
-                        households_affected,
-                        people_affected,
-                        children_schoolable,
-                        households_who_got_housing_with_help,
-                        households_who_got_housing_without_help,
-                        households_who_were_hosted,
-                        children_schooled,
-                        people_accessing_health,
-                        people_helped_for_employment,
-                        people_who_got_employment,
-                        households_domiciled,
-                        people_included,
-                        people_successfully_helped,
-                        people_excluded,
-                        people_who_resigned,
-                        people_pole_emploi,
-                        people_mission_locale,
-                        people_with_bank_account,
-                        people_trainee,
-                        average_duration,
-                        comment,
-                        households,
-                        people,
-                        european_people,
-                        french_people,
-                        non_european_people,
-                        young_kids,
-                        other_kids,
-                        schooled_kids,
-                        people_asking_for_cmu,
-                        people_with_cmu,
-                        minors_with_admin_procedure,
-                        minors_with_justice_procedure,
                         created_by,
                         updated_by
                     )
                 VALUES (
                     :name,
                     :startedAt,
+                    :targeted,
                     :ngo,
                     :type,
                     :departement,
-                    :householdsAffected,
-                    :peopleAffected,
-                    :childrenSchoolable,
-                    :householdsWhoGotHousingWithHelp,
-                    :householdsWhoGotHousingWithoutHelp,
-                    :householdsWhoWereHosted,
-                    :childrenSchooled,
-                    :peopleAccessingHealth,
-                    :peopleHelpedForEmployment,
-                    :peopleWhoGotEmployment,
-                    :householdsDomiciled,
-                    :peopleIncluded,
-                    :peopleSuccessfullyHelped,
-                    :peopleExcluded,
-                    :peopleWhoResigned,
-                    :peoplePoleEmploi,
-                    :peopleMissionLocale,
-                    :peopleWithBankAccount,
-                    :peopleTrainee,
-                    :averageDuration,
-                    :comment,
-                    :households,
-                    :people,
-                    :europeanPeople,
-                    :frenchPeople,
-                    :nonEuropeanPeople,
-                    :youngKids,
-                    :otherKids,
-                    :schooledKids,
-                    :peopleAskingForCmu,
-                    :peopleWithCmu,
-                    :minorsWithAdminProcedure,
-                    :minorsWithJusticeProcedure,
                     :createdBy,
                     :updatedBy
                 )
@@ -265,42 +219,10 @@ module.exports = (database) => {
                     replacements: {
                         name: data.name || null,
                         startedAt: data.startedAt,
+                        targeted: data.targetedOnTowns,
                         ngo: data.ngo,
                         type: data.planType,
                         departement: data.departement,
-                        householdsAffected: data.households_affected || null,
-                        peopleAffected: data.people_affected || null,
-                        childrenSchoolable: data.children_schoolable || null,
-                        householdsWhoGotHousingWithHelp: data.households_who_got_housing_with_help || null,
-                        householdsWhoGotHousingWithoutHelp: data.households_who_got_housing_without_help || null,
-                        householdsWhoWereHosted: data.households_who_were_hosted || null,
-                        childrenSchooled: data.children_schooled || null,
-                        peopleAccessingHealth: data.people_accessing_health || null,
-                        peopleHelpedForEmployment: data.people_helped_for_employment || null,
-                        peopleWhoGotEmployment: data.people_who_got_employment || null,
-                        householdsDomiciled: data.households_domiciled || null,
-                        peopleIncluded: data.people_included || null,
-                        peopleSuccessfullyHelped: data.people_successfully_helped || null,
-                        peopleExcluded: data.people_excluded || null,
-                        peopleWhoResigned: data.people_who_resigned || null,
-                        peoplePoleEmploi: data.people_pole_emploi || null,
-                        peopleMissionLocale: data.people_mission_locale || null,
-                        peopleWithBankAccount: data.people_with_bank_account || null,
-                        peopleTrainee: data.people_trainee || null,
-                        averageDuration: data.average_duration || null,
-                        comment: data.comment || null,
-                        households: data.households || null,
-                        people: data.people || null,
-                        europeanPeople: data.european_people || null,
-                        frenchPeople: data.french_people || null,
-                        nonEuropeanPeople: data.non_european_people || null,
-                        youngKids: data.young_kids || null,
-                        otherKids: data.other_kids || null,
-                        schooledKids: data.schooled_kids || null,
-                        peopleAskingForCmu: data.people_asking_for_cmu || null,
-                        peopleWithCmu: data.people_with_cmu || null,
-                        minorsWithAdminProcedure: data.minors_with_admin_procedure || null,
-                        minorsWithJusticeProcedure: data.minors_with_justice_procedure || null,
                         createdBy: data.createdBy,
                         updatedBy: data.createdBy,
                     },
@@ -346,7 +268,7 @@ module.exports = (database) => {
                 );
             }
 
-            if (data.towns && data.towns.length) {
+            if (data.targetedOnTowns === true && data.towns && data.towns.length) {
                 const replacements = [];
                 let replacementValues = {};
                 data.towns.forEach((townId, index) => {
@@ -366,12 +288,25 @@ module.exports = (database) => {
                 });
 
                 await database.query(
-                    `INSERT INTO plan_shantytowns(
+                    `INSERT INTO plan_details(
                         fk_plan, fk_shantytown, created_by, updated_by
                     )
                     VALUES (${replacements.join('),(')})`,
                     {
                         replacements: replacementValues,
+                    },
+                );
+            } else {
+                await database.query(
+                    `INSERT INTO plan_details(
+                        fk_plan, fk_shantytown, created_by, updated_by
+                    )
+                    VALUES (:planId, NULL, :creatorId, :creatorId)`,
+                    {
+                        replacements: {
+                            planId,
+                            creatorId: data.createdBy,
+                        },
                     },
                 );
             }
