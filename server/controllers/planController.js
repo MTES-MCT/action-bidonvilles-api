@@ -1,7 +1,12 @@
 module.exports = models => ({
     async list(req, res) {
         try {
-            const plans = await models.plan.findAll();
+            const filters = {};
+            if (req.query.departement) {
+                filters.fk_departement = [req.query.departement];
+            }
+
+            const plans = await models.plan.findAll(filters);
             res.status(200).send(plans);
         } catch (error) {
             res.status(500).send({

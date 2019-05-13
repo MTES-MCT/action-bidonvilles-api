@@ -32,7 +32,12 @@ function serializePlan(plan) {
 }
 
 module.exports = (database) => {
-    async function query(id = null) {
+    async function query(filters) {
+        const filterParts = [];
+        Object.keys(filters).forEach((column) => {
+            filterParts.push(`plans.${column} IN (:${column})`);
+        });
+
         const rows = await database.query(
             `SELECT
                 plans.plan_id AS id,
@@ -52,12 +57,10 @@ module.exports = (database) => {
             LEFT JOIN ngos ON plans.fk_ngo = ngos.ngo_id
             LEFT JOIN plan_types ON plans.fk_type = plan_types.plan_type_id
             LEFT JOIN departements ON plans.fk_departement = departements.code
-            ${id !== null ? 'WHERE plan_id = :planId' : ''}`,
+            ${filterParts.length > 0 ? `WHERE ${filterParts.join(' OR ')}` : ''}`,
             {
                 type: database.QueryTypes.SELECT,
-                replacements: {
-                    planId: id,
-                },
+                replacements: filters,
             },
         );
 
@@ -180,10 +183,12 @@ module.exports = (database) => {
     }
 
     return {
-        findAll: () => query(),
+        findAll: where => query(where),
 
         findOne: async (id) => {
-            const rows = await query(id);
+            const rows = await query({
+                plan_id: id,
+            });
             if (rows.length === 1) {
                 return rows[0];
             }
