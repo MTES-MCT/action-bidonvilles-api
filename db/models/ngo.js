@@ -12,12 +12,13 @@ module.exports = (sequelize, DataTypes) => {
             id: {
                 type: DataTypes.INTEGER,
                 primaryKey: true,
+                field: 'ngo_id',
             },
             name: DataTypes.STRING,
-            createdAt: DataTypes.DATE,
-            createdBy: DataTypes.INTEGER,
-            updatedAt: DataTypes.DATE,
-            updatedBy: DataTypes.INTEGER,
+            created_at: DataTypes.DATE,
+            created_by: DataTypes.INTEGER,
+            updated_at: DataTypes.DATE,
+            updated_by: DataTypes.INTEGER,
         },
         {
             sequelize,
