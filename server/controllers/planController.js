@@ -71,6 +71,7 @@ module.exports = models => ({
     async create(req, res) {
         const planData = Object.assign({}, req.body, {
             createdBy: req.user.id,
+            updatedBy: req.user.id,
         });
         const plan = new Plan(planData);
 

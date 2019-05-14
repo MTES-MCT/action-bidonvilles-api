@@ -235,7 +235,7 @@ module.exports = (database) => {
                         startedAt: data.startedAt,
                         targeted: data.targetedOnTowns,
                         ngo: data.ngo,
-                        type: data.planType,
+                        type: data.type,
                         departement: data.departement,
                         createdBy: data.createdBy,
                         updatedBy: data.createdBy,

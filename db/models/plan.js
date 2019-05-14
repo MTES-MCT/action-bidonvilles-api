@@ -90,9 +90,10 @@ module.exports = (sequelize, DataTypes) => {
                 allowNull: false,
                 defaultValue: DataTypes.NOW,
             },
-            created_by: {
+            createdBy: {
                 type: DataTypes.INTEGER,
                 allowNull: false,
+                field: 'created_by',
             },
             updated_at: {
                 type: DataTypes.DATE,
@@ -100,9 +101,10 @@ module.exports = (sequelize, DataTypes) => {
                 defaultValue: DataTypes.NOW,
                 onUpdate: DataTypes.NOW,
             },
-            updated_by: {
+            updatedBy: {
                 type: DataTypes.INTEGER,
                 allowNull: false,
+                field: 'updated_by',
             },
         },
         {
