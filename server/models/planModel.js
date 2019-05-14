@@ -111,9 +111,12 @@ module.exports = (database) => {
                     plan_details.minors_with_admin_procedure AS "minorsWithAdminProcedure",
                     plan_details.minors_with_justice_procedure AS "minorsWithJusticeProcedure",
                     shantytowns.shantytown_id AS "townId",
-                    shantytowns.address
+                    shantytowns.address,
+                    cities.code AS "cityCode",
+                    cities.name  AS "cityName"
                 FROM plan_details
                 LEFT JOIN shantytowns ON plan_details.fk_shantytown = shantytowns.shantytown_id
+                LEFT JOIN cities ON shantytowns.fk_city = cities.code
                 WHERE plan_details.fk_plan IN (:planIds)`,
                 {
                     type: database.QueryTypes.SELECT,
@@ -168,6 +171,10 @@ module.exports = (database) => {
                     plansHash[row.planId].towns.push(Object.assign({}, rowDetails, {
                         id: row.townId,
                         address: row.address,
+                        city: {
+                            id: row.cityCode,
+                            name: row.cityName,
+                        },
                     }));
                 } else {
                     if (row.townId !== null) {
