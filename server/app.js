@@ -150,6 +150,17 @@ module.exports = (middlewares, controllers) => {
         ],
         controllers.plan.create,
     );
+    app.post(
+        '/plan-details/:id',
+        [
+            middlewares.auth.authenticate,
+            (...args) => middlewares.auth.checkPermissions([{
+                type: 'feature',
+                name: 'updatePlan',
+            }], ...args),
+        ],
+        controllers.plan.updateDetails,
+    );
 
     // towns
     app.get(

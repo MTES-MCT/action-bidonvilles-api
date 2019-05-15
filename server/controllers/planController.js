@@ -99,6 +99,22 @@ module.exports = models => ({
         return res.status(200).send({});
     },
 
+    async updateDetails(req, res) {
+        try {
+            await models.plan.updateDetails(req.params.id, req.body);
+        } catch (error) {
+            console.log(error);
+            return res.status(500).send({
+                error: {
+                    user_message: 'Une erreur est survenue lors de l\'écriture des données en base',
+                    developer_message: error,
+                },
+            });
+        }
+
+        return res.status(200).send({});
+    },
+
     async delete(req, res) {
         try {
             await models.plan.delete(req.params.id);

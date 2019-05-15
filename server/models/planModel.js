@@ -76,6 +76,7 @@ module.exports = (database) => {
 
             const details = await database.query(
                 `SELECT
+                    plan_details.plan_shantytown_id AS "detailId",
                     plan_details.fk_plan AS "planId",
                     plan_details.households_affected AS "householdsAffected",
                     plan_details.people_affected AS "peopleAffected",
@@ -170,6 +171,7 @@ module.exports = (database) => {
 
                     plansHash[row.planId].towns.push(Object.assign({}, rowDetails, {
                         id: row.townId,
+                        detailId: row.detailId,
                         address: row.address,
                         city: {
                             id: row.cityCode,
@@ -335,5 +337,82 @@ module.exports = (database) => {
             return planId;
         },
 
+        updateDetails: async (id, data) => {
+            await database.query(
+                `UPDATE
+                    plan_details
+                SET
+                    households_affected = :householdsAffected,
+                    people_affected = :peopleAffected,
+                    children_schoolable = :childrenSchoolable,
+                    households_who_got_housing_with_help = :householdsWhoGotHousingWithHelp,
+                    households_who_got_housing_without_help = :householdsWhoGotHousingWithoutHelp,
+                    households_who_were_hosted = :householdsWhoWereHosted,
+                    children_schooled = :childrenSchooled,
+                    people_accessing_health = :peopleAccessingHealth,
+                    people_helped_for_employment = :peopleHelpedForEmployment,
+                    people_who_got_employment = :peopleWhoGotEmployment,
+                    households_domiciled = :householdsDomiciled,
+                    people_included = :peopleIncluded,
+                    people_successfully_helped = :peopleSuccessfullyHelped,
+                    people_excluded = :peopleExcluded,
+                    people_who_resigned = :peopleWhoResigned,
+                    people_pole_emploi = :peoplePoleEmploi,
+                    people_mission_locale = :peopleMissionLocale,
+                    people_with_bank_account = :peopleWithBankAccount,
+                    people_trainee = :peopleTrainee,
+                    average_duration = :averageDuration,
+                    households = :households,
+                    people = :people,
+                    european_people = :europeanPeople,
+                    french_people = :frenchPeople,
+                    non_european_people = :nonEuropeanPeople,
+                    young_kids = :youngKids,
+                    other_kids = :otherKids,
+                    schooled_kids = :schooledKids,
+                    people_asking_for_cmu = :peopleAskingForCmu,
+                    people_with_cmu = :peopleWithCmu,
+                    minors_with_admin_procedure = :minorsWithAdminProcedure,
+                    minors_with_justice_procedure = :minorsWithJusticeProcedure
+                WHERE plan_shantytown_id = :id`,
+                {
+                    replacements: {
+                        id,
+                        householdsAffected: data.householdsAffected || null,
+                        peopleAffected: data.peopleAffected || null,
+                        childrenSchoolable: data.childrenSchoolable || null,
+                        householdsWhoGotHousingWithHelp: data.householdsWhoGotHousingWithHelp || null,
+                        householdsWhoGotHousingWithoutHelp: data.householdsWhoGotHousingWithoutHelp || null,
+                        householdsWhoWereHosted: data.householdsWhoWereHosted || null,
+                        childrenSchooled: data.childrenSchooled || null,
+                        peopleAccessingHealth: data.peopleAccessingHealth || null,
+                        peopleHelpedForEmployment: data.peopleHelpedForEmployment || null,
+                        peopleWhoGotEmployment: data.peopleWhoGotEmployment || null,
+                        householdsDomiciled: data.householdsDomiciled || null,
+                        peopleIncluded: data.peopleIncluded || null,
+                        peopleSuccessfullyHelped: data.peopleSuccessfullyHelped || null,
+                        peopleExcluded: data.peopleExcluded || null,
+                        peopleWhoResigned: data.peopleWhoResigned || null,
+                        peoplePoleEmploi: data.peoplePoleEmploi || null,
+                        peopleMissionLocale: data.peopleMissionLocale || null,
+                        peopleWithBankAccount: data.peopleWithBankAccount || null,
+                        peopleTrainee: data.peopleTrainee || null,
+                        averageDuration: data.averageDuration || null,
+                        households: data.households || null,
+                        people: data.people || null,
+                        europeanPeople: data.europeanPeople || null,
+                        frenchPeople: data.frenchPeople || null,
+                        nonEuropeanPeople: data.nonEuropeanPeople || null,
+                        youngKids: data.youngKids || null,
+                        otherKids: data.otherKids || null,
+                        schooledKids: data.schooledKids || null,
+                        peopleAskingForCmu: data.peopleAskingForCmu || null,
+                        peopleWithCmu: data.peopleWithCmu || null,
+                        minorsWithAdminProcedure: data.minorsWithAdminProcedure || null,
+                        minorsWithJusticeProcedure: data.minorsWithJusticeProcedure || null,
+                    },
+                },
+            );
+        },
     };
 };
