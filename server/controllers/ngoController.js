@@ -26,7 +26,7 @@ module.exports = models => ({
 
     async create(req, res) {
         try {
-            await models.ngo.create(req.body);
+            await models.ngo.create(req.body, req.user.id);
         } catch (error) {
             res.status(500).send({
                 error: {
