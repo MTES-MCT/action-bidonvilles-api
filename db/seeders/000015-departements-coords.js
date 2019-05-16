@@ -1,5 +1,11 @@
 const rp = require('request-promise');
 
+async function sleep(delay) {
+    return new Promise((success) => {
+        setTimeout(success, delay);
+    });
+}
+
 module.exports = {
     up: queryInterface => queryInterface.sequelize.query(
         'SELECT * FROM departements', {
@@ -9,12 +15,22 @@ module.exports = {
         .then(async (departements) => {
             const promises = [];
             for (let i = 0; i < departements.length; i += 1) {
+                if (i > 0) {
+                    // eslint-disable-next-line
+                    await sleep(10 * 1000);
+                }
+
                 try {
                     // eslint-disable-next-line
                     const response = await rp({
                         uri: `https://www.google.fr/maps/place/${departements[i].name}`,
                     });
                     const match = response.match(/APP_INITIALIZATION_STATE=\[\[\[[^,]+,([^,]+),([^,]+)\]/);
+                    console.log({
+                        name: departements[i].name,
+                        latitude: match[2],
+                        longitude: match[1],
+                    });
                     promises.push(queryInterface.sequelize.query(
                         'UPDATE departements SET latitude = :latitude, longitude = :longitude WHERE name = :name',
                         {
