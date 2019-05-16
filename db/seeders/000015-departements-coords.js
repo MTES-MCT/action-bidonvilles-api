@@ -31,16 +31,21 @@ module.exports = {
                         latitude: match[2],
                         longitude: match[1],
                     });
-                    promises.push(queryInterface.sequelize.query(
-                        'UPDATE departements SET latitude = :latitude, longitude = :longitude WHERE name = :name',
-                        {
-                            replacements: {
-                                name: departements[i].name,
-                                latitude: match[2],
-                                longitude: match[1],
+                    if (parseFloat(match[2]) > 20 && parseFloat(match[1]) > 20) {
+                        i -= 1;
+                        console.log('Retrying...');
+                    } else {
+                        promises.push(queryInterface.sequelize.query(
+                            'UPDATE departements SET latitude = :latitude, longitude = :longitude WHERE name = :name',
+                            {
+                                replacements: {
+                                    name: departements[i].name,
+                                    latitude: match[2],
+                                    longitude: match[1],
+                                },
                             },
-                        },
-                    ));
+                        ));
+                    }
                 } catch (ignore) {
                     console.log(ignore);
                     console.log(`Failed for: ${departements[i].name}`);
