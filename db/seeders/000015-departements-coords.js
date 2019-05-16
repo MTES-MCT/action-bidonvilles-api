@@ -17,23 +17,20 @@ module.exports = {
             for (let i = 0; i < departements.length; i += 1) {
                 if (i > 0) {
                     // eslint-disable-next-line
-                    await sleep(10 * 1000);
+                    await sleep(2 * 1000);
                 }
 
                 try {
                     // eslint-disable-next-line
                     const response = await rp({
-                        uri: `https://www.google.fr/maps/place/${departements[i].name}`,
+                        uri: `https://www.google.fr/maps/place/${encodeURI(departements[i].name)}/`,
+                        headers: {
+                            'accept-language': 'fr-FR,fr;q=0.9,en-US;q=0.8,en;q=0.7',
+                        },
                     });
                     const match = response.match(/APP_INITIALIZATION_STATE=\[\[\[[^,]+,([^,]+),([^,]+)\]/);
-                    console.log({
-                        name: departements[i].name,
-                        latitude: match[2],
-                        longitude: match[1],
-                    });
                     if (parseFloat(match[2]) > 20 && parseFloat(match[1]) > 20) {
-                        i -= 1;
-                        console.log('Retrying...');
+                        console.log(`Failed for: ${departements[i].name}`);
                     } else {
                         promises.push(queryInterface.sequelize.query(
                             'UPDATE departements SET latitude = :latitude, longitude = :longitude WHERE name = :name',
