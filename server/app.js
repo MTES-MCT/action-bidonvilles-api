@@ -229,6 +229,20 @@ module.exports = (middlewares, controllers) => {
         ],
         controllers.town.addComment,
     );
+    app.post(
+        '/towns/:id/comments/:commentId',
+        [
+            middlewares.auth.authenticate,
+        ],
+        controllers.town.updateComment,
+    );
+    app.delete(
+        '/towns/:id/comments/:commentId',
+        [
+            middlewares.auth.authenticate,
+        ],
+        controllers.town.deleteComment,
+    );
 
     // actions
     app.get(

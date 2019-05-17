@@ -209,6 +209,7 @@ async function query(database, filters = {}, permissions) {
         promises.push(
             database.query(
                 `SELECT
+                    shantytown_comments.shantytown_comment_id AS "commentId",
                     shantytown_comments.fk_shantytown AS "shantytownId",
                     shantytown_comments.description AS "commentDescription",
                     shantytown_comments.created_at AS "commentCreatedAt",
@@ -218,7 +219,8 @@ async function query(database, filters = {}, permissions) {
                     users.company AS "userCompany"
                 FROM shantytown_comments
                 LEFT JOIN users ON shantytown_comments.created_by = users.user_id
-                WHERE shantytown_comments.fk_shantytown IN (:ids)`,
+                WHERE shantytown_comments.fk_shantytown IN (:ids)
+                ORDER BY shantytown_comments.created_at DESC`,
                 {
                     type: database.QueryTypes.SELECT,
                     replacements: { ids: Object.keys(serializedTowns.hash) },
@@ -265,6 +267,7 @@ async function query(database, filters = {}, permissions) {
     if (comments !== undefined) {
         comments.forEach((comment) => {
             serializedTowns.hash[comment.shantytownId].comments.push({
+                id: comment.commentId,
                 description: comment.commentDescription,
                 createdAt: comment.commentCreatedAt !== null ? (comment.commentCreatedAt.getTime() / 1000) : null,
                 createdBy: {

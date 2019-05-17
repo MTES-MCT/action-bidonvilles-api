@@ -43,6 +43,10 @@ function trim(str) {
     return str.replace(/^\s*|\s*$/g, '');
 }
 
+function hasPermission(permissions, permission) {
+    return permissions[permission.type] && permissions[permission.type].indexOf(permission.name) !== -1;
+}
+
 function cleanParams(body) {
     const {
         priority,
@@ -320,6 +324,7 @@ async function validateInput(body) {
 
 function serializeComment(comment) {
     return {
+        id: comment.commentId,
         description: comment.commentDescription,
         createdAt: comment.commentCreatedAt !== null ? (comment.commentCreatedAt.getTime() / 1000) : null,
         createdBy: {
@@ -797,6 +802,7 @@ module.exports = models => ({
 
             const rawComments = await sequelize.query(
                 `SELECT
+                    shantytown_comments.shantytown_comment_id AS "commentId",
                     shantytown_comments.fk_shantytown AS "shantytownId",
                     shantytown_comments.description AS "commentDescription",
                     shantytown_comments.created_at AS "commentCreatedAt",
@@ -806,7 +812,8 @@ module.exports = models => ({
                     users.company AS "userCompany"
                 FROM shantytown_comments
                 LEFT JOIN users ON shantytown_comments.created_by = users.user_id
-                WHERE shantytown_comments.fk_shantytown = :id`,
+                WHERE shantytown_comments.fk_shantytown = :id
+                ORDER BY shantytown_comments.created_at DESC`,
                 {
                     type: sequelize.QueryTypes.SELECT,
                     replacements: {
@@ -827,4 +834,150 @@ module.exports = models => ({
             });
         }
     },
+
+    async updateComment(req, res) {
+        let comment;
+        try {
+            comment = await ShantyTownComments.findOne({
+                where: {
+                    shantytown_comment_id: req.params.commentId,
+                },
+            });
+        } catch (error) {
+            return res.status(500).send({
+                error: {
+                    developer_message: 'Failed to retrieve the comment',
+                    user_message: 'Impossible de retrouver le commentaire à modifier en base de données',
+                },
+            });
+        }
+
+        if (!hasPermission(req.user.permissions, { type: 'feature', name: 'updateComment' })
+            && (comment.createdBy !== req.user.id || !hasPermission(req.user.permissions, { type: 'feature', name: 'updateOwnComment' }))) {
+            return res.status(400).send({
+                error: {
+                    user_message: 'Vous n\'avez pas accès à ces données',
+                    developer_message: 'Tried to access a secured page without authentication',
+                },
+            });
+        }
+
+        try {
+            await sequelize.query(
+                'UPDATE shantytown_comments SET description = :description WHERE shantytown_comment_id = :id',
+                {
+                    replacements: {
+                        id: req.params.commentId,
+                        description: req.body.description,
+                    },
+                },
+            );
+
+            const rawComments = await sequelize.query(
+                `SELECT
+                    shantytown_comments.shantytown_comment_id AS "commentId",
+                    shantytown_comments.fk_shantytown AS "shantytownId",
+                    shantytown_comments.description AS "commentDescription",
+                    shantytown_comments.created_at AS "commentCreatedAt",
+                    shantytown_comments.created_by AS "commentCreatedBy",
+                    users.first_name AS "userFirstName",
+                    users.last_name AS "userLastName",
+                    users.company AS "userCompany"
+                FROM shantytown_comments
+                LEFT JOIN users ON shantytown_comments.created_by = users.user_id
+                WHERE shantytown_comments.fk_shantytown = :id
+                ORDER BY shantytown_comments.created_at DESC`,
+                {
+                    type: sequelize.QueryTypes.SELECT,
+                    replacements: {
+                        id: req.params.id,
+                    },
+                },
+            );
+
+            return res.status(200).send({
+                comments: rawComments.map(serializeComment),
+            });
+        } catch (error) {
+            return res.status(500).send({
+                error: {
+                    developer_message: 'Failed to update the comment',
+                    user_message: 'Impossible de modifier le commentaire',
+                },
+            });
+        }
+    },
+
+    async deleteComment(req, res) {
+        let comment;
+        try {
+            comment = await ShantyTownComments.findOne({
+                where: {
+                    shantytown_comment_id: req.params.commentId,
+                },
+            });
+        } catch (error) {
+            return res.status(500).send({
+                error: {
+                    developer_message: 'Failed to retrieve the comment',
+                    user_message: 'Impossible de retrouver le commentaire à supprimer en base de données',
+                },
+            });
+        }
+
+        if (!hasPermission(req.user.permissions, { type: 'feature', name: 'deleteComment' })
+            && (comment.createdBy !== req.user.id || !hasPermission(req.user.permissions, { type: 'feature', name: 'deleteOwnComment' }))) {
+            return res.status(400).send({
+                error: {
+                    user_message: 'Vous n\'avez pas accès à ces données',
+                    developer_message: 'Tried to access a secured page without authentication',
+                },
+            });
+        }
+
+        try {
+            await sequelize.query(
+                'DELETE FROM shantytown_comments WHERE shantytown_comment_id = :id',
+                {
+                    replacements: {
+                        id: req.params.commentId,
+                    },
+                },
+            );
+
+            const rawComments = await sequelize.query(
+                `SELECT
+                    shantytown_comments.shantytown_comment_id AS "commentId",
+                    shantytown_comments.fk_shantytown AS "shantytownId",
+                    shantytown_comments.description AS "commentDescription",
+                    shantytown_comments.created_at AS "commentCreatedAt",
+                    shantytown_comments.created_by AS "commentCreatedBy",
+                    users.first_name AS "userFirstName",
+                    users.last_name AS "userLastName",
+                    users.company AS "userCompany"
+                FROM shantytown_comments
+                LEFT JOIN users ON shantytown_comments.created_by = users.user_id
+                WHERE shantytown_comments.fk_shantytown = :id
+                ORDER BY shantytown_comments.created_at DESC`,
+                {
+                    type: sequelize.QueryTypes.SELECT,
+                    replacements: {
+                        id: req.params.id,
+                    },
+                },
+            );
+
+            return res.status(200).send({
+                comments: rawComments.map(serializeComment),
+            });
+        } catch (error) {
+            return res.status(500).send({
+                error: {
+                    developer_message: 'Failed to delete the comment',
+                    user_message: 'Impossible de supprimer le commentaire',
+                },
+            });
+        }
+    },
+
 });
