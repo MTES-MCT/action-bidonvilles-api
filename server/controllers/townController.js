@@ -320,9 +320,14 @@ async function validateInput(body) {
 
 function serializeComment(comment) {
     return {
-        description: comment.description,
-        createdAt: new Date(comment.createdat || comment.createdAt).getTime() / 1000,
-        createdBy: comment.createdby || comment.createdBy,
+        description: comment.commentDescription,
+        createdAt: comment.commentCreatedAt !== null ? (comment.commentCreatedAt.getTime() / 1000) : null,
+        createdBy: {
+            id: comment.commentCreatedBy,
+            firstName: comment.userFirstName,
+            lastName: comment.userLastName,
+            company: comment.userCompany,
+        },
     };
 }
 
@@ -790,13 +795,28 @@ module.exports = models => ({
                 createdBy: req.user.id,
             });
 
-            const comments = await ShantyTownComments.findAll({
-                where: {
-                    shantytown: shantytown.id,
+            const rawComments = await sequelize.query(
+                `SELECT
+                    shantytown_comments.fk_shantytown AS "shantytownId",
+                    shantytown_comments.description AS "commentDescription",
+                    shantytown_comments.created_at AS "commentCreatedAt",
+                    shantytown_comments.created_by AS "commentCreatedBy",
+                    users.first_name AS "userFirstName",
+                    users.last_name AS "userLastName",
+                    users.company AS "userCompany"
+                FROM shantytown_comments
+                LEFT JOIN users ON shantytown_comments.created_by = users.user_id
+                WHERE shantytown_comments.fk_shantytown = :id`,
+                {
+                    type: sequelize.QueryTypes.SELECT,
+                    replacements: {
+                        id: shantytown.id,
+                    },
                 },
-            });
+            );
+
             return res.status(200).send({
-                comments: comments.map(serializeComment),
+                comments: rawComments.map(serializeComment),
             });
         } catch (e) {
             return res.status(500).send({

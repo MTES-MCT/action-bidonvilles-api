@@ -212,8 +212,12 @@ async function query(database, filters = {}, permissions) {
                     shantytown_comments.fk_shantytown AS "shantytownId",
                     shantytown_comments.description AS "commentDescription",
                     shantytown_comments.created_at AS "commentCreatedAt",
-                    shantytown_comments.created_by AS "commentCreatedBy"
+                    shantytown_comments.created_by AS "commentCreatedBy",
+                    users.first_name AS "userFirstName",
+                    users.last_name AS "userLastName",
+                    users.company AS "userCompany"
                 FROM shantytown_comments
+                LEFT JOIN users ON shantytown_comments.created_by = users.user_id
                 WHERE shantytown_comments.fk_shantytown IN (:ids)`,
                 {
                     type: database.QueryTypes.SELECT,
@@ -263,7 +267,12 @@ async function query(database, filters = {}, permissions) {
             serializedTowns.hash[comment.shantytownId].comments.push({
                 description: comment.commentDescription,
                 createdAt: comment.commentCreatedAt !== null ? (comment.commentCreatedAt.getTime() / 1000) : null,
-                createdBy: comment.commentCreatedBy,
+                createdBy: {
+                    id: comment.commentCreatedBy,
+                    firstName: comment.userFirstName,
+                    lastName: comment.userLastName,
+                    company: comment.userCompany,
+                },
             });
         });
     }
