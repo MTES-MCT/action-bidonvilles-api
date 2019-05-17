@@ -62,7 +62,7 @@ function cleanParams(body) {
         population_total,
         population_couples,
         population_minors,
-        access_to_electricity,
+        electricity_type,
         access_to_water,
         trash_evacuation,
         owner_complaint,
@@ -100,7 +100,7 @@ function cleanParams(body) {
         populationTotal: getIntOrNull(population_total),
         populationCouples: getIntOrNull(population_couples),
         populationMinors: getIntOrNull(population_minors),
-        accessToElectricity: getIntOrNull(access_to_electricity),
+        electricityType: getIntOrNull(electricity_type),
         accessToWater: getIntOrNull(access_to_water),
         trashEvacuation: getIntOrNull(trash_evacuation),
         ownerComplaint: getIntOrNull(owner_complaint),
@@ -141,7 +141,7 @@ async function validateInput(body) {
         populationTotal,
         populationCouples,
         populationMinors,
-        accessToElectricity,
+        electricityType,
         accessToWater,
         trashEvacuation,
         ownerComplaint,
@@ -299,10 +299,8 @@ async function validateInput(body) {
     }
 
     // access to electricty
-    if (accessToElectricity === null) {
-        error('access_to_electricity', 'Le champ "Accès à l\'éléctricité" est obligatoire');
-    } else if ([-1, 0, 1].indexOf(accessToElectricity) === -1) {
-        error('access_to_electricity', 'Valeur invalide');
+    if (electricityType === null) {
+        error('electricity_type', 'Le champ "Accès à l\'éléctricité" est obligatoire');
     }
 
     // access to water
@@ -402,7 +400,7 @@ module.exports = models => ({
             populationTotal,
             populationCouples,
             populationMinors,
-            accessToElectricity,
+            electricityType,
             accessToWater,
             trashEvacuation,
             fieldType,
@@ -438,7 +436,7 @@ module.exports = models => ({
                     populationTotal,
                     populationCouples,
                     populationMinors,
-                    accessToElectricity: toBool(accessToElectricity),
+                    electricityType,
                     accessToWater: toBool(accessToWater),
                     trashEvacuation: toBool(trashEvacuation),
                     fieldType,
@@ -529,7 +527,7 @@ module.exports = models => ({
             populationTotal,
             populationCouples,
             populationMinors,
-            accessToElectricity,
+            electricityType,
             accessToWater,
             trashEvacuation,
             fieldType,
@@ -566,7 +564,7 @@ module.exports = models => ({
                     populationTotal,
                     populationCouples,
                     populationMinors,
-                    accessToElectricity: toBool(accessToElectricity),
+                    electricityType,
                     accessToWater: toBool(accessToWater),
                     trashEvacuation: toBool(trashEvacuation),
                     fieldType,

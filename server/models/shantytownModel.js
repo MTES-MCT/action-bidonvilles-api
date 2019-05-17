@@ -50,7 +50,10 @@ function serializeShantytown(town, permissions) {
         populationTotal: town.populationTotal,
         populationCouples: town.populationCouples,
         populationMinors: town.populationMinors,
-        accessToElectricity: town.accessToElectricity,
+        electricityType: {
+            id: town.electricityTypeId,
+            label: town.electricityTypeLabel,
+        },
         accessToWater: town.accessToWater,
         trashEvacuation: town.trashEvacuation,
         owner: town.owner,
@@ -119,7 +122,6 @@ async function query(database, filters = {}, permissions) {
             shantytowns.population_total AS "populationTotal",
             shantytowns.population_couples AS "populationCouples",
             shantytowns.population_minors AS "populationMinors",
-            shantytowns.access_to_electricity AS "accessToElectricity",
             shantytowns.access_to_water AS "accessToWater",
             shantytowns.trash_evacuation AS "trashEvacuation",
             shantytowns.owner,
@@ -147,6 +149,9 @@ async function query(database, filters = {}, permissions) {
             departements.code AS "departementCode",
             departements.name AS "departementName",
 
+            electricity_types.electricity_type_id AS "electricityTypeId",
+            electricity_types.label AS "electricityTypeLabel",
+
             field_types.field_type_id AS "fieldTypeId",
             field_types.label AS "fieldTypeLabel",
 
@@ -155,6 +160,7 @@ async function query(database, filters = {}, permissions) {
         FROM shantytowns
         LEFT JOIN owner_types ON shantytowns.fk_owner_type = owner_types.owner_type_id
         LEFT JOIN field_types ON shantytowns.fk_field_type = field_types.field_type_id
+        LEFT JOIN electricity_types ON shantytowns.fk_electricity_type = electricity_types.electricity_type_id
         LEFT JOIN cities ON shantytowns.fk_city = cities.code
         LEFT JOIN epci ON cities.fk_epci = epci.code
         LEFT JOIN departements ON cities.fk_departement = departements.code

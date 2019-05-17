@@ -11,6 +11,7 @@ module.exports = models => ({
             roles: models.role.findAll(),
             funding_types: models.fundingType.findAll(),
             plan_types: models.planType.findAll(),
+            electricity_types: models.electricityType.findAll(),
         };
 
         const promises = Object.values(queries);

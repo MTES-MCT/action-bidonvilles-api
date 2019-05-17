@@ -112,10 +112,14 @@ module.exports = function (sequelize, DataTypes) {
             allowNull: true,
             field: 'population_minors',
         },
-        accessToElectricity: {
-            type: DataTypes.BOOLEAN,
-            allowNull: true,
-            field: 'access_to_electricity',
+        electricityType: {
+            type: DataTypes.INTEGER,
+            allowNull: false,
+            references: {
+                model: 'electricity_types',
+                key: 'electricity_type_id',
+            },
+            field: 'fk_electricity_type',
         },
         accessToWater: {
             type: DataTypes.BOOLEAN,
