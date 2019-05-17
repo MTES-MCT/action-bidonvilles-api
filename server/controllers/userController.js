@@ -366,7 +366,9 @@ module.exports = models => ({
         }
 
         try {
-            await models.user.update(req.user.id, exportValue);
+            await models.user.update(req.user.id, {
+                defaultExport: exportValue,
+            });
         } catch (error) {
             return res.status(500).send({
                 success: false,
