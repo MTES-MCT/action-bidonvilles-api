@@ -590,11 +590,10 @@ module.exports = models => ({
                     plan_types.label AS type,
                     departements.name AS departement
                 FROM
-                    plan_details
-                LEFT JOIN plans ON plans.plan_id = plan_details.fk_plan
+                    plans
                 LEFT JOIN plan_types ON plan_types.plan_type_id = plans.fk_type
                 LEFT JOIN departements ON departements.code = plans.fk_departement
-                WHERE plans.fk_departement = :departement AND plans.ended_at IS NULL`,
+                WHERE plans.fk_departement = :departement AND plans.ended_at IS NULL AND plans.targeted_on_towns = TRUE`,
                 {
                     type: sequelize.QueryTypes.SELECT,
                     replacements: {
