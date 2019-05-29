@@ -151,6 +151,15 @@ module.exports = (middlewares, controllers) => {
         controllers.plan.create,
     );
     app.post(
+        '/plans/:id/towns',
+        middlewares.auth.authenticate,
+        (...args) => middlewares.auth.checkPermissions([{
+            type: 'feature',
+            name: 'createTown',
+        }], ...args),
+        controllers.plan.link,
+    );
+    app.post(
         '/plan-details/:id',
         [
             middlewares.auth.authenticate,

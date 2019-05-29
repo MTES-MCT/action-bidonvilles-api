@@ -99,11 +99,24 @@ module.exports = models => ({
         return res.status(200).send({});
     },
 
+    async link(req, res) {
+        try {
+            await models.plan.addTown(req.params.id, req.body.townId, req.user.id);
+        } catch (error) {
+            return res.status(500).send({
+                error: {
+                    user_message: 'Une erreur est survenue lors de l\'écriture des données en base',
+                },
+            });
+        }
+
+        return res.status(200).send({});
+    },
+
     async updateDetails(req, res) {
         try {
             await models.plan.updateDetails(req.params.id, req.body);
         } catch (error) {
-            console.log(error);
             return res.status(500).send({
                 error: {
                     user_message: 'Une erreur est survenue lors de l\'écriture des données en base',

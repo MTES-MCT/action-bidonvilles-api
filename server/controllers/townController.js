@@ -43,48 +43,152 @@ function trim(str) {
     return str.replace(/^\s*|\s*$/g, '');
 }
 
+function ucfirst(str) {
+    return str[0].toUpperCase() + str.slice(1);
+}
+
+function toCamel(str) {
+    const atoms = str.split('_');
+    return atoms[0] + atoms.slice(1).map(ucfirst).join('');
+}
+
+function toUnderscore(str) {
+    const atoms = str.split(/[A-Z]+/);
+    const capitals = str.match(/[A-Z]+/g);
+
+    return atoms[0] + capitals.map((capital, index) => (`_${capital.toLowerCase()}${atoms[index + 1]}`)).join('');
+}
+
+function toFormat(str, format) {
+    if (format === 'underscore') {
+        return toUnderscore(str);
+    }
+
+    if (format === 'camel') {
+        return toCamel(str);
+    }
+
+    return str;
+}
+
 function hasPermission(permissions, permission) {
     return permissions[permission.type] && permissions[permission.type].indexOf(permission.name) !== -1;
 }
 
-function cleanParams(body) {
-    const {
-        priority,
-        built_at,
-        status,
-        closed_at,
-        latitude,
-        longitude,
-        city,
-        citycode,
-        address,
-        detailed_address,
-        population_total,
-        population_couples,
-        population_minors,
-        electricity_type,
-        access_to_water,
-        trash_evacuation,
-        owner_complaint,
-        justice_procedure,
-        justice_rendered,
-        justice_rendered_by,
-        justice_rendered_at,
-        justice_challenged,
-        social_origins,
-        field_type,
-        owner_type,
-        owner,
-        declared_at,
-        census_status,
-        census_conducted_at,
-        census_conducted_by,
-        police_status,
-        police_requested_at,
-        police_granted_at,
-        bailiff,
-        solutions,
-    } = body;
+function cleanParams(body, format) {
+    let priority;
+    let built_at;
+    let status;
+    let closed_at;
+    let latitude;
+    let longitude;
+    let city;
+    let citycode;
+    let address;
+    let detailed_address;
+    let population_total;
+    let population_couples;
+    let population_minors;
+    let electricity_type;
+    let access_to_water;
+    let trash_evacuation;
+    let owner_complaint;
+    let justice_procedure;
+    let justice_rendered;
+    let justice_rendered_by;
+    let justice_rendered_at;
+    let justice_challenged;
+    let social_origins;
+    let field_type;
+    let owner_type;
+    let owner;
+    let declared_at;
+    let census_status;
+    let census_conducted_at;
+    let census_conducted_by;
+    let police_status;
+    let police_requested_at;
+    let police_granted_at;
+    let bailiff;
+    let solutions;
+
+    if (format === 'camel') {
+        ({
+            priority,
+            builtAt: built_at,
+            status,
+            closedAt: closed_at,
+            latitude,
+            longitude,
+            city,
+            citycode,
+            address,
+            detailedAddress: detailed_address,
+            populationTotal: population_total,
+            populationCouples: population_couples,
+            populationMinors: population_minors,
+            electricityType: electricity_type,
+            accessToWater: access_to_water,
+            trashEvacuation: trash_evacuation,
+            ownerComplaint: owner_complaint,
+            justiceProcedure: justice_procedure,
+            justiceRendered: justice_rendered,
+            justiceRenderedBy: justice_rendered_by,
+            justiceRenderedAt: justice_rendered_at,
+            justiceChallenged: justice_challenged,
+            socialOrigins: social_origins,
+            fieldType: field_type,
+            ownerType: owner_type,
+            owner,
+            declaredAt: declared_at,
+            censusStatus: census_status,
+            censusConductedAt: census_conducted_at,
+            censusConductedBy: census_conducted_by,
+            policeStatus: police_status,
+            policeRequestedAt: police_requested_at,
+            policeGrantedAt: police_granted_at,
+            bailiff,
+            solutions,
+        } = body);
+    } else {
+        ({
+            priority,
+            built_at,
+            status,
+            closed_at,
+            latitude,
+            longitude,
+            city,
+            citycode,
+            address,
+            detailed_address,
+            population_total,
+            population_couples,
+            population_minors,
+            electricity_type,
+            access_to_water,
+            trash_evacuation,
+            owner_complaint,
+            justice_procedure,
+            justice_rendered,
+            justice_rendered_by,
+            justice_rendered_at,
+            justice_challenged,
+            social_origins,
+            field_type,
+            owner_type,
+            owner,
+            declared_at,
+            census_status,
+            census_conducted_at,
+            census_conducted_by,
+            police_status,
+            police_requested_at,
+            police_granted_at,
+            bailiff,
+            solutions,
+        } = body);
+    }
 
     return {
         priority: getIntOrNull(priority),
@@ -109,7 +213,7 @@ function cleanParams(body) {
         justiceRenderedBy: trim(justice_rendered_by),
         justiceRenderedAt: justice_rendered_at !== '' ? justice_rendered_at : null,
         justiceChallenged: getIntOrNull(justice_challenged),
-        socialOrigins: social_origins,
+        socialOrigins: social_origins || [],
         fieldType: getIntOrNull(field_type),
         ownerType: getIntOrNull(owner_type),
         owner: trim(owner),
@@ -129,7 +233,7 @@ function cleanParams(body) {
     };
 }
 
-async function validateInput(body) {
+async function validateInput(body, format = 'underscore') {
     const {
         priority,
         builtAt,
@@ -152,7 +256,7 @@ async function validateInput(body) {
         fieldType,
         ownerType,
         declaredAt,
-    } = cleanParams(body);
+    } = cleanParams(body, format);
 
     const now = Date.now();
     const fieldErrors = {};
@@ -167,29 +271,29 @@ async function validateInput(body) {
 
     // builtAt
     let builtAtTimestamp = null;
-    if (builtAt === '') {
-        error('built_at', 'La date d\'installation est obligatoire.');
+    if (!builtAt) {
+        error(toFormat('built_at', format), 'La date d\'installation est obligatoire.');
     } else {
         builtAtTimestamp = new Date(builtAt).getTime();
 
         if (Number.isNaN(builtAtTimestamp)) {
-            error('built_at', 'La date fournie n\'est pas reconnue');
+            error(toFormat('built_at', format), 'La date fournie n\'est pas reconnue');
         } else if (builtAtTimestamp >= now) {
-            error('built_at', 'La date d\'installation ne peut pas être future');
+            error(toFormat('built_at', format), 'La date d\'installation ne peut pas être future');
         }
     }
 
     // declaredAt
     let declaredAtTimestamp = null;
-    if (declaredAt === '') {
-        error('declared_at', 'La date de signalement est obligatoire.');
+    if (!declaredAt) {
+        error(toFormat('declared_at', format), 'La date de signalement est obligatoire.');
     } else {
         declaredAtTimestamp = new Date(declaredAt).getTime();
 
         if (Number.isNaN(declaredAtTimestamp)) {
-            error('declared_at', 'La date fournie n\'est pas reconnue');
+            error(toFormat('declared_at', format), 'La date fournie n\'est pas reconnue');
         } else if (declaredAtTimestamp >= now) {
-            error('declared_at', 'La date de signalement ne peut pas être future');
+            error(toFormat('declared_at', format), 'La date de signalement ne peut pas être future');
         }
     }
 
@@ -236,49 +340,49 @@ async function validateInput(body) {
 
     // field type
     if (fieldType === null) {
-        error('field_type', 'Le champ "type de site" est obligatoire');
+        error(toFormat('field_type', format), 'Le champ "type de site" est obligatoire');
     }
 
     // owner type
     if (ownerType === null) {
-        error('owner_type', 'Le champ "type de propriétaire" est obligatoire');
+        error(toFormat('owner_type', format), 'Le champ "type de propriétaire" est obligatoire');
     }
 
     // justice status
     if (ownerComplaint === null) {
-        error('owner_complaint', 'Le champ "Dépôt de plainte par le propriétaire" est obligatoire');
+        error(toFormat('owner_complaint', format), 'Le champ "Dépôt de plainte par le propriétaire" est obligatoire');
     } else if ([-1, 0, 1].indexOf(ownerComplaint) === -1) {
-        error('owner_complaint', 'Valeur invalide');
+        error(toFormat('owner_complaint', format), 'Valeur invalide');
     }
 
     if (ownerComplaint === 1) {
         if (justiceProcedure === null) {
-            error('justice_procedure', 'Le champ "Existence d\'une procédure judiciaire" est obligatoire');
+            error(toFormat('justice_procedure', format), 'Le champ "Existence d\'une procédure judiciaire" est obligatoire');
         } else if ([-1, 0, 1].indexOf(justiceProcedure) === -1) {
-            error('justice_procedure', 'Valeur invalide');
+            error(toFormat('justice_procedure', format), 'Valeur invalide');
         }
 
         if (justiceProcedure === 1) {
             if (justiceRendered === null) {
-                error('justice_rendered', 'Le champ "Décision de justice rendue" est obligatoire');
+                error(toFormat('justice_rendered', format), 'Le champ "Décision de justice rendue" est obligatoire');
             } else if ([-1, 0, 1].indexOf(justiceRendered) === -1) {
-                error('justice_rendered', 'Valeur invalide');
+                error(toFormat('justice_rendered', format), 'Valeur invalide');
             }
 
             if (justiceRendered === 1) {
                 if (justiceChallenged === null) {
-                    error('justice_challenged', 'Le champ "Contentieux relatif à la décision de justice" est obligatoire');
+                    error(toFormat('justice_challenged', format), 'Le champ "Contentieux relatif à la décision de justice" est obligatoire');
                 } else if ([-1, 0, 1].indexOf(justiceChallenged) === -1) {
-                    error('justice_challenged', 'Valeur invalide');
+                    error(toFormat('justice_challenged', format), 'Valeur invalide');
                 }
 
                 if (justiceRenderedAt !== '') {
                     const justiceRenderedAtTimestamp = new Date(justiceRenderedAt).getTime();
 
                     if (Number.isNaN(justiceRenderedAtTimestamp)) {
-                        error('justice_rendered_at', 'La date fournie n\'est pas reconnue');
+                        error(toFormat('justice_rendered_at', format), 'La date fournie n\'est pas reconnue');
                     } else if (justiceRenderedAtTimestamp >= now) {
-                        error('justice_rendered_at', 'La date ne peut pas être future');
+                        error(toFormat('justice_rendered_at', format), 'La date ne peut pas être future');
                     }
                 }
             }
@@ -287,34 +391,34 @@ async function validateInput(body) {
 
     // population
     if (populationTotal < 0) {
-        error('population_total', 'La population ne peut pas être négative');
+        error(toFormat('population_total', format), 'La population ne peut pas être négative');
     }
 
     if (populationCouples < 0) {
-        error('population_couples', 'Le nombre de ménages ne peut pas être négatif');
+        error(toFormat('population_couples', format), 'Le nombre de ménages ne peut pas être négatif');
     }
 
     if (populationMinors < 0) {
-        error('population_minors', 'Le nombre de mineurs ne peut pas être négatif');
+        error(toFormat('population_minors', format), 'Le nombre de mineurs ne peut pas être négatif');
     }
 
     // access to electricty
     if (electricityType === null) {
-        error('electricity_type', 'Le champ "Accès à l\'éléctricité" est obligatoire');
+        error(toFormat('electricity_type', format), 'Le champ "Accès à l\'éléctricité" est obligatoire');
     }
 
     // access to water
     if (accessToWater === null) {
-        error('access_to_water', 'Le champ "Accès à l\'eau" est obligatoire');
+        error(toFormat('access_to_water', format), 'Le champ "Accès à l\'eau" est obligatoire');
     } else if ([-1, 0, 1].indexOf(accessToWater) === -1) {
-        error('access_to_water', 'Valeur invalide');
+        error(toFormat('access_to_water', format), 'Valeur invalide');
     }
 
     // trash evacuatioon
     if (trashEvacuation === null) {
-        error('trash_evacuation', 'Le champ "Évacuation des déchets" est obligatoire');
+        error(toFormat('trash_evacuation', format), 'Le champ "Évacuation des déchets" est obligatoire');
     } else if ([-1, 0, 1].indexOf(trashEvacuation) === -1) {
-        error('trash_evacuation', 'Valeur invalide');
+        error(toFormat('trash_evacuation', format), 'Valeur invalide');
     }
 
     return fieldErrors;
@@ -373,7 +477,7 @@ module.exports = models => ({
         // check errors
         let fieldErrors = {};
         try {
-            fieldErrors = await validateInput(req.body);
+            fieldErrors = await validateInput(req.body, 'camel');
         } catch (error) {
             return res.status(500).send({ error });
         }
@@ -421,7 +525,7 @@ module.exports = models => ({
             policeRequestedAt,
             policeGrantedAt,
             bailiff,
-        } = cleanParams(req.body);
+        } = cleanParams(req.body, 'camel');
 
         try {
             let town;
@@ -463,7 +567,46 @@ module.exports = models => ({
                 await town.setSocialOrigins(socialOrigins);
             });
 
-            return res.status(200).send(town);
+            const departements = await sequelize.query(
+                `SELECT
+                    departements.code
+                FROM
+                    shantytowns
+                LEFT JOIN cities ON cities.code = shantytowns.fk_city
+                LEFT JOIN departements ON departements.code = cities.fk_departement
+                WHERE shantytowns.shantytown_id = :id`,
+                {
+                    type: sequelize.QueryTypes.SELECT,
+                    replacements: {
+                        id: town.id,
+                    },
+                },
+            );
+
+            const plans = await sequelize.query(
+                `SELECT
+                    plans.plan_id AS id,
+                    plans.name,
+                    plan_types.label AS type,
+                    departements.name AS departement
+                FROM
+                    plan_details
+                LEFT JOIN plans ON plans.plan_id = plan_details.fk_plan
+                LEFT JOIN plan_types ON plan_types.plan_type_id = plans.fk_type
+                LEFT JOIN departements ON departements.code = plans.fk_departement
+                WHERE plans.fk_departement = :departement AND plans.ended_at IS NULL`,
+                {
+                    type: sequelize.QueryTypes.SELECT,
+                    replacements: {
+                        departement: departements[0].code,
+                    },
+                },
+            );
+
+            return res.status(200).send({
+                town,
+                plans,
+            });
         } catch (e) {
             return res.status(500).send({
                 error: {

@@ -337,6 +337,22 @@ module.exports = (database) => {
             return planId;
         },
 
+        addTown: async (planId, townId, createdBy) => {
+            await database.query(
+                `INSERT INTO plan_details(
+                    fk_plan, fk_shantytown, created_by, updated_by
+                )
+                VALUES (:planId, :townId, :createdBy, :createdBy)`,
+                {
+                    replacements: {
+                        planId,
+                        townId,
+                        createdBy,
+                    },
+                },
+            );
+        },
+
         updateDetails: async (id, data) => {
             await database.query(
                 `UPDATE
