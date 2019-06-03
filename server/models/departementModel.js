@@ -3,7 +3,8 @@ module.exports = database => ({
         `SELECT
             departements.code AS code,
             departements.name AS name
-        FROM departements`,
+        FROM departements
+        ORDER BY code ASC`,
         {
             type: database.QueryTypes.SELECT,
         },
