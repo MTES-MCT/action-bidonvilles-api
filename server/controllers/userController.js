@@ -406,11 +406,13 @@ module.exports = models => ({
             });
         }
 
-        if (user.active === true) {
-            return res.status(403).send({
+        try {
+            await models.user.deactivate(req.params.id);
+        } catch (error) {
+            return res.status(500).send({
                 error: {
-                    user_message: 'Cet utilisateur est déjà activé',
-                    developer_message: 'The user is already activates',
+                    user_message: 'Une erreur est survenue lors de la désactivation de l\'utilisateur',
+                    developer_message: 'Failed updating the user in database',
                 },
             });
         }

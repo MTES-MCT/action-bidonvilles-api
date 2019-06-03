@@ -215,4 +215,20 @@ module.exports = database => ({
             throw new Error(`The user #${userId} does not exist`);
         }
     },
+
+    deactivate: id => database.query(
+        `UPDATE
+            users
+        SET
+            active = FALSE,
+            password = NULL
+        WHERE
+            user_id = :id
+        `,
+        {
+            replacements: {
+                id,
+            },
+        },
+    ),
 });
