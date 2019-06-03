@@ -25,6 +25,42 @@ module.exports = models => ({
     },
 
     async create(req, res) {
+        if (!req.body.name || !trim(req.body.name)) {
+            return res.status(500).send({
+                success: false,
+                error: {
+                    user_message: 'Certaines données sont invalides ou manquantes',
+                    fields: {
+                        name: ['Le nom de l\'opérateur est obligatoire'],
+                    },
+                },
+            });
+        }
+
+        let name;
+        try {
+            name = await models.ngo.findOneByName(req.body.name);
+        } catch (error) {
+            return res.status(500).send({
+                success: false,
+                error: {
+                    user_message: 'Une erreur est survenue lors de la lecture en base de données',
+                },
+            });
+        }
+
+        if (name !== null) {
+            return res.status(500).send({
+                success: false,
+                error: {
+                    user_message: 'Certaines données sont invalides ou manquantes',
+                    fields: {
+                        name: ['Un opérateur portant ce nom existe déjà'],
+                    },
+                },
+            });
+        }
+
         try {
             await models.ngo.create(req.body, req.user.id);
         } catch (error) {
