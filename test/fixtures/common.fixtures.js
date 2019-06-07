@@ -142,6 +142,28 @@ module.exports = randomStr => [
         ],
     },
     {
+        table: 'funding_types',
+        rows: [
+            {
+                label: 'Inconnu',
+            },
+            {
+                label: 'Autre',
+            },
+        ],
+    },
+    {
+        table: 'plan_types',
+        rows: [
+            {
+                label: 'Inconnu',
+            },
+            {
+                label: 'Autre',
+            },
+        ],
+    },
+    {
         table: 'social_origins',
         rows: [
             {
@@ -160,6 +182,27 @@ module.exports = randomStr => [
             },
             {
                 label: 'Whatever 2',
+            },
+        ],
+    },
+    {
+        table: 'ngos',
+        rows: [
+            {
+                name: randomStr,
+                created_by: 1,
+                updated_by: 1,
+            },
+        ],
+    },
+    {
+        table: 'electricity_types',
+        rows: [
+            {
+                label: 'Inconnu',
+            },
+            {
+                label: 'Autre',
             },
         ],
     },

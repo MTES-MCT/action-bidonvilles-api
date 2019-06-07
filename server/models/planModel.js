@@ -25,7 +25,7 @@ function serializePlan(plan) {
         towns: [],
         details: null,
         departement: {
-            id: plan.departementId,
+            id: plan.departementCode,
             name: plan.departementName,
         },
     };
@@ -57,7 +57,8 @@ module.exports = (database) => {
             LEFT JOIN ngos ON plans.fk_ngo = ngos.ngo_id
             LEFT JOIN plan_types ON plans.fk_type = plan_types.plan_type_id
             LEFT JOIN departements ON plans.fk_departement = departements.code
-            ${filterParts.length > 0 ? `WHERE ${filterParts.join(' OR ')}` : ''}`,
+            ${filterParts.length > 0 ? `WHERE ${filterParts.join(' OR ')}` : ''}
+            ORDER BY plans.plan_id ASC`,
             {
                 type: database.QueryTypes.SELECT,
                 replacements: filters,
@@ -192,7 +193,7 @@ module.exports = (database) => {
     }
 
     return {
-        findAll: where => query(where),
+        findAll: where => query(where || {}),
 
         findOne: async (id) => {
             const rows = await query({

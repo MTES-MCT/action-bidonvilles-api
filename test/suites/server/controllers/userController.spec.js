@@ -29,6 +29,7 @@ const otherMockModels = {
         findOne: sinon.stub(),
         findOneByEmail: sinon.stub(),
         update: sinon.stub(),
+        deactivate: sinon.stub(),
     },
     departement: {
         findOne: sinon.stub(),
@@ -809,7 +810,7 @@ describe('Controllers/User', () => {
             beforeEach(async () => {
                 const fakeExport = global.generate('string');
                 error = global.generate('string');
-                otherMockModels.user.update.withArgs(fakeUser.id, fakeExport).rejects(new Error(error));
+                otherMockModels.user.update.withArgs(fakeUser.id, { defaultExport: fakeExport }).rejects(new Error(error));
 
                 await request({
                     export: fakeExport,
@@ -835,7 +836,7 @@ describe('Controllers/User', () => {
         describe('if the query succeeds', () => {
             beforeEach(async () => {
                 const fakeExport = global.generate('string');
-                otherMockModels.user.update.withArgs(fakeUser.id, fakeExport).resolves();
+                otherMockModels.user.update.withArgs(fakeUser.id, { defaultExport: fakeExport }).resolves();
 
                 await request({
                     export: fakeExport,
@@ -904,56 +905,59 @@ describe('Controllers/User', () => {
             });
         });
 
-        describe('if the user is already active', () => {
-            beforeEach(async () => {
-                otherMockModels.user.findOne.withArgs(userId).resolves({
-                    active: true,
+        describe('if the user exists', () => {
+            describe('if deactivating the user fails', () => {
+                let error;
+                beforeEach(async () => {
+                    error = global.generate('string');
+                    otherMockModels.user.deactivate.withArgs(userId).rejects(error);
+
+                    await getActivationLink(httpReq, httpRes);
+                    [response] = httpRes.send.getCalls()[0].args;
                 });
 
-                await getActivationLink(httpReq, httpRes);
-                [response] = httpRes.send.getCalls()[0].args;
-            });
-
-            it('it responds with a 403', () => {
-                expect(httpRes.status).to.have.been.calledWith(403);
-            });
-
-            it('it responds with the proper error messages', () => {
-                expect(response.error).to.be.eql({
-                    user_message: 'Cet utilisateur est déjà activé',
-                    developer_message: 'The user is already activates',
-                });
-            });
-        });
-
-        describe('if the user is not active yet', () => {
-            let userEmail;
-            let activationLink;
-            beforeEach(async () => {
-                userEmail = global.generate('string');
-                otherMockModels.user.findOne.withArgs(userId).resolves({
-                    id: userId,
-                    email: userEmail,
-                    active: false,
+                it('it responds with a 500', () => {
+                    expect(httpRes.status).to.have.been.calledWith(500);
                 });
 
-                activationLink = global.generate('string');
-                mockAuth.getAccountActivationLink.withArgs({
-                    id: userId,
-                    email: userEmail,
-                }).returns(activationLink);
-
-                await getActivationLink(httpReq, httpRes);
-                [response] = httpRes.send.getCalls()[0].args;
+                it('it responds with the proper error messages', () => {
+                    expect(response.error).to.be.eql({
+                        user_message: 'Une erreur est survenue lors de la désactivation de l\'utilisateur',
+                        developer_message: 'Failed updating the user in database',
+                    });
+                });
             });
 
-            it('it responds with a 200', () => {
-                expect(httpRes.status).to.have.been.calledWith(200);
-            });
+            describe('if deactivating the user succeeds', () => {
+                let userEmail;
+                let activationLink;
+                beforeEach(async () => {
+                    userEmail = global.generate('string');
+                    otherMockModels.user.findOne.withArgs(userId).resolves({
+                        id: userId,
+                        email: userEmail,
+                        active: false,
+                    });
+                    otherMockModels.user.deactivate.withArgs(userId).resolves();
 
-            it('it responds with an activation link', () => {
-                expect(response).to.be.eql({
-                    activationLink,
+                    activationLink = global.generate('string');
+                    mockAuth.getAccountActivationLink.withArgs({
+                        id: userId,
+                        email: userEmail,
+                    }).returns(activationLink);
+
+                    await getActivationLink(httpReq, httpRes);
+                    [response] = httpRes.send.getCalls()[0].args;
+                });
+
+                it('it responds with a 200', () => {
+                    expect(httpRes.status).to.have.been.calledWith(200);
+                });
+
+                it('it responds with an activation link', () => {
+                    expect(response).to.be.eql({
+                        activationLink,
+                    });
                 });
             });
         });

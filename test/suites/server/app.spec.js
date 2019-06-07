@@ -48,6 +48,8 @@ function getFakeControllers() {
             edit: mockController(),
             find: mockController(),
             list: mockController(),
+            updateComment: mockController(),
+            deleteComment: mockController(),
         },
         action: {
             add: mockController(),
@@ -61,6 +63,19 @@ function getFakeControllers() {
             search: mockController(),
             searchCities: mockController(),
             searchEpci: mockController(),
+        },
+        ngo: {
+            list: mockController(),
+            create: mockController(),
+            search: mockController(),
+        },
+        plan: {
+            list: mockController(),
+            create: mockController(),
+            find: mockController(),
+            delete: mockController(),
+            link: mockController(),
+            updateDetails: mockController(),
         },
     };
 }

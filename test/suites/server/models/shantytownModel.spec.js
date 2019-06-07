@@ -21,7 +21,7 @@ describe('[/server/models] shantytownModel', () => {
         'populationTotal',
         'populationCouples',
         'populationMinors',
-        'accessToElectricity',
+        'electricityType',
         'accessToWater',
         'trashEvacuation',
         'owner',

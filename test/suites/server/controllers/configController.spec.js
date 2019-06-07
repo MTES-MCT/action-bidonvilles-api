@@ -28,6 +28,15 @@ const mockModels = {
     role: {
         findAll: sinon.stub(),
     },
+    fundingType: {
+        findAll: sinon.stub(),
+    },
+    planType: {
+        findAll: sinon.stub(),
+    },
+    electricityType: {
+        findAll: sinon.stub(),
+    },
 };
 
 const { list } = require('#server/controllers/configController')(mockModels);
@@ -51,6 +60,9 @@ describe('[server/controllers] configController', () => {
             let user;
             let actionTypes;
             let roles;
+            let fundingTypes;
+            let planTypes;
+            let electricityTypes;
             beforeEach(async () => {
                 user = {
                     [global.generate('string')]: global.generate('string'),
@@ -68,6 +80,9 @@ describe('[server/controllers] configController', () => {
                 closingSolutions = [global.generate('string'), global.generate('string')];
                 actionTypes = [global.generate('string'), global.generate('string')];
                 roles = [global.generate('string'), global.generate('string')];
+                fundingTypes = [global.generate('string'), global.generate('string')];
+                planTypes = [global.generate('string'), global.generate('string')];
+                electricityTypes = [global.generate('string'), global.generate('string')];
 
                 mockModels.fieldType.findAll.resolves(fieldTypes);
                 mockModels.ownerType.findAll.resolves(ownerTypes);
@@ -77,6 +92,9 @@ describe('[server/controllers] configController', () => {
                 mockModels.closingSolution.findAll.resolves(closingSolutions);
                 mockModels.actionType.findAll.resolves(actionTypes);
                 mockModels.role.findAll.resolves(roles);
+                mockModels.fundingType.findAll.resolves(fundingTypes);
+                mockModels.planType.findAll.resolves(planTypes);
+                mockModels.electricityType.findAll.resolves(electricityTypes);
 
                 await list(httpReq, httpRes);
                 [response] = httpRes.send.getCalls()[0].args;
@@ -86,7 +104,7 @@ describe('[server/controllers] configController', () => {
                 expect(httpRes.status).to.have.been.calledWith(200);
             });
 
-            it('it responds with the proper list of towns', () => {
+            it('it responds with the proper config', () => {
                 expect(response).to.be.eql({
                     user,
                     field_types: fieldTypes,
@@ -97,6 +115,9 @@ describe('[server/controllers] configController', () => {
                     closing_solutions: closingSolutions,
                     action_types: actionTypes,
                     roles,
+                    funding_types: fundingTypes,
+                    plan_types: planTypes,
+                    electricity_types: electricityTypes,
                 });
             });
         });
