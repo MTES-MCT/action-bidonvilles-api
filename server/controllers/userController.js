@@ -3,7 +3,6 @@ const {
 } = require('#server/utils/auth');
 const jwt = require('jsonwebtoken');
 const { auth: authConfig } = require('#server/config');
-const { User } = require('#db/models');
 
 function trim(str) {
     if (typeof str !== 'string') {
@@ -121,16 +120,12 @@ module.exports = models => ({
     async edit(req, res) {
         // find the user
         const { id: userId } = req.user;
-        const user = await User.findOne({
-            where: {
-                id: userId,
-            },
-        });
+        const user = await models.user.findOne(userId, true);
 
         if (user === null) {
             return res.status(500).send({
                 error: {
-                    user_message: 'Impossible de trouver voos informations en bases de données.',
+                    user_message: 'Impossible de trouver vos informations en bases de données.',
                     developer_message: `User #${userId} does not exist`,
                 },
             });
