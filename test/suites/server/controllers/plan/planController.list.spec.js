@@ -9,7 +9,7 @@ const mockModels = {
     },
 };
 
-const { list } = require('#server/controllers/planController')(mockModels);
+const list = require('#server/controllers/plan/planController.list')(mockModels);
 
 const { expect } = chai;
 chai.use(sinonChai);
