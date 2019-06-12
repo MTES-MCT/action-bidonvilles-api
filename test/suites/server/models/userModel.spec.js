@@ -207,6 +207,12 @@ describe('[/server/models] userModel', () => {
 
     describe('.findOneByEmail', () => {
         describe('if the email matches an existing user', () => {
+            it('it ignores case', async () => {
+                await global.insertFixtures(db, fixtures.findOneByEmail.inputs);
+                const user = await findOneByEmail(fixtures.findOneByEmail.email.toUpperCase());
+                expect(user).to.eql(fixtures.findOneByEmail.output);
+            });
+
             it('it returns the proper user from the database', async () => {
                 await global.insertFixtures(db, fixtures.findOneByEmail.inputs);
                 const user = await findOneByEmail(fixtures.findOneByEmail.email);

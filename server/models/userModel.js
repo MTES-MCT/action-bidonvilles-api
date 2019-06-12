@@ -45,8 +45,8 @@ async function query(database, where = [], fullVersion) {
     const replacements = {};
     const whereClause = where.map((clauses, index) => {
         const clauseGroup = Object.keys(clauses).map((column) => {
-            replacements[`${column}${index}`] = clauses[column];
-            return `${column} IN (:${column}${index})`;
+            replacements[`${column}${index}`] = clauses[column].value || clauses[column];
+            return `${clauses[column].query || column} IN (:${column}${index})`;
         }).join(' OR ');
 
         return `(${clauseGroup})`;
@@ -127,7 +127,7 @@ module.exports = database => ({
     findOneByEmail: async (email, fullVersion = false) => {
         const users = await query(
             database,
-            [{ email: [email] }],
+            [{ email: { value: [email.toUpperCase()], query: 'upper(email)' } }],
             fullVersion,
         );
         return users.length === 1 ? users[0] : null;
