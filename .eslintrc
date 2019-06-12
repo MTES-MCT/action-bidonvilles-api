@@ -16,6 +16,7 @@
                 "map": [
                     ["#server", "./server"],
                     ["#db", "./db"],
+                    ["#test", "./test"],
                     ["#fixtures", "./test/fixtures"]
                 ],
                 "extensions": [".js"]

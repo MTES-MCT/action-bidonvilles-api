@@ -40,6 +40,9 @@ const generators = {
     number() {
         return Math.round(Math.random() * 1989);
     },
+    float() {
+        return Math.round((Math.random() * 1989) * 100) / 100;
+    },
     boolean() {
         return Math.round(Math.random()) === 1;
     },

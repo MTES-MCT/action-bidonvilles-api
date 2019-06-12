@@ -4,6 +4,7 @@
         "paths": {
             "#server/*": [ "./server/*" ],
             "#db/*": [ "./db/*" ],
+            "#test/*": [ "./test/*" ],
             "#fixtures/*": [ "./test/fixtures/*" ]
         }
     },

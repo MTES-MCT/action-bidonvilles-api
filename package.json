@@ -26,7 +26,8 @@
     "request-promise": "^4.2.2",
     "sequelize": "^4.42.0",
     "sequelize-cli": "^5.4.0",
-    "sequelize-temporal": "^1.0.6"
+    "sequelize-temporal": "^1.0.6",
+    "validator": "^11.0.0"
   },
   "devDependencies": {
     "chai": "^4.2.0",
@@ -68,6 +69,7 @@
   "_moduleAliases": {
     "#server": "./server",
     "#db": "./db",
+    "#test": "./test",
     "#fixtures": "./test/fixtures"
   }
 }

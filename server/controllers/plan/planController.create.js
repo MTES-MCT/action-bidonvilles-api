@@ -1,66 +1,43 @@
-const { Plan } = require('#db/models');
-
-function convertNullError(error) {
-    if (error.type !== 'notNull Violation') {
-        return error;
-    }
-
-    const customMsg = error.instance.constructor.attributes[error.path].allowNullMsg;
-    if (customMsg !== undefined) {
-        // eslint-disable-next-line no-param-reassign
-        error.message = customMsg;
-    }
-
-    return error;
-}
-
-function compileError(error) {
-    return error.message;
-}
-
-async function validate(instance) {
-    try {
-        await instance.validate();
-        return {};
-    } catch (errors) {
-        return errors.errors.reduce((acc, error) => {
-            if (!acc[error.path]) {
-                acc[error.path] = [];
-            }
-
-            acc[error.path].push(compileError(convertNullError(error)));
-            return acc;
-        }, {});
-    }
-}
-
 module.exports = models => async (req, res) => {
-    const planData = Object.assign({}, req.body, {
-        createdBy: req.user.id,
-        updatedBy: req.user.id,
+    const { body } = req;
+    const filteredBody = Object.assign({}, body);
+
+    if (filteredBody.targetedOnTowns !== true) {
+        filteredBody.towns = undefined;
+    }
+
+    const response = await models.plan.create(filteredBody);
+
+    return res.status(200).send({
+        success: true,
+        response,
     });
-    const plan = new Plan(planData);
+    // const planData = Object.assign({}, req.body, {
+    //     createdBy: req.user.id,
+    //     updatedBy: req.user.id,
+    // });
+    // const plan = new Plan(planData);
 
-    const errors = await validate(plan);
-    if (Object.keys(errors).length > 0) {
-        return res.status(500).send({
-            error: {
-                user_message: 'Les données saisies sont incomplètes ou incorrectes',
-                fields: errors,
-            },
-        });
-    }
+    // const errors = await validate(plan);
+    // if (Object.keys(errors).length > 0) {
+    //     return res.status(500).send({
+    //         error: {
+    //             user_message: 'Les données saisies sont incomplètes ou incorrectes',
+    //             fields: errors,
+    //         },
+    //     });
+    // }
 
-    try {
-        await models.plan.create(planData);
-    } catch (error) {
-        return res.status(500).send({
-            error: {
-                user_message: 'Une erreur est survenue lors de l\'écriture des données en base',
-                developer_message: error,
-            },
-        });
-    }
+    // try {
+    //     await models.plan.create(planData);
+    // } catch (error) {
+    //     return res.status(500).send({
+    //         error: {
+    //             user_message: 'Une erreur est survenue lors de l\'écriture des données en base',
+    //             developer_message: error,
+    //         },
+    //     });
+    // }
 
-    return res.status(200).send({});
+    // return res.status(200).send({});
 };
