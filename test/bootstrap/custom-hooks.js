@@ -1,4 +1,4 @@
-/* eslint-disable prefer-arrow-callback, no-param-reassign, func-names */
+/* eslint-disable prefer-arrow-callback, no-param-reassign, func-names, no-multi-assign */
 
 /**
  * This files enriches the vanilla Mocha with
@@ -69,13 +69,15 @@
  * - test2
  */
 const { Runner, Suite, interfaces } = require('mocha');
+const Common = require('mocha/lib/interfaces/common');
+const Test = require('mocha/lib/test');
 
 /**
  * Custom hooks to be declared, and in the expected call order
  *
  * @type {Array.<string>}
  */
-const customHooks = ['prepare', 'build', 'execute'];
+const customHooks = ['prepare', 'build', 'execute', 'collect'];
 
 /**
  * Custom hook
@@ -109,16 +111,97 @@ function customHook(name, title, fn) {
 // ensure the custom hooks haven't already been declared
 if (!Suite.prototype.customHooked) {
     // declare the custom-hooks in the bdd interface
-    const originalBdd = interfaces.bdd;
     interfaces.bdd = function (suite) {
-        originalBdd(suite);
+        const suites = [suite];
 
-        suite.on('pre-require', function (context) {
+        suite.on('pre-require', function (context, file, mocha) {
+            const common = Common(suites, context, mocha);
+
+            context.before = common.before;
+            context.after = common.after;
+            context.beforeEach = common.beforeEach;
+            context.afterEach = common.afterEach;
+            context.run = mocha.options.delay && common.runWithSuite(suite);
             customHooks.forEach(function (hookName) {
                 context[hookName] = function (name, fn) {
-                    suite[hookName](name, fn);
+                    suites[0][hookName](name, fn);
                 };
             });
+
+            /**
+             * Describe a "suite" with the given `title`
+             * and callback `fn` containing nested suites
+             * and/or tests.
+             */
+            context.describe = context.context = function (title, fn) {
+                return common.suite.create({
+                    title,
+                    file,
+                    fn,
+                });
+            };
+
+            /**
+             * Pending describe.
+             */
+            context.xdescribe = context.xcontext = context.describe.skip = function (
+                title,
+                fn,
+            ) {
+                return common.suite.skip({
+                    title,
+                    file,
+                    fn,
+                });
+            };
+
+            /**
+             * Exclusive suite.
+             */
+            context.describe.only = function (title, fn) {
+                return common.suite.only({
+                    title,
+                    file,
+                    fn,
+                });
+            };
+
+            /**
+             * Describe a specification or test-case
+             * with the given `title` and callback `fn`
+             * acting as a thunk.
+             */
+            context.it = context.specify = function (title, fn) {
+                const s = suites[0];
+                if (s.isPending()) {
+                    fn = null;
+                }
+                const test = new Test(title, fn);
+                test.file = file;
+                s.addTest(test);
+                return test;
+            };
+
+            /**
+             * Exclusive test-case.
+             */
+            context.it.only = function (title, fn) {
+                return common.test.only(mocha, context.it(title, fn));
+            };
+
+            /**
+             * Pending test case.
+             */
+            context.xit = context.xspecify = context.it.skip = function (title) {
+                return context.it(title);
+            };
+
+            /**
+             * Number of attempts to retry.
+             */
+            context.it.retries = function (n) {
+                context.retries(n);
+            };
         });
     };
 
