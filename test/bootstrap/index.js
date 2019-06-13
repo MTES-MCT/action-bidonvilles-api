@@ -1,4 +1,6 @@
 require('module-alias/register');
+require('./custom-hooks');
+
 const fs = require('fs');
 const path = require('path');
 const Sequelize = require('sequelize');
