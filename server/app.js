@@ -148,6 +148,7 @@ module.exports = (middlewares, controllers) => {
                 name: 'createPlan',
             }], ...args),
         ],
+        controllers.plan['create-validate'],
         controllers.plan.create,
     );
     app.post(

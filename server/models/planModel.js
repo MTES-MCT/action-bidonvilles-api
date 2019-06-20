@@ -244,9 +244,9 @@ module.exports = (database) => {
                         name: data.name || null,
                         startedAt: data.startedAt,
                         targeted: data.targetedOnTowns,
-                        ngo: data.ngo,
-                        type: data.type,
-                        departement: data.departement,
+                        ngo: data.ngo.id,
+                        type: data.type.id,
+                        departement: data.departement.code,
                         createdBy: data.createdBy,
                         updatedBy: data.createdBy,
                     },
@@ -262,10 +262,10 @@ module.exports = (database) => {
                 data.funding.forEach(({ amount, details, type }, index) => {
                     replacementValues = Object.assign({}, replacementValues, {
                         [`year${index}`]: year,
-                        [`amount${index}`]: parseFloat(amount),
+                        [`amount${index}`]: amount,
                         [`details${index}`]: details,
                         [`plan${index}`]: planId,
-                        [`type${index}`]: parseInt(type, 10),
+                        [`type${index}`]: type.id,
                         [`created${index}`]: data.createdBy,
                         [`updated${index}`]: data.createdBy,
                     });
@@ -295,7 +295,7 @@ module.exports = (database) => {
             if (data.targetedOnTowns === true && data.towns && data.towns.length) {
                 const replacements = [];
                 let replacementValues = {};
-                data.towns.forEach((townId, index) => {
+                data.towns.forEach(({ id: townId }, index) => {
                     replacementValues = Object.assign({}, replacementValues, {
                         [`plan${index}`]: planId,
                         [`town${index}`]: townId,

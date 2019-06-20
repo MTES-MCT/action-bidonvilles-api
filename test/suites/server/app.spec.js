@@ -72,6 +72,7 @@ function getFakeControllers() {
         plan: {
             list: mockController(),
             create: mockController(),
+            'create-validate': mockController(),
             find: mockController(),
             delete: mockController(),
             link: mockController(),

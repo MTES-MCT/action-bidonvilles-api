@@ -91,9 +91,15 @@ module.exports = {
                 name: null,
                 startedAt: date,
                 targetedOnTowns: false,
-                ngo: 1,
-                type: 1,
-                departement: '75',
+                ngo: {
+                    id: 1,
+                },
+                type: {
+                    id: 1,
+                },
+                departement: {
+                    code: '75',
+                },
                 createdBy: 1,
             },
             output: {
@@ -111,9 +117,15 @@ module.exports = {
                 name: null,
                 startedAt: date,
                 targetedOnTowns: true,
-                ngo: 1,
-                type: 1,
-                departement: '75',
+                ngo: {
+                    id: 1,
+                },
+                type: {
+                    id: 1,
+                },
+                departement: {
+                    code: '75',
+                },
                 createdBy: 1,
             },
             output: {

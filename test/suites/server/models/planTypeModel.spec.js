@@ -32,4 +32,8 @@ describe('[/server/models] planTypeModel', () => {
             expect(planTypes).to.eql(fixtures.findAll.output);
         });
     });
+
+    describe('.findOneById()', () => {
+        it('');
+    });
 });

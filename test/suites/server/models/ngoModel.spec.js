@@ -69,4 +69,12 @@ describe('[/server/models] ngoModel', () => {
             });
         });
     });
+
+    describe('.findOneById()', () => {
+        it('');
+    });
+
+    describe('.findOneByName()', () => {
+        it('');
+    });
 });

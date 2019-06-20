@@ -9,6 +9,28 @@ module.exports = database => ({
         },
     ),
 
+    findOneById: async (id) => {
+        const ngo = await database.query(
+            `SELECT
+                ngos.ngo_id AS id,
+                ngos.name AS name
+            FROM ngos
+            WHERE ngo_id = :id`,
+            {
+                type: database.QueryTypes.SELECT,
+                replacements: {
+                    id,
+                },
+            },
+        );
+
+        if (ngo.length === 0) {
+            return null;
+        }
+
+        return ngo[0];
+    },
+
     findOneByName: async (name) => {
         const ngo = await database.query(
             `SELECT

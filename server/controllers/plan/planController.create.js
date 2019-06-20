@@ -1,43 +1,23 @@
 module.exports = models => async (req, res) => {
-    const { body } = req;
-    const filteredBody = Object.assign({}, body);
-
-    if (filteredBody.targetedOnTowns !== true) {
-        filteredBody.towns = undefined;
+    let response;
+    try {
+        response = await models.plan.create(Object.assign({}, req.filteredBody, {
+            createdBy: req.user.id,
+        }));
+    } catch (error) {
+        res.status(500);
+        res.send({
+            success: false,
+            response: {
+                userMessage: 'La création du dispositif a échoué',
+            },
+        });
+        return;
     }
 
-    const response = await models.plan.create(filteredBody);
-
-    return res.status(200).send({
+    res.status(200);
+    res.send({
         success: true,
         response,
     });
-    // const planData = Object.assign({}, req.body, {
-    //     createdBy: req.user.id,
-    //     updatedBy: req.user.id,
-    // });
-    // const plan = new Plan(planData);
-
-    // const errors = await validate(plan);
-    // if (Object.keys(errors).length > 0) {
-    //     return res.status(500).send({
-    //         error: {
-    //             user_message: 'Les données saisies sont incomplètes ou incorrectes',
-    //             fields: errors,
-    //         },
-    //     });
-    // }
-
-    // try {
-    //     await models.plan.create(planData);
-    // } catch (error) {
-    //     return res.status(500).send({
-    //         error: {
-    //             user_message: 'Une erreur est survenue lors de l\'écriture des données en base',
-    //             developer_message: error,
-    //         },
-    //     });
-    // }
-
-    // return res.status(200).send({});
 };
