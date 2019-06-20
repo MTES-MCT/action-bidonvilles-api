@@ -3,7 +3,7 @@ const closedDate = new Date('1989-10-25T00:00:00');
 const randomStr = global.generate('string');
 const commonInputs = require('#fixtures/common.fixtures')(randomStr);
 
-function getEmptyTownInput() {
+function getEmptyTownInput(withDistrict = false) {
     return {
         // shantytown_id: '', (auto)
         priority: 1,
@@ -14,7 +14,7 @@ function getEmptyTownInput() {
         longitude: 1.0,
         address: randomStr,
         address_details: null,
-        fk_city: '75056',
+        fk_city: withDistrict ? '75001' : '75056',
         owner: null,
         declared_at: null,
         census_status: null,
@@ -45,8 +45,8 @@ function getEmptyTownInput() {
     };
 }
 
-function getFullTownInput() {
-    return Object.assign({}, getEmptyTownInput(), {
+function getFullTownInput(withDistrict = false) {
+    return Object.assign({}, getEmptyTownInput(withDistrict), {
         status: 'closed_by_justice',
         built_at: builtDate,
         closed_at: closedDate,
@@ -122,16 +122,23 @@ function getSolutionsFor(townId) {
     ];
 }
 
-function getEmptyTownOutput(townId, version = 'unfiltered') {
+function getEmptyTownOutput(townId, version = 'unfiltered', withDistrict = false) {
     const baseOutput = {
         id: townId,
         status: 'open',
         latitude: 2.5,
         longitude: 1.0,
-        city: {
-            code: '75056',
-            name: 'Paris',
-        },
+        city: withDistrict
+            ? {
+                code: '75001',
+                name: 'Paris (1er arrondissement)',
+                main: '75056',
+            }
+            : {
+                code: '75056',
+                name: 'Paris',
+                main: null,
+            },
         epci: {
             code: '200054781',
             name: 'Métropole du Grand Paris',
@@ -192,16 +199,23 @@ function getEmptyTownOutput(townId, version = 'unfiltered') {
     });
 }
 
-function getFullTownOutput(townId, version = 'unfiltered') {
+function getFullTownOutput(townId, version = 'unfiltered', withDistrict = false) {
     const baseOutput = {
         id: townId,
         status: 'closed_by_justice',
         latitude: 2.5,
         longitude: 1.0,
-        city: {
-            code: '75056',
-            name: 'Paris',
-        },
+        city: withDistrict
+            ? {
+                code: '75001',
+                name: 'Paris (1er arrondissement)',
+                main: '75056',
+            }
+            : {
+                code: '75056',
+                name: 'Paris',
+                main: null,
+            },
         epci: {
             code: '200054781',
             name: 'Métropole du Grand Paris',
@@ -216,7 +230,7 @@ function getFullTownOutput(townId, version = 'unfiltered') {
         return baseOutput;
     }
 
-    return Object.assign({}, getEmptyTownOutput(townId, 'unfiltered'), {
+    return Object.assign({}, getEmptyTownOutput(townId, 'unfiltered', withDistrict), {
         status: 'closed_by_justice',
         declaredAt: builtDate.getTime() / 1000,
         builtAt: builtDate.getTime() / 1000,
@@ -289,6 +303,7 @@ module.exports = {
                 rows: [
                     getEmptyTownInput(),
                     getFullTownInput(),
+                    getEmptyTownInput(true),
                 ],
             },
             {
@@ -313,10 +328,12 @@ module.exports = {
         outputWithAllPermissions: [
             getEmptyTownOutput(1),
             getFullTownOutput(2),
+            getEmptyTownOutput(3, 'unfiltered', true),
         ],
         outputWithNoPermissions: [
             getEmptyTownOutput(1, 'filtered'),
             getFullTownOutput(2, 'filtered'),
+            getEmptyTownOutput(3, 'filtered', true),
         ],
     },
 

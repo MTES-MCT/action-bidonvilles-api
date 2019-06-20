@@ -28,6 +28,7 @@ function serializeShantytown(town, permissions) {
         city: {
             code: town.cityCode,
             name: town.cityName,
+            main: town.cityMain,
         },
         epci: {
             code: town.epciCode,
@@ -142,6 +143,7 @@ async function query(database, filters = {}, permissions) {
 
             cities.code AS "cityCode",
             cities.name AS "cityName",
+            cities.fk_main AS "cityMain",
 
             epci.code AS "epciCode",
             epci.name AS "epciName",
