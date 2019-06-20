@@ -1,4 +1,6 @@
 require('module-alias/register');
-require('./custom-hooks');
+require('./globals');
+require('./stubs');
+require('./customHooks');
 require('./random');
 require('./db');

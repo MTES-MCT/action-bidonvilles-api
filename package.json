@@ -62,8 +62,8 @@
     "db:reset": "sequelize db:migrate:undo:all && sequelize db:migrate && sequelize db:seed:all",
     "start": "forever start server/index.js",
     "dev": "nodemon server/index.js",
-    "test": "mocha --recursive --require ./test/bootstrap/index.js --bail",
-    "test:unit": "yarn test --invert --grep '.*server/models.*'",
+    "test": "mocha --recursive ./test/suites --require ./test/bootstrap/index.js --bail --slow 2",
+    "test:unit": "yarn test --invert --grep '.*server/models.*' --slow 2",
     "test:integration": "yarn test --grep '.*server/models.*'"
   },
   "_moduleAliases": {

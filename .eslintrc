@@ -29,6 +29,25 @@
             "rules": {
                 "no-unused-expressions": "off"
             }
+        },
+        {
+            "files": "test/**/*.js",
+            "globals": {
+                "sinon": true,
+                "sandbox": true,
+                "expect": true,
+                "prepare": true,
+                "build": true,
+                "execute": true,
+                "collect": true,
+                "returnedValue": true,
+                "fakeDb": true,
+                "fakeModels": true,
+                "req": true,
+                "res": true,
+                "next": true,
+                "sentData": true
+            }
         }
     ]
 }

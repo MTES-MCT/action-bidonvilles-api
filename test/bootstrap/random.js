@@ -41,9 +41,7 @@ const generators = {
  * @returns {Object}
  */
 function getRandomValue(types) {
-    const values = types.map(type => generators[type]());
-
-    return values[Math.round(Math.random() * (values.length - 1))];
+    return generators[types[Math.round(Math.random() * (types.length - 1))]]();
 }
 
 /**

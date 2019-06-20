@@ -71,6 +71,7 @@
 const { Runner, Suite, interfaces } = require('mocha');
 const Common = require('mocha/lib/interfaces/common');
 const Test = require('mocha/lib/test');
+const customDescribes = require('./describe/index');
 
 /**
  * Custom hooks to be declared, and in the expected call order
@@ -165,6 +166,11 @@ if (!Suite.prototype.customHooked) {
                     fn,
                 });
             };
+
+            // enrich describe with custom describe.xxx methods
+            Object.keys(customDescribes).forEach((key) => {
+                customDescribes[key](context);
+            });
 
             /**
              * Describe a specification or test-case
