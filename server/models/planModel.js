@@ -193,7 +193,7 @@ module.exports = (database) => {
     }
 
     return {
-        findAll: where => query(where || {}),
+        findAll: () => query({}),
 
         findOne: async (id) => {
             const rows = await query({

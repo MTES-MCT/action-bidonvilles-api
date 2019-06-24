@@ -37,12 +37,7 @@ async function validate(instance) {
 module.exports = models => ({
     async list(req, res) {
         try {
-            const filters = {};
-            if (req.query.departement) {
-                filters.fk_departement = [req.query.departement];
-            }
-
-            const plans = await models.plan.findAll(filters);
+            const plans = await models.plan.findAll();
             res.status(200).send(plans);
         } catch (error) {
             res.status(500).send({
