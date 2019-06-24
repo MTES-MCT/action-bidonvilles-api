@@ -68,7 +68,6 @@ async function query(database, where = [], fullVersion) {
             `SELECT
                 users.user_id AS id,
                 users.email AS email,
-                users.fk_departement AS departement,
                 users.first_name AS first_name,
                 users.last_name AS last_name,
                 users.company AS company,
@@ -77,10 +76,13 @@ async function query(database, where = [], fullVersion) {
                 users.active AS active,
                 users.salt AS salt,
                 users.password AS password,
-                departements.latitude AS latitude,
-                departements.longitude AS longitude
-            FROM users
-            LEFT JOIN departements ON users.fk_departement = departements.code
+                users.fk_region AS region,
+                users.fk_departement AS departement,
+                users.fk_epci AS epci,
+                users.fk_city AS city,
+                users.latitude AS latitude,
+                users.longitude AS longitude
+            FROM users_full AS users
             ${where.length > 0 ? `WHERE ${whereClause}` : ''}
             ORDER BY id ASC`,
             {
