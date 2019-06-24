@@ -4,7 +4,7 @@ module.exports = {
         `CREATE OR REPLACE VIEW users_full AS
         (
             SELECT
-                users.user_id AS id,
+                users.user_id AS user_id,
                 users.email AS email,
                 users.first_name AS first_name,
                 users.last_name AS last_name,
@@ -36,7 +36,7 @@ module.exports = {
         UNION
         (
             SELECT
-                users.user_id AS id,
+                users.user_id AS user_id,
                 users.email AS email,
                 users.first_name AS first_name,
                 users.last_name AS last_name,
@@ -62,7 +62,7 @@ module.exports = {
         UNION
         (
             SELECT
-                users.user_id AS id,
+                users.user_id AS user_id,
                 users.email AS email,
                 users.first_name AS first_name,
                 users.last_name AS last_name,
@@ -90,7 +90,7 @@ module.exports = {
         UNION
         (
             SELECT
-                users.user_id AS id,
+                users.user_id AS user_id,
                 users.email AS email,
                 users.first_name AS first_name,
                 users.last_name AS last_name,
@@ -120,7 +120,7 @@ module.exports = {
         UNION
         (
             SELECT
-                users.user_id AS id,
+                users.user_id AS user_id,
                 users.email AS email,
                 users.first_name AS first_name,
                 users.last_name AS last_name,
