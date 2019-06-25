@@ -56,6 +56,10 @@ function toUnderscore(str) {
     const atoms = str.split(/[A-Z]+/);
     const capitals = str.match(/[A-Z]+/g);
 
+    if (capitals === null) {
+        return str;
+    }
+
     return atoms[0] + capitals.map((capital, index) => (`_${capital.toLowerCase()}${atoms[index + 1]}`)).join('');
 }
 
