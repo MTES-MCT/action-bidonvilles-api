@@ -289,9 +289,7 @@ async function validateInput(body, format = 'underscore') {
 
     // declaredAt
     let declaredAtTimestamp = null;
-    if (!declaredAt) {
-        error(toFormat('declared_at', format), 'La date de signalement est obligatoire.');
-    } else {
+    if (declaredAt) {
         declaredAtTimestamp = new Date(declaredAt).getTime();
 
         if (Number.isNaN(declaredAtTimestamp)) {
