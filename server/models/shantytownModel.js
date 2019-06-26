@@ -108,8 +108,13 @@ async function query(database, filters = {}, permissions, departement) {
         filterParts.push(`shantytowns.${column} IN (:${column})`);
     });
 
+    let where = filterParts.join(' OR ');
     if (permissions.indexOf('local') !== -1 && departement !== null) {
-        filterParts.push(`departements.code = '${departement}'`);
+        if (where !== '') {
+            where = `(${where}) AND departements.code = '${departement}'`;
+        } else {
+            where = `departements.code = '${departement}'`;
+        }
     }
 
     const towns = await database.query(
@@ -170,7 +175,7 @@ async function query(database, filters = {}, permissions, departement) {
         LEFT JOIN cities ON shantytowns.fk_city = cities.code
         LEFT JOIN epci ON cities.fk_epci = epci.code
         LEFT JOIN departements ON cities.fk_departement = departements.code
-        ${filterParts.length > 0 ? `WHERE ${filterParts.join(' OR ')}` : ''}
+        ${where !== '' ? `WHERE ${where}` : ''}
         ORDER BY id ASC`,
         {
             type: database.QueryTypes.SELECT,
