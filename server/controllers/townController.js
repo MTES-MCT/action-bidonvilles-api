@@ -237,7 +237,7 @@ function cleanParams(body, format) {
     };
 }
 
-async function validateInput(body, format = 'underscore') {
+async function validateInput(body, permissions, format = 'underscore') {
     const {
         priority,
         builtAt,
@@ -351,40 +351,42 @@ async function validateInput(body, format = 'underscore') {
     }
 
     // justice status
-    if (ownerComplaint === null) {
-        error(toFormat('owner_complaint', format), 'Le champ "Dépôt de plainte par le propriétaire" est obligatoire');
-    } else if ([-1, 0, 1].indexOf(ownerComplaint) === -1) {
-        error(toFormat('owner_complaint', format), 'Valeur invalide');
-    }
-
-    if (ownerComplaint === 1) {
-        if (justiceProcedure === null) {
-            error(toFormat('justice_procedure', format), 'Le champ "Existence d\'une procédure judiciaire" est obligatoire');
-        } else if ([-1, 0, 1].indexOf(justiceProcedure) === -1) {
-            error(toFormat('justice_procedure', format), 'Valeur invalide');
+    if (permissions.data.indexOf('ownerComplaint') !== -1) {
+        if (ownerComplaint === null) {
+            error(toFormat('owner_complaint', format), 'Le champ "Dépôt de plainte par le propriétaire" est obligatoire');
+        } else if ([-1, 0, 1].indexOf(ownerComplaint) === -1) {
+            error(toFormat('owner_complaint', format), 'Valeur invalide');
         }
 
-        if (justiceProcedure === 1) {
-            if (justiceRendered === null) {
-                error(toFormat('justice_rendered', format), 'Le champ "Décision de justice rendue" est obligatoire');
-            } else if ([-1, 0, 1].indexOf(justiceRendered) === -1) {
-                error(toFormat('justice_rendered', format), 'Valeur invalide');
+        if (ownerComplaint === 1) {
+            if (justiceProcedure === null) {
+                error(toFormat('justice_procedure', format), 'Le champ "Existence d\'une procédure judiciaire" est obligatoire');
+            } else if ([-1, 0, 1].indexOf(justiceProcedure) === -1) {
+                error(toFormat('justice_procedure', format), 'Valeur invalide');
             }
 
-            if (justiceRendered === 1) {
-                if (justiceChallenged === null) {
-                    error(toFormat('justice_challenged', format), 'Le champ "Contentieux relatif à la décision de justice" est obligatoire');
-                } else if ([-1, 0, 1].indexOf(justiceChallenged) === -1) {
-                    error(toFormat('justice_challenged', format), 'Valeur invalide');
+            if (justiceProcedure === 1) {
+                if (justiceRendered === null) {
+                    error(toFormat('justice_rendered', format), 'Le champ "Décision de justice rendue" est obligatoire');
+                } else if ([-1, 0, 1].indexOf(justiceRendered) === -1) {
+                    error(toFormat('justice_rendered', format), 'Valeur invalide');
                 }
 
-                if (justiceRenderedAt !== '') {
-                    const justiceRenderedAtTimestamp = new Date(justiceRenderedAt).getTime();
+                if (justiceRendered === 1) {
+                    if (justiceChallenged === null) {
+                        error(toFormat('justice_challenged', format), 'Le champ "Contentieux relatif à la décision de justice" est obligatoire');
+                    } else if ([-1, 0, 1].indexOf(justiceChallenged) === -1) {
+                        error(toFormat('justice_challenged', format), 'Valeur invalide');
+                    }
 
-                    if (Number.isNaN(justiceRenderedAtTimestamp)) {
-                        error(toFormat('justice_rendered_at', format), 'La date fournie n\'est pas reconnue');
-                    } else if (justiceRenderedAtTimestamp >= now) {
-                        error(toFormat('justice_rendered_at', format), 'La date ne peut pas être future');
+                    if (justiceRenderedAt !== '') {
+                        const justiceRenderedAtTimestamp = new Date(justiceRenderedAt).getTime();
+
+                        if (Number.isNaN(justiceRenderedAtTimestamp)) {
+                            error(toFormat('justice_rendered_at', format), 'La date fournie n\'est pas reconnue');
+                        } else if (justiceRenderedAtTimestamp >= now) {
+                            error(toFormat('justice_rendered_at', format), 'La date ne peut pas être future');
+                        }
                     }
                 }
             }
@@ -479,7 +481,7 @@ module.exports = models => ({
         // check errors
         let fieldErrors = {};
         try {
-            fieldErrors = await validateInput(req.body, 'camel');
+            fieldErrors = await validateInput(req.body, req.user.permissions, 'camel');
         } catch (error) {
             return res.status(500).send({ error });
         }
@@ -532,7 +534,7 @@ module.exports = models => ({
         try {
             let town;
             await sequelize.transaction(async () => {
-                town = await ShantyTowns.create({
+                const baseTown = {
                     priority,
                     latitude,
                     longitude,
@@ -554,17 +556,28 @@ module.exports = models => ({
                     censusStatus,
                     censusConductedAt,
                     censusConductedBy,
-                    ownerComplaint: toBool(ownerComplaint),
-                    justiceProcedure: toBool(justiceProcedure),
-                    justiceRendered: toBool(justiceRendered),
-                    justiceRenderedBy,
-                    justiceRenderedAt,
-                    justiceChallenged: toBool(justiceChallenged),
-                    policeStatus,
-                    policeRequestedAt,
-                    policeGrantedAt,
-                    bailiff,
-                });
+                };
+
+                town = await ShantyTowns.create(
+                    Object.assign(
+                        {},
+                        baseTown,
+                        req.user.permissions.data.indexOf('ownerComplaint') !== -1
+                            ? {
+                                ownerComplaint: toBool(ownerComplaint),
+                                justiceProcedure: toBool(justiceProcedure),
+                                justiceRendered: toBool(justiceRendered),
+                                justiceRenderedBy,
+                                justiceRenderedAt,
+                                justiceChallenged: toBool(justiceChallenged),
+                                policeStatus,
+                                policeRequestedAt,
+                                policeGrantedAt,
+                                bailiff,
+                            }
+                            : {},
+                    ),
+                );
 
                 await town.setSocialOrigins(socialOrigins);
             });
@@ -622,7 +635,7 @@ module.exports = models => ({
         // check errors
         let fieldErrors = {};
         try {
-            fieldErrors = await validateInput(req.body);
+            fieldErrors = await validateInput(req.body, req.user.permissions);
         } catch (error) {
             return res.status(500).send({ error });
         }
@@ -692,7 +705,7 @@ module.exports = models => ({
 
         try {
             await sequelize.transaction(async () => {
-                await town.update({
+                const baseTown = {
                     priority,
                     declaredAt,
                     builtAt,
@@ -716,17 +729,28 @@ module.exports = models => ({
                     owner,
                     city: citycode,
                     updatedBy: req.user.id,
-                    ownerComplaint: toBool(ownerComplaint),
-                    justiceProcedure: toBool(justiceProcedure),
-                    justiceRendered: toBool(justiceRendered),
-                    justiceRenderedBy,
-                    justiceRenderedAt,
-                    justiceChallenged: toBool(justiceChallenged),
-                    policeStatus,
-                    policeRequestedAt,
-                    policeGrantedAt,
-                    bailiff,
-                });
+                };
+
+                await town.update(
+                    Object.assign(
+                        {},
+                        baseTown,
+                        req.user.permissions.data.indexOf('ownerComplaint') !== -1
+                            ? {
+                                ownerComplaint: toBool(ownerComplaint),
+                                justiceProcedure: toBool(justiceProcedure),
+                                justiceRendered: toBool(justiceRendered),
+                                justiceRenderedBy,
+                                justiceRenderedAt,
+                                justiceChallenged: toBool(justiceChallenged),
+                                policeStatus,
+                                policeRequestedAt,
+                                policeGrantedAt,
+                                bailiff,
+                            }
+                            : {},
+                    ),
+                );
 
                 await town.setSocialOrigins(socialOrigins);
             });
