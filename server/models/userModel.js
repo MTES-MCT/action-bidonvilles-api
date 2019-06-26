@@ -11,11 +11,35 @@ function serializeUser(permissionsByRole, fullVersion, user) {
     const serialized = {
         id: user.id,
         email: user.email,
-        departement: user.departement,
-        map_center: [user.latitude, user.longitude],
         first_name: user.first_name,
         last_name: user.last_name,
-        company: user.company,
+        organization: {
+            id: user.organizationId,
+            name: user.organizationName,
+            type: {
+                uid: user.organizationTypeUid,
+                name: user.organizationTypeName,
+                full_name: user.organizationTypeFullName,
+            },
+            geo_level: user.organizationGeoLevel,
+            region: user.regionCode !== null ? {
+                code: user.regionCode,
+                name: user.regionName,
+            } : null,
+            departement: user.departementCode !== null ? {
+                code: user.departementCode,
+                name: user.departementName,
+            } : null,
+            epci: user.epciCode !== null ? {
+                code: user.epciCode,
+                name: user.epciName,
+            } : null,
+            city: user.cityCode !== null ? {
+                code: user.cityCode,
+                name: user.cityName,
+            } : null,
+        },
+        map_center: [user.latitude, user.longitude],
         permissions: permissionsByRole[user.roleId] || {
             feature: [],
             data: [],
@@ -70,19 +94,30 @@ async function query(database, where = [], fullVersion) {
                 users.email AS email,
                 users.first_name AS first_name,
                 users.last_name AS last_name,
-                users.company AS company,
                 users.fk_role AS "roleId",
                 users.default_export AS default_export,
                 users.active AS active,
                 users.salt AS salt,
-                users.password AS password,
-                users.fk_region AS region,
-                users.fk_departement AS departement,
-                users.fk_epci AS epci,
-                users.fk_city AS city,
-                users.latitude AS latitude,
-                users.longitude AS longitude
-            FROM users_full AS users
+                users.password AS password
+                organizations.latitude AS latitude,
+                organizations.longitude AS longitude,
+                organizations.organization_id AS "organizationId",
+                organizations.name AS "organizationName",
+                organizations.geo_level AS "organizationGeoLevel",
+                organization_types.uid AS "organizationTypeUid",
+                organization_types.name AS "organizationTypeName",
+                organization_types.full_name AS "organizationTypeFullName",
+                organizations.regionCode AS "regionCode",
+                organizations.regionName AS "regionName",
+                organizations.departementCode AS "departementCode",
+                organizations.departementName AS "departementName",
+                organizations.epciCode AS "epciCode",
+                organizations.epciName AS "epciName",
+                organizations.cityCode AS "cityCode",
+                organizations.cityName AS "cityName"
+            FROM users
+                LEFT JOIN organizations_full AS organizations ON users.fk_organization = organizations.organization_id
+                LEFT JOIN organization_types ON organizations.fk_organization_type = organization_types.uid
             ${where.length > 0 ? `WHERE ${whereClause}` : ''}
             ORDER BY id ASC`,
             {
@@ -114,28 +149,30 @@ async function query(database, where = [], fullVersion) {
     return users.map(serializeUser.bind(this, permissionsGroupedByRole, fullVersion));
 }
 
-module.exports = database => ({
-    findAll: async () => query(database),
+module.exports = (database) => {
+    const methods = {};
 
-    findOne: async (userId, fullVersion = false) => {
+    methods.findAll = async () => query(database);
+
+    methods.findOne = async (userId, fullVersion = false) => {
         const users = await query(
             database,
             [{ user_id: [userId] }],
             fullVersion,
         );
         return users.length === 1 ? users[0] : null;
-    },
+    };
 
-    findOneByEmail: async (email, fullVersion = false) => {
+    methods.findOneByEmail = async (email, fullVersion = false) => {
         const users = await query(
             database,
             [{ email: { value: [email.toUpperCase()], query: 'upper(email)' } }],
             fullVersion,
         );
         return users.length === 1 ? users[0] : null;
-    },
+    };
 
-    create: async (user) => {
+    methods.create = async (user) => {
         const response = await database.query(
             `INSERT INTO
                 users(
@@ -144,9 +181,8 @@ module.exports = database => ({
                     salt,
                     first_name,
                     last_name,
-                    company,
                     fk_role,
-                    fk_departement
+                    fk_organization
                 )
 
                 VALUES(
@@ -155,9 +191,8 @@ module.exports = database => ({
                     :salt,
                     :firstName,
                     :lastName,
-                    :company,
                     :role,
-                    :departement
+                    :organization
                 )
                 
                 RETURNING user_id`,
@@ -166,10 +201,10 @@ module.exports = database => ({
             },
         );
 
-        return response[0][0].user_id;
-    },
+        return methods.findOne(response[0][0].user_id);
+    };
 
-    update: async (userId, values) => {
+    methods.update = async (userId, values) => {
         if (userId === undefined) {
             throw new Error('The user id is missing');
         }
@@ -216,9 +251,11 @@ module.exports = database => ({
         if (rowCount === 0) {
             throw new Error(`The user #${userId} does not exist`);
         }
-    },
 
-    deactivate: id => database.query(
+        return methods.findOne(userId);
+    };
+
+    methods.deactivate = id => database.query(
         `UPDATE
             users
         SET
@@ -232,5 +269,7 @@ module.exports = database => ({
                 id,
             },
         },
-    ),
-});
+    );
+
+    return methods;
+};

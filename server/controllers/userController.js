@@ -18,14 +18,13 @@ module.exports = models => ({
         try {
             const users = await models.user.findAll();
             res.status(200).send(users.map(({
-                id, email, departement, first_name, last_name, company, active,
+                id, email, first_name, last_name, organization, active,
             }) => ({
                 id,
                 email,
-                departement,
                 first_name,
                 last_name,
-                company,
+                organization,
                 active,
             })));
         } catch (error) {
@@ -130,7 +129,7 @@ module.exports = models => ({
         if (user === null) {
             return res.status(500).send({
                 error: {
-                    user_message: 'Impossible de trouver voos informations en bases de données.',
+                    user_message: 'Impossible de trouver vos informations en bases de données.',
                     developer_message: `User #${userId} does not exist`,
                 },
             });
@@ -149,12 +148,6 @@ module.exports = models => ({
         const lastName = trim(req.body.last_name);
         if (lastName === null || lastName === '') {
             errors.last_name = ['Le nom de famille est obligatoire '];
-        }
-
-        // company
-        const company = trim(req.body.company);
-        if (company === null || company === '') {
-            errors.company = ['Le nom de la structure pour laquelle vous travaillez est obligatoire '];
         }
 
         // password
@@ -177,7 +170,6 @@ module.exports = models => ({
         const data = {
             first_name: firstName,
             last_name: lastName,
-            company,
         };
 
         if (password !== null) {
@@ -185,14 +177,14 @@ module.exports = models => ({
         }
 
         try {
-            await user.update(data);
+            const updatedUser = await user.update(data);
             return res.status(200).send({
-                id: user.userId,
-                email: user.email,
-                first_name: firstName,
-                last_name: lastName,
-                company,
-                departement: user.departement,
+                id: updatedUser.id,
+                email: updatedUser.email,
+                first_name: updatedUser.first_name,
+                last_name: updatedUser.last_name,
+                organization: updatedUser.organization,
+                active: updatedUser.active,
             });
         } catch (error) {
             return res.status(500).send({
@@ -211,10 +203,9 @@ module.exports = models => ({
         // create the new user
         const {
             email: rawEmail,
-            departement: departementCode,
             firstName: rawFirstName,
             lastName: rawLastName,
-            company: rawCompany,
+            organization: organizationId,
             role: roleId,
             dataOwnerAgreement,
         } = req.body;
@@ -260,29 +251,15 @@ module.exports = models => ({
             addError('lastName', 'Le nom de famille est obligatoire');
         }
 
-        const company = trim(rawCompany);
-        if (!rawCompany || company === '') {
-            addError('company', 'La structure est obligatoire');
+        let organization;
+        try {
+            organization = await models.organization.findOneById(organizationId);
+        } catch (error) {
+            organization = null;
         }
 
-        if (!departementCode) {
-            addError('departement', 'Le département est obligatoire');
-        } else {
-            let departement;
-            try {
-                departement = await models.departement.findOne(departementCode);
-            } catch (error) {
-                return res.status(500).send({
-                    error: {
-                        user_message: 'Une erreur est survenue lors de la lecture de la base de données',
-                        developer_message: 'Failed checking departement\'s existence',
-                    },
-                });
-            }
-
-            if (departement === null) {
-                addError('departement', 'Ce département n\'est pas reconnu');
-            }
+        if (organization === null) {
+            addError('organization', 'La structure sélectionnée n\'existe pas en base de données');
         }
 
         if (!roleId) {
@@ -321,14 +298,13 @@ module.exports = models => ({
             });
         }
 
-        let userId;
+        let user;
         try {
-            userId = await models.user.create({
+            user = await models.user.create({
                 email,
-                departement: departementCode,
                 firstName,
                 lastName,
-                company,
+                organization: organizationId,
                 role: roleId,
                 salt: generateSalt(),
                 password: null,
@@ -343,7 +319,7 @@ module.exports = models => ({
         }
 
         const activationLink = getAccountActivationLink({
-            id: userId,
+            id: user.id,
             email,
         });
 

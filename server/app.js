@@ -49,6 +49,17 @@ module.exports = (middlewares, controllers) => {
         middlewares.auth.authenticate,
         controllers.user.setDefaultExport,
     );
+    app.get(
+        '/organizations',
+        [
+            middlewares.auth.authenticate,
+            (...args) => middlewares.auth.checkPermissions([{
+                type: 'feature',
+                name: 'createUser',
+            }], ...args),
+        ],
+        controllers.organization.list,
+    );
     app.post(
         '/users',
         [
