@@ -102,11 +102,15 @@ function serializeShantytown(town, permissions) {
  *
  * @returns {Array.<Object>}
  */
-async function query(database, filters = {}, permissions) {
+async function query(database, filters = {}, permissions, departement) {
     const filterParts = [];
     Object.keys(filters).forEach((column) => {
         filterParts.push(`shantytowns.${column} IN (:${column})`);
     });
+
+    if (permissions.indexOf('local') !== -1 && departement !== null) {
+        filterParts.push(`departements.code = '${departement}'`);
+    }
 
     const towns = await database.query(
         `SELECT
@@ -302,10 +306,10 @@ async function query(database, filters = {}, permissions) {
 }
 
 module.exports = database => ({
-    findAll: (permissions = [], filters = []) => query(database, filters, permissions),
+    findAll: (permissions = [], departement = null, filters = []) => query(database, filters, permissions, departement),
 
-    findOne: async (shantytownId, permissions = []) => {
-        const towns = await query(database, { shantytown_id: [shantytownId] }, permissions);
+    findOne: async (shantytownId, permissions = [], departement = null) => {
+        const towns = await query(database, { shantytown_id: [shantytownId] }, permissions, departement);
         return towns.length === 1 ? towns[0] : null;
     },
 });
