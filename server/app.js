@@ -338,5 +338,18 @@ module.exports = (middlewares, controllers) => {
         controllers.geo.searchEpci,
     );
 
+    // stats
+    app.get(
+        '/stats',
+        [
+            middlewares.auth.authenticate,
+            (...args) => middlewares.auth.checkPermissions([{
+                type: 'feature',
+                name: 'stats',
+            }], ...args),
+        ],
+        controllers.stats.all,
+    );
+
     return app;
 };
