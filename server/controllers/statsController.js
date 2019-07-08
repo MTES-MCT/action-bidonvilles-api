@@ -19,7 +19,8 @@ module.exports = () => ({
                     users.email <> 'sophie.jacquemont@developpement-durable.gouv.fr'
                     AND
                     users.email <> 'dubuc.laure@gmail.com'
-                GROUP BY departements.code, departements.name`,
+                GROUP BY departements.code, departements.name
+                ORDER BY departements.code ASC`,
                 {
                     type: sequelize.QueryTypes.SELECT,
                 },
@@ -44,7 +45,8 @@ module.exports = () => ({
                     users.email <> 'sophie.jacquemont@developpement-durable.gouv.fr'
                     AND
                     users.email <> 'dubuc.laure@gmail.com'
-                GROUP BY departements.code, departements.name`,
+                GROUP BY departements.code, departements.name
+                ORDER BY departements.code ASC`,
                 {
                     type: sequelize.QueryTypes.SELECT,
                 },
@@ -67,7 +69,8 @@ module.exports = () => ({
                     users.email <> 'dubuc.laure@gmail.com'
                     AND
                     shantytowns.closed_at IS NOT NULL
-                GROUP BY departements.code, departements.name`,
+                GROUP BY departements.code, departements.name
+                ORDER BY departements.code ASC`,
                 {
                     type: sequelize.QueryTypes.SELECT,
                 },
