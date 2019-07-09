@@ -90,6 +90,10 @@ function serializeShantytown(town, permissions) {
         serializedTown[data] = restrictedData[data];
     });
 
+    if (permissions.indexOf('address') !== -1) {
+        serializedTown.addressSimple = town.addressSimple || 'Pas d\'adresse précise';
+    }
+
     return serializedTown;
 }
 
@@ -129,6 +133,7 @@ async function query(database, filters = {}, permissions, departement) {
             shantytowns.longitude,
             shantytowns.address,
             shantytowns.address_details AS "addressDetails",
+            (SELECT regexp_matches(address, '^(.+) [0-9]+ [^,]+, [0-9]+,? [^, ]+(, [^,(]+( \\([^)]+\\))?)?$'))[1] AS "addressSimple",
             shantytowns.population_total AS "populationTotal",
             shantytowns.population_couples AS "populationCouples",
             shantytowns.population_minors AS "populationMinors",
