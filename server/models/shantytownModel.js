@@ -176,7 +176,7 @@ async function query(database, filters = {}, permissions, departement) {
         LEFT JOIN epci ON cities.fk_epci = epci.code
         LEFT JOIN departements ON cities.fk_departement = departements.code
         ${where !== '' ? `WHERE ${where}` : ''}
-        ORDER BY id ASC`,
+        ORDER BY departements.code ASC, cities.name ASC`,
         {
             type: database.QueryTypes.SELECT,
             replacements: filters,
