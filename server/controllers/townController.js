@@ -267,10 +267,8 @@ async function validateInput(body, permissions, format = 'underscore') {
     const error = addError.bind(this, fieldErrors);
 
     // priority
-    if (priority === null) {
-        error('priority', 'La niveau de priorité du site est obligatoire');
-    } else if (priority < 1 || priority > 4) {
-        error('priority', 'Le niveau de priorité doit être compris entre 1 et 4');
+    if (priority !== null && (priority < 1 || priority > 3)) {
+        error('priority', 'Le niveau de priorité doit être compris entre 1 et 3');
     }
 
     // builtAt
