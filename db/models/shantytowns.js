@@ -11,8 +11,7 @@ module.exports = function (sequelize, DataTypes) {
         },
         priority: {
             type: DataTypes.INTEGER,
-            allowNull: false,
-            defaultValue: 4,
+            allowNull: true,
         },
         status: {
             type: DataTypes.ENUM('open', 'immediately_expelled', 'closed', 'closed_by_justice', 'closed_by_admin', 'covered'),
