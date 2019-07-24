@@ -12,6 +12,7 @@ function serializeUser(permissionsByRole, fullVersion, user) {
         id: user.id,
         email: user.email,
         departement: user.departement,
+        region: user.region,
         map_center: [user.latitude, user.longitude],
         first_name: user.first_name,
         last_name: user.last_name,
@@ -78,7 +79,8 @@ async function query(database, where = [], fullVersion) {
                 users.salt AS salt,
                 users.password AS password,
                 departements.latitude AS latitude,
-                departements.longitude AS longitude
+                departements.longitude AS longitude,
+                departements.fk_region AS region
             FROM users
             LEFT JOIN departements ON users.fk_departement = departements.code
             ${where.length > 0 ? `WHERE ${whereClause}` : ''}

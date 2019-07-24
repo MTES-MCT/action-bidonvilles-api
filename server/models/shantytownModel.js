@@ -38,6 +38,10 @@ function serializeShantytown(town, permissions) {
             code: town.departementCode,
             name: town.departementName,
         },
+        region: {
+            code: town.regionCode,
+            name: town.regionName,
+        },
     };
 
     // @todo: alter all dates to a datetime so it can be easily serialized (just like closed_at)
@@ -165,6 +169,9 @@ async function query(database, filters = {}, permissions, departement) {
             departements.code AS "departementCode",
             departements.name AS "departementName",
 
+            regions.code AS "regionCode",
+            regions.name AS "regionName",
+
             electricity_types.electricity_type_id AS "electricityTypeId",
             electricity_types.label AS "electricityTypeLabel",
 
@@ -180,6 +187,7 @@ async function query(database, filters = {}, permissions, departement) {
         LEFT JOIN cities ON shantytowns.fk_city = cities.code
         LEFT JOIN epci ON cities.fk_epci = epci.code
         LEFT JOIN departements ON cities.fk_departement = departements.code
+        LEFT JOIN regions ON departements.fk_region = regions.code
         ${where !== '' ? `WHERE ${where}` : ''}
         ORDER BY departements.code ASC, cities.name ASC`,
         {
