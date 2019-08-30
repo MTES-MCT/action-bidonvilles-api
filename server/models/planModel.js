@@ -56,19 +56,17 @@ module.exports = (database) => {
         const replacements = Object.assign({}, filters);
 
         // check if a location filter should be applied (ie. the feature is not allowed on a national level)
-        const featurePermission = user.permissions.plan[feature];
-        const allowedLevel = featurePermission.geographic_level;
+        const featureLevel = user.permissions.plan[feature].geographic_level;
+        const userLevel = user.organization.location.type;
 
-        if (allowedLevel === 'nation' || (allowedLevel === 'local' && user.organization.location.type !== 'nation')) {
-            const level = allowedLevel === 'local' ? user.organization.location.type : allowedLevel;
-            const location = user.organization.location[level];
-
-            if (location === null) {
+        if (featureLevel !== 'nation' && (featureLevel !== 'local' || userLevel !== 'nation')) {
+            const level = featureLevel === 'local' ? userLevel : featureLevel;
+            if (user.organization.location[level] === null) {
                 return [];
             }
 
             where.push(`${fromGeoLevelToTableName(level)}.code = :locationCode`);
-            replacements.locationCode = location.code;
+            replacements.locationCode = user.organization.location[level].code;
         }
 
         // integrate custom filters
