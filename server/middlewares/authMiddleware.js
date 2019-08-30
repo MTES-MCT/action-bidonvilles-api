@@ -30,7 +30,9 @@ module.exports = (models) => {
             });
         }
 
-        const user = await models.user.findOne(decoded.userId);
+        const user = await models.user.findOne(decoded.userId, {
+            extended: true,
+        });
         if (user === null) {
             throw new AuthenticateError({
                 code: 3,
@@ -39,7 +41,7 @@ module.exports = (models) => {
             });
         }
 
-        if (user.active !== true) {
+        if (user.active !== true || user.organization.active !== true) {
             throw new AuthenticateError({
                 code: 4,
                 user_message: 'Votre session a expiré',
@@ -51,20 +53,32 @@ module.exports = (models) => {
     }
 
     function hasPermission(permissions, permission) {
-        return permissions[permission.type] && permissions[permission.type].indexOf(permission.name) !== -1;
+        const [entity, feature] = permission.split('.');
+
+        return Object.prototype.hasOwnProperty.call(permissions, entity)
+            && Object.prototype.hasOwnProperty.call(permissions[entity], feature)
+            && permissions[entity][feature].allowed === true;
     }
 
     const authMiddleware = {};
 
-    authMiddleware.authenticate = async (req, res, next) => {
+    authMiddleware.authenticate = async (req, res, next, respond = true) => {
         try {
             const user = await authenticate(req);
             req.user = user;
-            next();
+            req.user.isAllowedTo = (feature, entity) => hasPermission(user.permissions, `${entity}.${feature}`);
         } catch (error) {
+            if (respond !== true) {
+                throw error;
+            }
+
             res.status(400).send({
                 error: error.details,
             });
+        }
+
+        if (respond === true) {
+            next();
         }
     };
 

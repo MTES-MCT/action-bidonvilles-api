@@ -15,6 +15,7 @@ function generateAccessTokenFor(user, expiresIn = null) {
         {
             userId: user.id,
             email: user.email,
+            activatedBy: user.activatedBy,
         },
         authConfig.secret,
         {
@@ -60,6 +61,10 @@ module.exports = {
         }
 
         const token = generateAccessTokenFor(user, activationTokenExpiresIn);
-        return `${frontUrl}/activer-mon-compte/${encodeURIComponent(token)}`;
+
+        return {
+            link: `${frontUrl}/activer-mon-compte/${encodeURIComponent(token)}`,
+            expiracyDate: new Date(Date.now() + (parseInt(activationTokenExpiresIn, 10) * 60 * 60 * 1000)),
+        };
     },
 };

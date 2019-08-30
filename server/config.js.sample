@@ -1,4 +1,7 @@
+const path = require('path');
+
 module.exports = {
+    assetsSrc: path.resolve(__dirname, '../assets'),
     frontUrl: 'http://localhost:1234',
     port: 810,
     auth: {
@@ -6,4 +9,8 @@ module.exports = {
         expiresIn: '168h', // 7 days
     },
     activationTokenExpiresIn: '48h',
+    mail: {
+        publicKey: 'MAILJET_API_PUBLIC_KEY',
+        privateKey: 'MAILJET_API_PRIVATE_KEY',
+    },
 };

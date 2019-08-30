@@ -1,3 +1,5 @@
+const permissionsDescription = require('#server/permissions_description');
+
 module.exports = models => ({
     async list(req, res) {
         const queries = {
@@ -8,10 +10,10 @@ module.exports = models => ({
             regions: models.region.findAll(),
             closing_solutions: models.closingSolution.findAll(),
             action_types: models.actionType.findAll(),
-            roles: models.role.findAll(),
             funding_types: models.fundingType.findAll(),
             plan_types: models.planType.findAll(),
             electricity_types: models.electricityType.findAll(),
+            permissions_description: permissionsDescription,
         };
 
         const promises = Object.values(queries);
