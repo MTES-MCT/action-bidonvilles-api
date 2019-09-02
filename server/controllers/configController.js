@@ -1,4 +1,5 @@
 const permissionsDescription = require('#server/permissions_description');
+const { activationTokenExpiresIn } = require('#server/config');
 
 module.exports = models => ({
     async list(req, res) {
@@ -23,6 +24,7 @@ module.exports = models => ({
             .then((results) => {
                 const response = {
                     user: req.user,
+                    activation_token_expires_in: parseInt(activationTokenExpiresIn, 10) * 3600,
                 };
                 names.forEach((name, index) => {
                     response[name] = results[index];

@@ -1,4 +1,5 @@
 const permissionsDescription = require('#server/permissions_description');
+const { activationTokenExpiresIn } = require('#server/config');
 
 /**
  * @typedef {Object} UserFilters
@@ -120,6 +121,12 @@ function serializeUser(user, filters, permissionMap) {
         role: user.role_name || user.organization_type_role_name,
         role_id: user.role || user.organization_type_role,
     };
+
+    if (serialized.last_activation_link_sent_on !== null) {
+        serialized.activation_link_expires_on = serialized.last_activation_link_sent_on + (parseInt(activationTokenExpiresIn, 10) * 3600);
+    } else {
+        serialized.activation_link_expires_on = null;
+    }
 
     if (filters.auth === true) {
         Object.assign(serialized, {
