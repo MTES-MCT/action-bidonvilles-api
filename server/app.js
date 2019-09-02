@@ -90,6 +90,12 @@ module.exports = (middlewares, controllers) => {
         '/activation-tokens/:token/check',
         controllers.user.checkActivationToken,
     );
+    app.delete(
+        '/users/:id',
+        middlewares.auth.authenticate,
+        (...args) => middlewares.auth.checkPermissions(['user.deactivate'], ...args),
+        controllers.user.remove,
+    );
 
     // plans
     app.get(

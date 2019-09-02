@@ -566,7 +566,7 @@ module.exports = (models) => {
                 });
             }
 
-            if (user.active !== true) {
+            if (user.status !== 'active') {
                 return res.status(400).send({
                     success: false,
                     error: {
@@ -853,7 +853,7 @@ module.exports = (models) => {
                 });
             }
 
-            if (user.active === true) {
+            if (user.status !== 'new') {
                 return res.status(400).send({
                     error: {
                         user_message: 'Ce compte utilisateur est déjà activé',
@@ -1057,7 +1057,7 @@ module.exports = (models) => {
                 });
             }
 
-            if (user.active === true) {
+            if (user.status === 'active') {
                 return res.status(400).send({
                     error: {
                         user_message: 'Ce compte utilisateur est déjà activé',
@@ -1083,7 +1083,7 @@ module.exports = (models) => {
                 await models.organization.activate(user.organization.id);
                 await models.user.update(user.id, {
                     password: hashPassword(req.body.password, user.salt),
-                    active: true,
+                    fk_status: 'active',
                     activated_by: decoded.activatedBy,
                     activated_on: new Date(),
                 });
@@ -1163,6 +1163,42 @@ module.exports = (models) => {
                 return res.status(500).send({
                     error: {
                         user_message: 'Une erreur est survenue lors de l\'écriture en base de données',
+                        developer_message: error.message,
+                    },
+                });
+            }
+
+            return res.status(200).send({});
+        },
+
+        async remove(req, res) {
+            let user;
+            try {
+                user = await models.user.findOne(req.params.id, undefined, req.user, 'deactivate');
+            } catch (error) {
+                return res.status(500).send({
+                    error: {
+                        user_message: 'Une erreur est survenue lors de la lecture en base de données',
+                        developer_message: error.message,
+                    },
+                });
+            }
+
+            if (user === null) {
+                return res.status(404).send({
+                    error: {
+                        user_message: 'L\'utilisateur auquel supprimer l\'accès n\'a pas été trouvé en base de données',
+                        developer_message: null,
+                    },
+                });
+            }
+
+            try {
+                await models.user.deactivate(req.params.id);
+            } catch (error) {
+                return res.status(500).send({
+                    error: {
+                        user_message: 'Une erreur est survenue lors de la suppression du compte de la base de données',
                         developer_message: error.message,
                     },
                 });

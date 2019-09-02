@@ -41,7 +41,7 @@ module.exports = (models) => {
             });
         }
 
-        if (user.active !== true || user.organization.active !== true) {
+        if (user.status !== 'active' || user.organization.active !== true) {
             throw new AuthenticateError({
                 code: 4,
                 user_message: 'Votre session a expiré',

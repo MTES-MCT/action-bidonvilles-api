@@ -19,7 +19,10 @@ module.exports = {
                     activated_on: new Date(2019, 0, 1), /* symbolic date */
                 },
                 {
-                    active: true,
+                    [Sequelize.Op.or]: [
+                        { fk_status: 'active' },
+                        { fk_status: 'inactive' },
+                    ],
                 },
                 {
                     transaction,

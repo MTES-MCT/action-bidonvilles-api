@@ -67,7 +67,7 @@ function serializeUser(user, filters, permissionMap) {
         phone: user.phone,
         position: user.position,
         last_activation_link_sent_on: user.last_activation_link_sent_on ? user.last_activation_link_sent_on.getTime() / 1000 : null,
-        active: user.active,
+        status: user.status,
         activated_on: user.activated_on ? user.activated_on.getTime() / 1000 : null,
         created_at: user.created_at.getTime() / 1000,
         organization: {
@@ -228,7 +228,7 @@ module.exports = (database) => {
                 users.salt,
                 users.last_activation_link_sent_on,
                 users.access_request_message,
-                users.active,
+                users.fk_status AS status,
                 users.activated_on,
                 users.default_export,
                 users.created_at,
@@ -336,7 +336,7 @@ module.exports = (database) => {
                 fk_role: ['national_admin'],
             },
             {
-                active: [true],
+                fk_status: ['active'],
             },
             {
                 organization_active: {
@@ -359,7 +359,7 @@ module.exports = (database) => {
                 },
             },
             {
-                active: [true],
+                fk_status: ['active'],
             },
             {
                 organization_active: {
@@ -430,7 +430,7 @@ module.exports = (database) => {
                         access_request_message,
                         salt,
                         phone,
-                        active,
+                        fk_status,
                         created_by
                     )
 
@@ -443,7 +443,7 @@ module.exports = (database) => {
                         :access_request_message,
                         :salt,
                         '',
-                        FALSE,
+                        'new',
                         :created_by
                     )
                     
@@ -463,7 +463,7 @@ module.exports = (database) => {
             }
 
             const allowedProperties = [
-                'first_name', 'last_name', 'position', 'phone', 'password', 'defaultExport', 'active', 'last_activation_link_sent_on',
+                'first_name', 'last_name', 'position', 'phone', 'password', 'defaultExport', 'fk_status', 'last_activation_link_sent_on',
                 'activated_by', 'activated_on',
             ];
             const propertiesToColumns = {
@@ -473,7 +473,7 @@ module.exports = (database) => {
                 phone: 'phone',
                 password: 'password',
                 defaultExport: 'default_export',
-                active: 'active',
+                fk_status: 'fk_status',
                 last_activation_link_sent_on: 'last_activation_link_sent_on',
                 activated_by: 'activated_by',
                 activated_on: 'activated_on',
@@ -529,8 +529,7 @@ module.exports = (database) => {
             `UPDATE
                 users
             SET
-                active = FALSE,
-                password = NULL
+                fk_status = 'inactive'
             WHERE
                 user_id = :id
             `,
