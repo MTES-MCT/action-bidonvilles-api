@@ -12,7 +12,7 @@ module.exports = {
                 },
                 {
                     role_id:    'association',
-                    name:       'Opérateur associatif',
+                    name:       'Opérateur',
                 },
                 {
                     role_id:    'national_establisment',

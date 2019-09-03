@@ -1,6 +1,6 @@
 module.exports = {
     national_establisment: {
-        description: 'TODO',
+        description: 'L\'acteur national est en charge de la mise en oeuvre du cadre national. Pour cela, il suit et évalue les actions. Il peut, le cas échéant, apporter un soutien financier ou un appui technique.',
         national_permissions: [
             [{ type: 'view', label: 'Consulter les %sites%', comments: 'dont les procédures judiciaires' }],
             [{ type: 'view', label: 'Consulter les %dispositifs%', comments: 'dont les financements' }],
@@ -9,7 +9,7 @@ module.exports = {
         options: [],
     },
     direct_collaborator: {
-        description: 'TODO',
+        description: 'Le correspondant est le représentant local de l\'Etat en charge de la question des bidonvilles à l\'échelle du territoire. Il pilote les actions menées et est également l\'interlocuteur privilégié de la Dihal sur le sujet.',
         national_permissions: [
             [{ type: 'view', label: 'Consulter les %sites%', comments: 'dont les procédures judiciaires' }],
             [{ type: 'view', label: 'Consulter les %dispositifs%', comments: 'hors financements' }],
@@ -22,7 +22,7 @@ module.exports = {
         options: [],
     },
     collaborator: {
-        description: 'TODO',
+        description: 'Le partenaire institutionnel est un acteur public impliqué dans le pilotage et le suivi des actions menées, dans le champ de ses compétences et prérogatives.',
         national_permissions: [],
         local_permissions: [
             [
@@ -35,12 +35,12 @@ module.exports = {
             [{ type: 'edit', label: 'Mettre à jour les %dispositifs%', comments: 'hors financements' }],
         ],
         options: [
-            { id: 'close_shantytown', label: 'Autoriser l’opérateur à créer un site et déclarer la fermeture d’un site' },
+            { id: 'close_shantytown', label: 'Autoriser l\'opérateur à créer un site et déclarer la fermeture d\'un site' },
             { id: 'hide_justice', label: 'Masquer les procédures judiciaires' },
         ],
     },
     association: {
-        description: 'TODO',
+        description: 'L\'opérateur est la structure chargée d\'intervenir auprès des habitants dans une perspective de résorption des bidonvilles.',
         national_permissions: [],
         local_permissions: [
             [
@@ -56,7 +56,7 @@ module.exports = {
             [{ type: 'view', label: 'Mettre à jour les %dispositifs%', comments: 'hors financements' }],
         ],
         options: [
-            { id: 'create_and_close_shantytown', label: 'Autoriser l’opérateur à créer un site et déclarer la fermeture d’un site' },
+            { id: 'create_and_close_shantytown', label: 'Autoriser l\'opérateur à créer un site et déclarer la fermeture d\'un site' },
             { id: 'hide_justice', label: 'Masquer les procédures judiciaires' },
         ],
     },
