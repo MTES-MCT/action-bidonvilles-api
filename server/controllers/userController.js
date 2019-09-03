@@ -3,6 +3,7 @@ const { sequelize } = require('#db/models');
 
 const {
     generateAccessTokenFor, hashPassword, generateSalt, getAccountActivationLink,
+    getPasswordResetLink,
 } = require('#server/utils/auth');
 const {
     send: sendMail,
@@ -14,6 +15,7 @@ MAIL_TEMPLATES.new_user_confirmation = require('#server/mails/new_user_confirmat
 MAIL_TEMPLATES.new_user_alert = require('#server/mails/new_user_alert');
 MAIL_TEMPLATES.access_granted = require('#server/mails/access_granted');
 MAIL_TEMPLATES.access_denied = require('#server/mails/access_denied');
+MAIL_TEMPLATES.new_password = require('#server/mails/new_password');
 
 const jwt = require('jsonwebtoken');
 const { auth: authConfig } = require('#server/config');
@@ -166,7 +168,7 @@ module.exports = (models) => {
             }
         },
 
-        async email(data) {
+        async email(data, checkUnicity = true) {
             if (data.email === null || data.email === '') {
                 throw new Error('Le courriel est obligatoire');
             }
@@ -175,15 +177,17 @@ module.exports = (models) => {
                 throw new Error('Le courriel est invalide');
             }
 
-            let user = null;
-            try {
-                user = await models.user.findOneByEmail(data.email);
-            } catch (error) {
-                throw new Error('Une erreur est survenue lors de la vérification de votre courriel');
-            }
+            if (checkUnicity === true) {
+                let user = null;
+                try {
+                    user = await models.user.findOneByEmail(data.email);
+                } catch (error) {
+                    throw new Error('Une erreur est survenue lors de la vérification de votre courriel');
+                }
 
-            if (user !== null) {
-                throw new Error('Un utilisateur existe déjà pour ce courriel');
+                if (user !== null) {
+                    throw new Error('Un utilisateur existe déjà pour ce courriel');
+                }
             }
         },
 
@@ -868,6 +872,53 @@ module.exports = (models) => {
             });
         },
 
+        async checkPasswordToken(req, res) {
+            if (!req.params.token) {
+                return res.status(400).send({
+                    error: {
+                        user_message: 'Le jeton d\'identification est manquant',
+                        developer_message: 'The password token is missing',
+                    },
+                });
+            }
+
+            let decoded;
+            try {
+                decoded = jwt.verify(req.params.token, authConfig.secret);
+            } catch (error) {
+                return res.status(400).send({
+                    error: {
+                        user_message: 'Le jeton d\'identification est invalide ou expiré.\nNous vous invitons à reprendre le formulaire de demande de renouvelement de mot de passe.',
+                        developer_message: 'The password token is either invalid or expired',
+                    },
+                });
+            }
+
+            if (decoded.type !== 'password_reset') {
+                return res.status(400).send({
+                    error: {
+                        user_message: 'Le jeton d\'identification est invalide',
+                        developer_message: 'The given token is not a password token',
+                    },
+                });
+            }
+
+            const user = await models.user.findOne(decoded.userId);
+            if (user === null) {
+                return res.status(400).send({
+                    error: {
+                        user_message: 'Le jeton d\'identification ne correspond à aucun utilisateur',
+                        developer_message: 'The password token does not match a real user',
+                    },
+                });
+            }
+
+            return res.status(200).send({
+                id: user.id,
+                email: user.email,
+            });
+        },
+
         async sendActivationLink(req, res) {
             let user;
             try {
@@ -1099,6 +1150,85 @@ module.exports = (models) => {
             return res.status(200).send({});
         },
 
+        async setNewPassword(req, res) {
+            if (!req.body.token) {
+                return res.status(400).send({
+                    error: {
+                        user_message: 'Le jeton d\'identification est manquant',
+                        developer_message: 'The password token is missing',
+                    },
+                });
+            }
+
+            let decoded;
+            try {
+                decoded = jwt.verify(req.body.token, authConfig.secret);
+            } catch (error) {
+                return res.status(400).send({
+                    error: {
+                        user_message: 'Le jeton d\'identification est invalide ou expiré',
+                        developer_message: 'The password token is either invalid or expired',
+                    },
+                });
+            }
+
+            if (decoded.type !== 'password_reset') {
+                return res.status(400).send({
+                    error: {
+                        user_message: 'Le jeton d\'identification n\'est pas valide',
+                        developer_message: 'The password token does not match the user id',
+                    },
+                });
+            }
+
+            const user = await models.user.findOne(decoded.userId, { auth: true });
+            if (user === null) {
+                return res.status(400).send({
+                    error: {
+                        user_message: 'Le jeton d\'identification ne correspond à aucun utilisateur',
+                        developer_message: 'The password token does not match a real user',
+                    },
+                });
+            }
+
+            if (user.id !== parseInt(req.params.id, 10)) {
+                return res.status(400).send({
+                    error: {
+                        user_message: 'Le jeton d\'identification n\'est pas valide',
+                        developer_message: 'The password token does not match the user id',
+                    },
+                });
+            }
+
+            const errors = checkPassword(req.body.password);
+            if (errors.length > 0) {
+                return res.status(400).send({
+                    error: {
+                        user_message: 'Le mot de passe est invalide',
+                        developer_message: 'Input data is invalid',
+                        fields: {
+                            password: errors,
+                        },
+                    },
+                });
+            }
+
+            try {
+                await models.user.update(user.id, {
+                    password: hashPassword(req.body.password, user.salt),
+                });
+            } catch (error) {
+                return res.status(500).send({
+                    error: {
+                        user_message: 'Une erreur est survenue lors de l\'écriture en base de données',
+                        developer_message: 'Failed updating the user',
+                    },
+                });
+            }
+
+            return res.status(200).send({});
+        },
+
         async upgrade(req, res) {
             // ensure the user exists and actually needs an upgrade
             let user;
@@ -1202,6 +1332,52 @@ module.exports = (models) => {
                         developer_message: error.message,
                     },
                 });
+            }
+
+            return res.status(200).send({});
+        },
+
+        async requestNewPassword(req, res) {
+            const data = { email: req.body.email };
+            const fields = [
+                { key: 'email', sanitizer: 'string', validatorOptions: [false] },
+            ];
+            const sanitizedData = sanitize(data, fields);
+
+            const errors = await validate(sanitizedData, fields);
+            if (Object.keys(errors).length > 0) {
+                return res.status(400).send({
+                    error: {
+                        user_message: 'Certaines données sont manquantes ou invalides',
+                        fields: errors,
+                    },
+                });
+            }
+
+            let user;
+            try {
+                user = await models.user.findOneByEmail(sanitizedData.email);
+            } catch (error) {
+                return res.status(500).send({
+                    error: {
+                        user_message: 'Une erreur est survenue lors de la lecture en base de données',
+                        developer_messaage: error.message,
+                    },
+                });
+            }
+
+            if (user !== null) {
+                try {
+                    const resetLink = getPasswordResetLink(user);
+                    await sendMail(user, MAIL_TEMPLATES.new_password(user, resetLink));
+                } catch (error) {
+                    return res.status(500).send({
+                        error: {
+                            user_message: 'Une erreur est survenue lors de l\'envoi du mail',
+                            developer_message: error.message,
+                        },
+                    });
+                }
             }
 
             return res.status(200).send({});

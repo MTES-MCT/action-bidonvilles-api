@@ -9,6 +9,7 @@ module.exports = {
         expiresIn: '168h', // 7 days
     },
     activationTokenExpiresIn: '48h',
+    passwordResetDuration: '24h',
     mail: {
         publicKey: 'MAILJET_API_PUBLIC_KEY',
         privateKey: 'MAILJET_API_PRIVATE_KEY',

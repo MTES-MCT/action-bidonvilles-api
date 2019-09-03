@@ -96,6 +96,18 @@ module.exports = (middlewares, controllers) => {
         (...args) => middlewares.auth.checkPermissions(['user.deactivate'], ...args),
         controllers.user.remove,
     );
+    app.post(
+        '/users/new-password',
+        controllers.user.requestNewPassword,
+    );
+    app.get(
+        '/password-tokens/:token/check',
+        controllers.user.checkPasswordToken,
+    );
+    app.post(
+        '/users/:id/newPassword',
+        controllers.user.setNewPassword,
+    );
 
     // plans
     app.get(
