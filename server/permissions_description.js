@@ -60,4 +60,16 @@ module.exports = {
             { id: 'hide_justice', label: 'Masquer les procédures judiciaires' },
         ],
     },
+    local_admin: {
+        description: '',
+        national_permissions: [],
+        local_permissions: [],
+        options: [],
+    },
+    national_admin: {
+        description: '',
+        national_permissions: [],
+        local_permissions: [],
+        options: [],
+    },
 };
