@@ -270,9 +270,13 @@ async function query(database, filters = {}, user, feature) {
                     shantytown_comments.created_at AS "commentCreatedAt",
                     shantytown_comments.created_by AS "commentCreatedBy",
                     users.first_name AS "userFirstName",
-                    users.last_name AS "userLastName"
+                    users.last_name AS "userLastName",
+                    users.position AS "userPosition",
+                    organizations.name AS "organizationName",
+                    organizations.abbreviation AS "organizationAbbreviation"
                 FROM shantytown_comments
                 LEFT JOIN users ON shantytown_comments.created_by = users.user_id
+                LEFT JOIN organizations ON users.fk_organization = organizations.organization_id
                 WHERE shantytown_comments.fk_shantytown IN (:ids)
                 ORDER BY shantytown_comments.created_at DESC`,
                 {
@@ -324,6 +328,8 @@ async function query(database, filters = {}, user, feature) {
                     id: comment.commentCreatedBy,
                     firstName: comment.userFirstName,
                     lastName: comment.userLastName,
+                    position: comment.userPosition,
+                    organization: comment.organizationAbbreviation || comment.organizationName,
                 },
             });
         });
