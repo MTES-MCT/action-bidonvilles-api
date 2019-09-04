@@ -1,3 +1,6 @@
+const permissionsDescription = require('#server/permissions_description');
+const { activationTokenExpiresIn } = require('#server/config');
+
 module.exports = models => ({
     async list(req, res) {
         const queries = {
@@ -8,10 +11,10 @@ module.exports = models => ({
             regions: models.region.findAll(),
             closing_solutions: models.closingSolution.findAll(),
             action_types: models.actionType.findAll(),
-            roles: models.role.findAll(),
             funding_types: models.fundingType.findAll(),
             plan_types: models.planType.findAll(),
             electricity_types: models.electricityType.findAll(),
+            permissions_description: permissionsDescription,
         };
 
         const promises = Object.values(queries);
@@ -21,6 +24,7 @@ module.exports = models => ({
             .then((results) => {
                 const response = {
                     user: req.user,
+                    activation_token_expires_in: parseInt(activationTokenExpiresIn, 10) * 3600,
                 };
                 names.forEach((name, index) => {
                     response[name] = results[index];

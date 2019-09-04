@@ -31,12 +31,53 @@ function serializePlan(plan) {
     };
 }
 
+function fromGeoLevelToTableName(geoLevel) {
+    switch (geoLevel) {
+    case 'region':
+        return 'regions';
+
+    case 'departement':
+        return 'departements';
+
+    case 'epci':
+        return 'epci';
+
+    case 'city':
+        return 'cities';
+
+    default:
+        return null;
+    }
+}
+
 module.exports = (database) => {
-    async function query(filters) {
+    async function query(user, feature, filters = {}) {
+        const where = [];
+        const replacements = Object.assign({}, filters);
+
+        // check if a location filter should be applied (ie. the feature is not allowed on a national level)
+        const featureLevel = user.permissions.plan[feature].geographic_level;
+        const userLevel = user.organization.location.type;
+
+        if (featureLevel !== 'nation' && (featureLevel !== 'local' || userLevel !== 'nation')) {
+            const level = featureLevel === 'local' ? userLevel : featureLevel;
+            if (user.organization.location[level] === null) {
+                return [];
+            }
+
+            where.push(`${fromGeoLevelToTableName(level)}.code = :locationCode`);
+            replacements.locationCode = user.organization.location[level].code;
+        }
+
+        // integrate custom filters
         const filterParts = [];
         Object.keys(filters).forEach((column) => {
             filterParts.push(`plans.${column} IN (:${column})`);
         });
+
+        if (filterParts.length > 0) {
+            where.push(filterParts.join(' OR '));
+        }
 
         const rows = await database.query(
             `SELECT
@@ -57,11 +98,12 @@ module.exports = (database) => {
             LEFT JOIN ngos ON plans.fk_ngo = ngos.ngo_id
             LEFT JOIN plan_types ON plans.fk_type = plan_types.plan_type_id
             LEFT JOIN departements ON plans.fk_departement = departements.code
-            ${filterParts.length > 0 ? `WHERE ${filterParts.join(' OR ')}` : ''}
+            LEFT JOIN regions ON departements.fk_region = regions.code
+            ${where.length > 0 ? `WHERE (${where.join(') AND (')})` : ''}
             ORDER BY plans.plan_id ASC`,
             {
                 type: database.QueryTypes.SELECT,
-                replacements: filters,
+                replacements,
             },
         );
 
@@ -193,12 +235,13 @@ module.exports = (database) => {
     }
 
     return {
-        findAll: where => query(where || {}),
+        findAll: user => query(user, 'list'),
 
-        findOne: async (id) => {
-            const rows = await query({
+        findOne: async (user, id) => {
+            const rows = await query(user, 'read', {
                 plan_id: id,
             });
+
             if (rows.length === 1) {
                 return rows[0];
             }

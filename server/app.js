@@ -27,10 +27,7 @@ module.exports = (middlewares, controllers) => {
         '/users',
         [
             middlewares.auth.authenticate,
-            (...args) => middlewares.auth.checkPermissions([{
-                type: 'feature',
-                name: 'readUser',
-            }], ...args),
+            (...args) => middlewares.auth.checkPermissions(['user.list'], ...args),
         ],
         controllers.user.list,
     );
@@ -38,6 +35,14 @@ module.exports = (middlewares, controllers) => {
         '/me',
         middlewares.auth.authenticate,
         controllers.user.me,
+    );
+    app.get(
+        '/users/:id',
+        [
+            middlewares.auth.authenticate,
+            (...args) => middlewares.auth.checkPermissions(['user.read'], ...args),
+        ],
+        controllers.user.get,
     );
     app.post(
         '/me',
@@ -51,122 +56,97 @@ module.exports = (middlewares, controllers) => {
     );
     app.post(
         '/users',
-        [
-            middlewares.auth.authenticate,
-            (...args) => middlewares.auth.checkPermissions([{
-                type: 'feature',
-                name: 'createUser',
-            }], ...args),
-        ],
-        controllers.user.create,
+        async (...args) => {
+            try {
+                await middlewares.auth.authenticate(...args, false);
+                return controllers.user.create(...args);
+            } catch (error) {
+                return controllers.user.signup(...args);
+            }
+        },
     );
-    app.get(
-        '/users/:id/activate',
-        [
-            middlewares.auth.authenticate,
-            (...args) => middlewares.auth.checkPermissions([{
-                type: 'feature',
-                name: 'createUser',
-            }], ...args),
-        ],
-        controllers.user.getActivationLink,
+    app.post(
+        '/users/:id/sendActivationLink',
+        middlewares.auth.authenticate,
+        (...args) => middlewares.auth.checkPermissions(['user.activate'], ...args),
+        controllers.user.sendActivationLink,
+    );
+    app.post(
+        '/users/:id/denyAccess',
+        middlewares.auth.authenticate,
+        (...args) => middlewares.auth.checkPermissions(['user.activate'], ...args),
+        controllers.user.denyAccess,
     );
     app.post(
         '/users/:id/activate',
         controllers.user.activate,
     );
+    app.post(
+        '/users/:id/upgrade',
+        middlewares.auth.authenticate,
+        controllers.user.upgrade,
+    );
     app.get(
         '/activation-tokens/:token/check',
         controllers.user.checkActivationToken,
     );
-
-    // ngos
-    app.get(
-        '/ngos',
+    app.delete(
+        '/users/:id',
         middlewares.auth.authenticate,
-        (...args) => middlewares.auth.checkPermissions([{
-            type: 'feature',
-            name: 'readNgo',
-        }], ...args),
-        controllers.ngo.list,
-    );
-    app.get(
-        '/ngos/search',
-        middlewares.auth.authenticate,
-        (...args) => middlewares.auth.checkPermissions([{
-            type: 'feature',
-            name: 'readNgo',
-        }], ...args),
-        controllers.ngo.search,
+        (...args) => middlewares.auth.checkPermissions(['user.deactivate'], ...args),
+        controllers.user.remove,
     );
     app.post(
-        '/ngos',
-        [
-            middlewares.auth.authenticate,
-            (...args) => middlewares.auth.checkPermissions([{
-                type: 'feature',
-                name: 'createNgo',
-            }], ...args),
-        ],
-        controllers.ngo.create,
+        '/users/new-password',
+        controllers.user.requestNewPassword,
+    );
+    app.get(
+        '/password-tokens/:token/check',
+        controllers.user.checkPasswordToken,
+    );
+    app.post(
+        '/users/:id/newPassword',
+        controllers.user.setNewPassword,
     );
 
     // plans
     app.get(
         '/plans',
         middlewares.auth.authenticate,
-        (...args) => middlewares.auth.checkPermissions([{
-            type: 'feature',
-            name: 'readPlan',
-        }], ...args),
+        (...args) => middlewares.auth.checkPermissions(['plan.list'], ...args),
         controllers.plan.list,
     );
     app.get(
         '/plans/:id',
         middlewares.auth.authenticate,
-        (...args) => middlewares.auth.checkPermissions([{
-            type: 'feature',
-            name: 'readPlan',
-        }], ...args),
+        (...args) => middlewares.auth.checkPermissions(['plan.read'], ...args),
         controllers.plan.find,
     );
     app.delete(
         '/plans/:id',
         middlewares.auth.authenticate,
-        (...args) => middlewares.auth.checkPermissions([{
-            type: 'feature',
-            name: 'deletePlan',
-        }], ...args),
+        (...args) => middlewares.auth.checkPermissions(['plan.delete'], ...args),
         controllers.plan.delete,
     );
     app.post(
         '/plans',
         [
             middlewares.auth.authenticate,
-            (...args) => middlewares.auth.checkPermissions([{
-                type: 'feature',
-                name: 'createPlan',
-            }], ...args),
+            (...args) => middlewares.auth.checkPermissions(['plan.create'], ...args),
         ],
         controllers.plan.create,
     );
     app.post(
         '/plans/:id/towns',
         middlewares.auth.authenticate,
-        (...args) => middlewares.auth.checkPermissions([{
-            type: 'feature',
-            name: 'createTown',
-        }], ...args),
+        (...args) => middlewares.auth.checkPermissions(['shantytown.create'], ...args),
         controllers.plan.link,
     );
     app.post(
         '/plan-details/:id',
         [
             middlewares.auth.authenticate,
-            (...args) => middlewares.auth.checkPermissions([{
-                type: 'feature',
-                name: 'updatePlan',
-            }], ...args),
+            (...args) => middlewares.auth.checkPermissions(['plan.update'], ...args),
         ],
         controllers.plan.updateDetails,
     );
@@ -175,21 +155,20 @@ module.exports = (middlewares, controllers) => {
     app.get(
         '/towns',
         middlewares.auth.authenticate,
+        (...args) => middlewares.auth.checkPermissions(['shantytown.list'], ...args),
         controllers.town.list,
     );
     app.get(
         '/towns/:id',
         middlewares.auth.authenticate,
+        (...args) => middlewares.auth.checkPermissions(['shantytown.read'], ...args),
         controllers.town.find,
     );
     app.post(
         '/towns',
         [
             middlewares.auth.authenticate,
-            (...args) => middlewares.auth.checkPermissions([{
-                type: 'feature',
-                name: 'createTown',
-            }], ...args),
+            (...args) => middlewares.auth.checkPermissions(['shantytown.create'], ...args),
         ],
         controllers.town.add,
     );
@@ -197,10 +176,7 @@ module.exports = (middlewares, controllers) => {
         '/towns/:id',
         [
             middlewares.auth.authenticate,
-            (...args) => middlewares.auth.checkPermissions([{
-                type: 'feature',
-                name: 'updateTown',
-            }], ...args),
+            (...args) => middlewares.auth.checkPermissions(['shantytown.update'], ...args),
         ],
         controllers.town.edit,
     );
@@ -208,10 +184,7 @@ module.exports = (middlewares, controllers) => {
         '/towns/:id/close',
         [
             middlewares.auth.authenticate,
-            (...args) => middlewares.auth.checkPermissions([{
-                type: 'feature',
-                name: 'closeTown',
-            }], ...args),
+            (...args) => middlewares.auth.checkPermissions(['shantytown.close'], ...args),
         ],
         controllers.town.close,
     );
@@ -219,10 +192,7 @@ module.exports = (middlewares, controllers) => {
         '/towns/:id',
         [
             middlewares.auth.authenticate,
-            (...args) => middlewares.auth.checkPermissions([{
-                type: 'feature',
-                name: 'deleteTown',
-            }], ...args),
+            (...args) => middlewares.auth.checkPermissions(['shantytown.delete'], ...args),
         ],
         controllers.town.delete,
     );
@@ -230,11 +200,7 @@ module.exports = (middlewares, controllers) => {
         '/towns/:id/comments',
         [
             middlewares.auth.authenticate,
-            (...args) => middlewares.auth.checkPermissions([
-                {
-                    type: 'feature',
-                    name: 'createComment',
-                }], ...args),
+            (...args) => middlewares.auth.checkPermissions(['shantytown_comment.create'], ...args),
         ],
         controllers.town.addComment,
     );
@@ -253,78 +219,30 @@ module.exports = (middlewares, controllers) => {
         controllers.town.deleteComment,
     );
 
-    // actions
+    // organizations
     app.get(
-        '/actions',
-        [
-            middlewares.auth.authenticate,
-            (...args) => middlewares.auth.checkPermissions([{
-                type: 'feature',
-                name: 'readAction',
-            }], ...args),
-        ],
-        controllers.action.list,
+        '/organization-categories',
+        controllers.organization.categories,
     );
+
     app.get(
-        '/actions/:id',
-        [
-            middlewares.auth.authenticate,
-            (...args) => middlewares.auth.checkPermissions([{
-                type: 'feature',
-                name: 'readAction',
-            }], ...args),
-        ],
-        controllers.action.find,
+        '/organization-categories/:categoryId/organization-types',
+        controllers.organization.types,
     );
-    app.post(
-        '/actions',
-        [
-            middlewares.auth.authenticate,
-            (...args) => middlewares.auth.checkPermissions([{
-                type: 'feature',
-                name: 'createAction',
-            }], ...args),
-        ],
-        controllers.action.add,
+
+    app.get(
+        '/organization-categories/:categoryId/organizations',
+        controllers.organization.getByCategory,
     );
-    app.post(
-        '/actions/:id',
-        [
-            middlewares.auth.authenticate,
-            (...args) => middlewares.auth.checkPermissions([{
-                type: 'feature',
-                name: 'createAction',
-            }], ...args),
-        ],
-        controllers.action.edit,
-    );
-    app.post(
-        '/actions/:id/steps',
-        [
-            middlewares.auth.authenticate,
-            (...args) => middlewares.auth.checkPermissions([{
-                type: 'feature',
-                name: 'createAction',
-            }], ...args),
-        ],
-        controllers.action.addStep,
-    );
-    app.delete(
-        '/actions/:id',
-        [
-            middlewares.auth.authenticate,
-            (...args) => middlewares.auth.checkPermissions([{
-                type: 'feature',
-                name: 'deleteAction',
-            }], ...args),
-        ],
-        controllers.action.delete,
+
+    app.get(
+        '/organization-types/:typeId/organizations',
+        controllers.organization.getByType,
     );
 
     // geo
     app.get(
         '/locations/search',
-        middlewares.auth.authenticate,
         controllers.geo.search,
     );
     app.get(
@@ -337,16 +255,17 @@ module.exports = (middlewares, controllers) => {
         middlewares.auth.authenticate,
         controllers.geo.searchEpci,
     );
+    app.get(
+        '/departements',
+        controllers.geo.listDepartements,
+    );
 
     // stats
     app.get(
         '/stats',
         [
             middlewares.auth.authenticate,
-            (...args) => middlewares.auth.checkPermissions([{
-                type: 'feature',
-                name: 'stats',
-            }], ...args),
+            (...args) => middlewares.auth.checkPermissions(['stats.list'], ...args),
         ],
         controllers.stats.all,
     );

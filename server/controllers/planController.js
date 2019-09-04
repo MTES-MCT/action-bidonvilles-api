@@ -37,12 +37,7 @@ async function validate(instance) {
 module.exports = models => ({
     async list(req, res) {
         try {
-            const filters = {};
-            if (req.query.departement) {
-                filters.fk_departement = [req.query.departement];
-            }
-
-            const plans = await models.plan.findAll(filters);
+            const plans = await models.plan.findAll(req.user);
             res.status(200).send(plans);
         } catch (error) {
             res.status(500).send({
@@ -56,7 +51,7 @@ module.exports = models => ({
 
     async find(req, res) {
         try {
-            const plans = await models.plan.findOne(req.params.id);
+            const plans = await models.plan.findOne(req.user, req.params.id);
             res.status(200).send(plans);
         } catch (error) {
             res.status(500).send({

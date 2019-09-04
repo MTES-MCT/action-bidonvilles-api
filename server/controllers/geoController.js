@@ -9,10 +9,30 @@ function trim(str) {
     return str.replace(/^\s*|\s*$/g, '');
 }
 
-function generateSearch(table, label) {
+function generateSearch(table) {
+    const map = {
+        cities: {
+            label: 'Commune',
+            type: 'city',
+        },
+        epci: {
+            label: 'Intercommunalité',
+            type: 'epci',
+        },
+        departements: {
+            label: 'Département',
+            type: 'departement',
+        },
+        regions: {
+            label: 'Région',
+            type: 'region',
+        },
+    };
+
     return `
     SELECT
-        '${label}' AS "type",
+        '${map[table].label}' AS "label",
+        '${map[table].type}' AS "type",
         code,
         name
     FROM
@@ -144,9 +164,11 @@ module.exports = () => ({
 
         try {
             const results = await sequelize.query(
-                `(${generateSearch('cities', 'Commune')}) UNION (${generateSearch('epci', 'EPCI')}) UNION (${generateSearch('departements', 'Département')}) ORDER BY "type" DESC`,
+                `(${generateSearch('cities')}) UNION (${generateSearch('epci')}) UNION (${generateSearch('departements')}) UNION (${generateSearch('regions')}) ORDER BY "type" DESC`,
                 {
                     replacements: [
+                        `%${query}%`,
+                        `${query}%`,
                         `%${query}%`,
                         `${query}%`,
                         `%${query}%`,
@@ -167,5 +189,19 @@ module.exports = () => ({
                 },
             });
         }
+    },
+
+    async listDepartements(req, res) {
+        return res.status(200).send({
+            success: true,
+            response: {
+                departements: await sequelize.query(
+                    'SELECT code, name FROM departements ORDER BY code ASC',
+                    {
+                        type: sequelize.QueryTypes.SELECT,
+                    },
+                ),
+            },
+        });
     },
 });

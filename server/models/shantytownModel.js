@@ -11,15 +11,34 @@ function fromDateToTimestamp(date) {
     return date !== null ? (new Date(`${date}T00:00:00`).getTime() / 1000) : null;
 }
 
+function fromGeoLevelToTableName(geoLevel) {
+    switch (geoLevel) {
+    case 'region':
+        return 'regions';
+
+    case 'departement':
+        return 'departements';
+
+    case 'epci':
+        return 'epci';
+
+    case 'city':
+        return 'cities';
+
+    default:
+        return null;
+    }
+}
+
 /**
  * Serializes a single shantytown row
  *
- * @param {Object}         town
- * @param {Array.<string>} permissions The list of granted permissions
+ * @param {Object} town
+ * @param {Object} permission
  *
  * @returns {Object}
  */
-function serializeShantytown(town, permissions) {
+function serializeShantytown(town, permission) {
     const serializedTown = {
         id: town.id,
         status: town.status,
@@ -42,16 +61,13 @@ function serializeShantytown(town, permissions) {
             code: town.regionCode,
             name: town.regionName,
         },
-    };
-
-    // @todo: alter all dates to a datetime so it can be easily serialized (just like closed_at)
-    const restrictedData = {
         priority: town.priority,
         declaredAt: fromDateToTimestamp(town.declaredAt),
         builtAt: fromDateToTimestamp(town.builtAt),
         closedAt: town.closedAt !== null ? (town.closedAt.getTime() / 1000) : null,
         address: town.address,
         addressDetails: town.addressDetails,
+        addressSimple: town.addressSimple || 'Pas d\'adresse précise',
         populationTotal: town.populationTotal,
         populationCouples: town.populationCouples,
         populationMinors: town.populationMinors,
@@ -65,16 +81,6 @@ function serializeShantytown(town, permissions) {
         censusStatus: town.censusStatus,
         censusConductedBy: town.censusConductedBy,
         censusConductedAt: fromDateToTimestamp(town.censusConductedAt),
-        ownerComplaint: town.ownerComplaint,
-        justiceProcedure: town.justiceProcedure,
-        justiceRendered: town.justiceRendered,
-        justiceRenderedAt: fromDateToTimestamp(town.justiceRenderedAt),
-        justiceRenderedBy: town.justiceRenderedBy,
-        justiceChallenged: town.justiceChallenged,
-        policeStatus: town.policeStatus,
-        policeRequestedAt: fromDateToTimestamp(town.policeRequestedAt),
-        policeGrantedAt: fromDateToTimestamp(town.policeGrantedAt),
-        bailiff: town.bailiff,
         fieldType: {
             id: town.fieldTypeId,
             label: town.fieldTypeLabel,
@@ -90,13 +96,27 @@ function serializeShantytown(town, permissions) {
         updatedAt: town.updatedAt !== null ? (town.updatedAt.getTime() / 1000) : null,
     };
 
-    Object.keys(restrictedData).filter(data => permissions.indexOf(data) !== -1).forEach((data) => {
-        serializedTown[data] = restrictedData[data];
-    });
+    // @todo: alter all dates to a datetime so it can be easily serialized (just like closed_at)
+    const restrictedData = {
+        data_justice: {
+            ownerComplaint: town.ownerComplaint,
+            justiceProcedure: town.justiceProcedure,
+            justiceRendered: town.justiceRendered,
+            justiceRenderedAt: fromDateToTimestamp(town.justiceRenderedAt),
+            justiceRenderedBy: town.justiceRenderedBy,
+            justiceChallenged: town.justiceChallenged,
+            policeStatus: town.policeStatus,
+            policeRequestedAt: fromDateToTimestamp(town.policeRequestedAt),
+            policeGrantedAt: fromDateToTimestamp(town.policeGrantedAt),
+            bailiff: town.bailiff,
+        },
+    };
 
-    if (permissions.indexOf('address') !== -1) {
-        serializedTown.addressSimple = town.addressSimple || 'Pas d\'adresse précise';
-    }
+    Object.keys(restrictedData)
+        .filter(dataPermission => permission[dataPermission] === true)
+        .forEach((dataPermission) => {
+            Object.assign(serializedTown, restrictedData[dataPermission]);
+        });
 
     return serializedTown;
 }
@@ -106,23 +126,32 @@ function serializeShantytown(town, permissions) {
  *
  * @param {Sequelize}             database
  * @param {Object.<string,Array>} filters     The list of towns to be fetched
- * @param {Array.<string>}        permissions The list of granted permissions
  *
  * @returns {Array.<Object>}
  */
-async function query(database, filters = {}, permissions, departement) {
+async function query(database, filters = {}, user, feature) {
     const filterParts = [];
+    const where = [];
     Object.keys(filters).forEach((column) => {
         filterParts.push(`shantytowns.${column} IN (:${column})`);
     });
 
-    let where = filterParts.join(' OR ');
-    if (permissions.indexOf('local') !== -1 && departement !== null) {
-        if (where !== '') {
-            where = `(${where}) AND departements.code = '${departement}'`;
-        } else {
-            where = `departements.code = '${departement}'`;
+    if (filterParts.length > 0) {
+        where.push(filterParts.join(' OR '));
+    }
+
+    const replacements = Object.assign({}, filters);
+
+    const featureLevel = user.permissions.shantytown[feature].geographic_level;
+    const userLevel = user.organization.location.type;
+    if (featureLevel !== 'nation' && (featureLevel !== 'local' || userLevel !== 'nation')) {
+        const level = featureLevel === 'local' ? userLevel : featureLevel;
+        if (user.organization.location[level] === null) {
+            return [];
         }
+
+        where.push(`${fromGeoLevelToTableName(level)}.code = :locationCode`);
+        replacements.locationCode = user.organization.location[level].code;
     }
 
     const towns = await database.query(
@@ -188,11 +217,11 @@ async function query(database, filters = {}, permissions, departement) {
         LEFT JOIN epci ON cities.fk_epci = epci.code
         LEFT JOIN departements ON cities.fk_departement = departements.code
         LEFT JOIN regions ON departements.fk_region = regions.code
-        ${where !== '' ? `WHERE ${where}` : ''}
+        ${where.length > 0 ? `WHERE (${where.join(') AND (')})` : ''}
         ORDER BY departements.code ASC, cities.name ASC`,
         {
             type: database.QueryTypes.SELECT,
-            replacements: filters,
+            replacements,
         },
     );
 
@@ -203,7 +232,7 @@ async function query(database, filters = {}, permissions, departement) {
     const serializedTowns = towns.reduce(
         (object, town) => {
             /* eslint-disable no-param-reassign */
-            object.hash[town.id] = serializeShantytown(town, permissions);
+            object.hash[town.id] = serializeShantytown(town, user.permissions.shantytown[feature]);
             object.ordered.push(object.hash[town.id]);
             /* eslint-enable no-param-reassign */
             return object;
@@ -215,27 +244,23 @@ async function query(database, filters = {}, permissions, departement) {
     );
 
     const promises = [];
-    if (permissions.indexOf('socialOrigins') !== -1) {
-        promises.push(
-            database.query(
-                `SELECT
-                    shantytown_origins.fk_shantytown AS "shantytownId",
-                    social_origins.social_origin_id AS "socialOriginId",
-                    social_origins.label AS "socialOriginLabel"
-                FROM shantytown_origins
-                LEFT JOIN social_origins ON shantytown_origins.fk_social_origin = social_origins.social_origin_id
-                WHERE shantytown_origins.fk_shantytown IN (:ids)`,
-                {
-                    type: database.QueryTypes.SELECT,
-                    replacements: { ids: Object.keys(serializedTowns.hash) },
-                },
-            ),
-        );
-    } else {
-        promises.push(Promise.resolve(undefined));
-    }
+    promises.push(
+        database.query(
+            `SELECT
+                shantytown_origins.fk_shantytown AS "shantytownId",
+                social_origins.social_origin_id AS "socialOriginId",
+                social_origins.label AS "socialOriginLabel"
+            FROM shantytown_origins
+            LEFT JOIN social_origins ON shantytown_origins.fk_social_origin = social_origins.social_origin_id
+            WHERE shantytown_origins.fk_shantytown IN (:ids)`,
+            {
+                type: database.QueryTypes.SELECT,
+                replacements: { ids: Object.keys(serializedTowns.hash) },
+            },
+        ),
+    );
 
-    if (permissions.indexOf('comments') !== -1) {
+    if (user.isAllowedTo('list', 'shantytown_comment')) {
         promises.push(
             database.query(
                 `SELECT
@@ -245,8 +270,7 @@ async function query(database, filters = {}, permissions, departement) {
                     shantytown_comments.created_at AS "commentCreatedAt",
                     shantytown_comments.created_by AS "commentCreatedBy",
                     users.first_name AS "userFirstName",
-                    users.last_name AS "userLastName",
-                    users.company AS "userCompany"
+                    users.last_name AS "userLastName"
                 FROM shantytown_comments
                 LEFT JOIN users ON shantytown_comments.created_by = users.user_id
                 WHERE shantytown_comments.fk_shantytown IN (:ids)
@@ -261,26 +285,22 @@ async function query(database, filters = {}, permissions, departement) {
         promises.push(Promise.resolve(undefined));
     }
 
-    if (permissions.indexOf('closingSolutions') !== -1) {
-        promises.push(
-            database.query(
-                `SELECT
-                    shantytown_closing_solutions.fk_shantytown AS "shantytownId",
-                    closing_solutions.closing_solution_id AS "closingSolutionId",
-                    shantytown_closing_solutions.number_of_people_affected AS "peopleAffected",
-                    shantytown_closing_solutions.number_of_households_affected AS "householdsAffected"
-                FROM shantytown_closing_solutions
-                LEFT JOIN closing_solutions ON shantytown_closing_solutions.fk_closing_solution = closing_solutions.closing_solution_id
-                WHERE shantytown_closing_solutions.fk_shantytown IN (:ids)`,
-                {
-                    type: database.QueryTypes.SELECT,
-                    replacements: { ids: Object.keys(serializedTowns.hash) },
-                },
-            ),
-        );
-    } else {
-        promises.push(Promise.resolve(undefined));
-    }
+    promises.push(
+        database.query(
+            `SELECT
+                shantytown_closing_solutions.fk_shantytown AS "shantytownId",
+                closing_solutions.closing_solution_id AS "closingSolutionId",
+                shantytown_closing_solutions.number_of_people_affected AS "peopleAffected",
+                shantytown_closing_solutions.number_of_households_affected AS "householdsAffected"
+            FROM shantytown_closing_solutions
+            LEFT JOIN closing_solutions ON shantytown_closing_solutions.fk_closing_solution = closing_solutions.closing_solution_id
+            WHERE shantytown_closing_solutions.fk_shantytown IN (:ids)`,
+            {
+                type: database.QueryTypes.SELECT,
+                replacements: { ids: Object.keys(serializedTowns.hash) },
+            },
+        ),
+    );
 
     const [socialOrigins, comments, closingSolutions] = await Promise.all(promises);
 
@@ -304,7 +324,6 @@ async function query(database, filters = {}, permissions, departement) {
                     id: comment.commentCreatedBy,
                     firstName: comment.userFirstName,
                     lastName: comment.userLastName,
-                    company: comment.userCompany,
                 },
             });
         });
@@ -324,10 +343,10 @@ async function query(database, filters = {}, permissions, departement) {
 }
 
 module.exports = database => ({
-    findAll: (permissions = [], departement = null, filters = []) => query(database, filters, permissions, departement),
+    findAll: (user, filters = []) => query(database, filters, user, 'list'),
 
-    findOne: async (shantytownId, permissions = [], departement = null) => {
-        const towns = await query(database, { shantytown_id: [shantytownId] }, permissions, departement);
+    findOne: async (user, shantytownId) => {
+        const towns = await query(database, { shantytown_id: [shantytownId] }, user, 'read');
         return towns.length === 1 ? towns[0] : null;
     },
 });

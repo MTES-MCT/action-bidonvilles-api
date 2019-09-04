@@ -449,7 +449,7 @@ module.exports = models => ({
             }
 
             return res.status(200).send(
-                await models.shantytown.findAll(req.user.permissions.data, req.user.departement, filters),
+                await models.shantytown.findAll(req.user, filters),
             );
         } catch (error) {
             return res.status(500).send(error.message);
@@ -458,7 +458,7 @@ module.exports = models => ({
 
     async find(req, res) {
         try {
-            const town = await models.shantytown.findOne(req.params.id, req.user.permissions.data, req.user.departement);
+            const town = await models.shantytown.findOne(req.user, req.params.id);
 
             if (town === null) {
                 return res.status(404).send({

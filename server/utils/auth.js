@@ -1,20 +1,25 @@
 const jwt = require('jsonwebtoken');
 const crypto = require('crypto');
-const { frontUrl, auth: authConfig, activationTokenExpiresIn } = require('#server/config');
+const {
+    frontUrl, auth: authConfig, activationTokenExpiresIn, passwordResetDuration,
+} = require('#server/config');
 
 /**
  * Generates an access token for the given user
  *
  * @param {User}   user
+ * @param {String} [type]
  * @param {string} [expiresIn]
  *
  * @returns {string}
  */
-function generateAccessTokenFor(user, expiresIn = null) {
+function generateAccessTokenFor(user, type = 'default', expiresIn = null) {
     return jwt.sign(
         {
+            type,
             userId: user.id,
             email: user.email,
+            activatedBy: user.activatedBy,
         },
         authConfig.secret,
         {
@@ -59,7 +64,31 @@ module.exports = {
             throw new Error('The user is mandatory to generate an account activation link');
         }
 
-        const token = generateAccessTokenFor(user, activationTokenExpiresIn);
-        return `${frontUrl}/activer-mon-compte/${encodeURIComponent(token)}`;
+        const token = generateAccessTokenFor(user, 'account_validation', activationTokenExpiresIn);
+
+        return {
+            link: `${frontUrl}/activer-mon-compte/${encodeURIComponent(token)}`,
+            expiracyDate: new Date(Date.now() + (parseInt(activationTokenExpiresIn, 10) * 60 * 60 * 1000)),
+        };
+    },
+
+    /**
+     * Generates a password-reset link
+     *
+     * @param {User} user
+     *
+     * @returns {String}
+     */
+    getPasswordResetLink(user) {
+        if (!user) {
+            throw new Error('The user is mandatory to generate a password-reset link');
+        }
+
+        const token = generateAccessTokenFor(user, 'password_reset', passwordResetDuration);
+
+        return {
+            link: `${frontUrl}/renouveler-mot-de-passe/${encodeURIComponent(token)}`,
+            expiracyDate: new Date(Date.now() + (parseInt(passwordResetDuration, 10) * 60 * 60 * 1000)),
+        };
     },
 };
