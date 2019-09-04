@@ -14,7 +14,13 @@ const MONTHS = [
 ];
 
 module.exports = {
-    toString(date) {
-        return `${`${date.getDate()}`.padStart(2, '0')} ${MONTHS[date.getMonth()]} ${date.getFullYear()}`;
+    toString(date, showHours = false) {
+        const str = `${`${date.getDate()}`.padStart(2, '0')} ${MONTHS[date.getMonth()]} ${date.getFullYear()}`;
+
+        if (showHours !== true) {
+            return str;
+        }
+
+        return `${str} à ${`${date.getHours()}`.padStart(2, '0')}h${`${date.getMinutes()}`.padStart(2, '0')}`;
     },
 };

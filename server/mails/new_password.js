@@ -9,7 +9,7 @@ module.exports = (user, link) => ({
     Une demande de renouvellement du mot de passe associé à votre accès Résorption Bidonvilles a été formulée.
     Si vous n'êtes pas à l'origine de cette demande, veuillez ignorer ce mail.
 
-    Si vous souhaitez renouveler votre mot de passe, veuillez vous rendre à l'adresse suivante avant le ${dateToString(link.expiracyDate)}
+    Si vous souhaitez renouveler votre mot de passe, veuillez vous rendre à l'adresse suivante avant le ${dateToString(link.expiracyDate, true)}
     ${link.link}
 
     Cordialement,
@@ -35,7 +35,7 @@ module.exports = (user, link) => ({
                                 Une demande de renouvellement du mot de passe associé à votre accès Résorption Bidonvilles a été formulée.<br/>
                                 Si vous n'êtes pas à l'origine de cette demande, veuillez ignorer ce mail.<br/>
                                 <br/>
-                                Si vous souhaitez renouveler votre mot de passe, veuillez cliquer sur le lien suivanat avant le ${dateToString(link.expiracyDate)}<br/>
+                                Si vous souhaitez renouveler votre mot de passe, veuillez cliquer sur le lien suivant avant le ${dateToString(link.expiracyDate, true)} :<br/>
                                 <a href="${link.link}">renouveler mon mot de passe</a><br/>
                                 <br/>
                                 Cordialement,<br/>

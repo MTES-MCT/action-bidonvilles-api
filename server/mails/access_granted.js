@@ -67,7 +67,7 @@ module.exports = (activatedUser, administrator, activationLink, expiracyDate) =>
 
         ${TextPart}
 
-        Découvrez la plateforme Résorption Bidonvilles en activant votre compte dès maintenant (lien valide jusqu'au ${dateToString(expiracyDate)}).
+        Découvrez la plateforme Résorption Bidonvilles en activant votre compte dès maintenant (lien valide jusqu'au ${dateToString(expiracyDate, true)}).
 
         ${activationLink}
 
@@ -97,7 +97,7 @@ module.exports = (activatedUser, administrator, activationLink, expiracyDate) =>
                                     Suite à votre demande du ${dateToString(new Date(activatedUser.created_at * 1000))} d'accès à la plateforme <a href="${frontUrl}">Résorption Bidonvilles</a>, l'administrateur de votre territoire vous a ouvert un accès en tant que ${activatedUser.role}, ce qui vous donne les droits suivants.<br/>
                                     <br/>
                                     ${HTMLPart}<br/>
-                                    Découvrez la plateforme Résorption Bidonvilles en activant votre compte dès maintenant (lien valide jusqu'au ${dateToString(expiracyDate)}).<br/>
+                                    Découvrez la plateforme Résorption Bidonvilles en activant votre compte dès maintenant (lien valide jusqu'au ${dateToString(expiracyDate, true)}).<br/>
                                     <br/>
                                 </td>
                             </tr>
