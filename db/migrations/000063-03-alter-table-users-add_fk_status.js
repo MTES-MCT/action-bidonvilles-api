@@ -26,13 +26,13 @@ module.exports = {
                 },
             ))
             .then(() => queryInterface.sequelize.query(
-                'UPDATE users SET fk_status = \'active\' WHERE users.active = true AND users.password IS NULL',
+                'UPDATE users SET fk_status = \'active\' WHERE users.active = true AND users.password IS NOT NULL',
                 {
                     transaction,
                 },
             ))
             .then(() => queryInterface.sequelize.query(
-                'UPDATE users SET fk_status = \'inactive\' WHERE users.active = true AND users.password IS NOT NULL',
+                'UPDATE users SET fk_status = \'inactive\' WHERE users.active = true AND users.password IS NULL',
                 {
                     transaction,
                 },
