@@ -75,8 +75,8 @@ function toFormat(str, format) {
     return str;
 }
 
-function hasPermission(permissions, permission) {
-    return permissions[permission.type] && permissions[permission.type].indexOf(permission.name) !== -1;
+function hasPermission(user, feature, entity) {
+    return user.permissions && user.permissions[entity] && user.permissions[entity][feature] && user.permissions[entity][feature].allowed === true;
 }
 
 function cleanParams(body, format) {
@@ -237,7 +237,7 @@ function cleanParams(body, format) {
     };
 }
 
-async function validateInput(body, permissions, format = 'underscore') {
+async function validateInput(body, permission, format = 'underscore') {
     const {
         priority,
         builtAt,
@@ -349,7 +349,7 @@ async function validateInput(body, permissions, format = 'underscore') {
     }
 
     // justice status
-    if (permissions.data.indexOf('ownerComplaint') !== -1) {
+    if (permission.data_justice === true) {
         if (ownerComplaint === null) {
             error(toFormat('owner_complaint', format), 'Le champ "Dépôt de plainte par le propriétaire" est obligatoire');
         } else if ([-1, 0, 1].indexOf(ownerComplaint) === -1) {
@@ -476,10 +476,12 @@ module.exports = models => ({
     },
 
     async add(req, res) {
+        const permission = req.user.permissions.shantytown.create;
+
         // check errors
         let fieldErrors = {};
         try {
-            fieldErrors = await validateInput(req.body, req.user.permissions, 'camel');
+            fieldErrors = await validateInput(req.body, permission, 'camel');
         } catch (error) {
             return res.status(500).send({ error });
         }
@@ -560,7 +562,7 @@ module.exports = models => ({
                     Object.assign(
                         {},
                         baseTown,
-                        req.user.permissions.data.indexOf('ownerComplaint') !== -1
+                        permission.data_justice === true
                             ? {
                                 ownerComplaint: toBool(ownerComplaint),
                                 justiceProcedure: toBool(justiceProcedure),
@@ -630,10 +632,12 @@ module.exports = models => ({
     },
 
     async edit(req, res) {
+        const permission = req.user.permissions.shantytown.update;
+
         // check errors
         let fieldErrors = {};
         try {
-            fieldErrors = await validateInput(req.body, req.user.permissions);
+            fieldErrors = await validateInput(req.body, permission);
         } catch (error) {
             return res.status(500).send({ error });
         }
@@ -733,7 +737,7 @@ module.exports = models => ({
                     Object.assign(
                         {},
                         baseTown,
-                        req.user.permissions.data.indexOf('ownerComplaint') !== -1
+                        permission.data_justice === true
                             ? {
                                 ownerComplaint: toBool(ownerComplaint),
                                 justiceProcedure: toBool(justiceProcedure),
@@ -1016,8 +1020,7 @@ module.exports = models => ({
             });
         }
 
-        if (!hasPermission(req.user.permissions, { type: 'feature', name: 'updateComment' })
-            && (comment.createdBy !== req.user.id || !hasPermission(req.user.permissions, { type: 'feature', name: 'updateOwnComment' }))) {
+        if (comment.createdBy !== req.user.id && !hasPermission(req.user, 'moderate', 'shantytown_comment')) {
             return res.status(400).send({
                 error: {
                     user_message: 'Vous n\'avez pas accès à ces données',
@@ -1089,8 +1092,7 @@ module.exports = models => ({
             });
         }
 
-        if (!hasPermission(req.user.permissions, { type: 'feature', name: 'deleteComment' })
-            && (comment.createdBy !== req.user.id || !hasPermission(req.user.permissions, { type: 'feature', name: 'deleteOwnComment' }))) {
+        if (comment.createdBy !== req.user.id && !hasPermission(req.user, 'moderate', 'shantytown_comment')) {
             return res.status(400).send({
                 error: {
                     user_message: 'Vous n\'avez pas accès à ces données',
