@@ -44,7 +44,7 @@ module.exports = database => ({
             "city_name"
         FROM localized_organizations
         WHERE fk_type = :typeId AND active = TRUE
-        ORDER BY departement_code ASC, region_name ASC, epci_name ASC, city_name ASC`,
+        ORDER BY departement_code ASC, REPLACE(region_name, 'Î', 'I') ASC, epci_name ASC, city_name ASC`,
         {
             type: database.QueryTypes.SELECT,
             replacements: {
