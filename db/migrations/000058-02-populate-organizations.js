@@ -97,7 +97,13 @@ const organizations = [
     },
     {
         type: 'Direction Régionale et Interdépartementale de l\'Hébergement et du Logement',
-        generate: 'region',
+        list: [
+            {
+                name: 'Direction Régionale et Interdépartementale de l\'Hébergement et du Logement - Île-de-France',
+                abbreviation: 'DRIHL - Île-de-France',
+                fk_region: '11',
+            },
+        ],
     },
     {
         type: 'Direction Régionale de la Jeunesse, des Sports, et de la Cohésion Sociale',
