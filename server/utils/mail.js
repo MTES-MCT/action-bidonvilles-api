@@ -2,6 +2,19 @@ const { mail: mailConfig } = require('#server/config');
 const mailjet = require('node-mailjet').connect(mailConfig.publicKey, mailConfig.privateKey);
 
 module.exports = {
+    generateUserSignature(user) {
+        const signature = [
+            `${user.first_name} ${user.last_name.toUpperCase()}`,
+            `${user.position} - ${user.organization.type.abbreviation || user.organization.name}${user.organization.location.departement !== null ? ` - ${user.organization.location.departement.code}` : ''}`,
+            `${user.role} de resorption-bidonvilles.com`,
+        ];
+
+        return {
+            TextPart: signature.join('\n'),
+            HTMLPart: signature.join('<br/>'),
+        };
+    },
+
     send(user, mailContent, replyTo = null) {
         return mailjet
             .post('send', { version: 'v3.1' })
