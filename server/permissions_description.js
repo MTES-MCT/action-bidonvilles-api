@@ -35,7 +35,7 @@ module.exports = {
             [{ type: 'edit', label: 'Mettre à jour les %dispositifs%', comments: 'hors financements' }],
         ],
         options: [
-            { id: 'close_shantytown', label: 'Autoriser l\'opérateur à créer un site et déclarer la fermeture d\'un site' },
+            { id: 'close_shantytown', label: 'Autoriser le partenaire à créer un site et déclarer la fermeture d\'un site' },
             { id: 'hide_justice', label: 'Masquer les procédures judiciaires' },
         ],
     },
