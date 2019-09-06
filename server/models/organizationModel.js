@@ -3,6 +3,7 @@ module.exports = database => ({
         `SELECT
             organizations.organization_id AS id,
             organizations.name,
+            organizations.abbreviation,
             organizations.location_type,
             organizations."region_code",
             organizations."region_name",
