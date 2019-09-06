@@ -2,7 +2,7 @@ const { toString: dateToString } = require('#server/utils/date');
 const signature = require('./signature');
 
 module.exports = (activatedUser, administrator) => ({
-    Subject: 'Votre demande d\'accès à la plateforme Résorption Bidonvilles.',
+    Subject: '[ resorption-bidonvilles ] - Votre demande d\'accès',
 
     TextPart: `Bonjour,
 

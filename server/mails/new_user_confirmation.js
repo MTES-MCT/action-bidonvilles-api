@@ -1,7 +1,7 @@
 const signature = require('./signature');
 
 module.exports = () => ({
-    Subject: 'Demande d\'accès à la plateforme Résorption Bidonvilles',
+    Subject: '[ resorption-bidonvilles ] - Demande d\'accès',
 
     TextPart: `Bonjour,
 
