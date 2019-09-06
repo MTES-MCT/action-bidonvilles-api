@@ -73,6 +73,7 @@ function serializeUser(user, filters, permissionMap) {
         organization: {
             id: user.organization_id,
             name: user.organization_name,
+            abbreviation: user.organization_abbreviation,
             active: user.organization_active,
             type: {
                 id: user.organization_type_id,
@@ -239,6 +240,7 @@ module.exports = (database) => {
                 roles_admin.name AS role_name,
                 organizations.organization_id,
                 organizations.name AS organization_name,
+                organizations.abbreviation AS organization_abbreviation,
                 organizations.location_type,
                 organizations.active AS organization_active,
                 organizations.region_code,
