@@ -48,6 +48,4 @@ module.exports = (user, link) => ({
             </div>
         </body>
     </html>`,
-
-    InlinedAttachments: signature.InlinedAttachments,
 });

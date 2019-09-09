@@ -1,11 +1,13 @@
 const express = require('express');
 const cors = require('cors');
 const bodyParser = require('body-parser');
+const path = require('path');
 
 module.exports = (middlewares, controllers) => {
     const app = express();
     app.use(cors());
     app.use(bodyParser.json());
+    app.use('/assets', express.static(path.resolve(__dirname, '../assets')));
 
     app.post(
         '/signin',

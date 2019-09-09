@@ -131,7 +131,5 @@ module.exports = (activatedUser, administrator, activationLink, expiracyDate) =>
                 </div>
             </body>
         </html>`,
-
-        InlinedAttachments: signature.InlinedAttachments,
     };
 };
