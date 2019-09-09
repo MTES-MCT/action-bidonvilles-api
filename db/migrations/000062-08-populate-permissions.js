@@ -109,11 +109,11 @@ const permissions = {
         },
         association: {
             shantytown: {
-                list: { level: 'local', data: { data_justice: false } },
-                read: { level: 'local', data: { data_justice: false } },
-                create: { level: 'local', data: { data_justice: false } },
-                update: { level: 'local', data: { data_justice: false } },
-                export: { level: 'local', data: { data_justice: false } },
+                list: { level: 'local', data: { data_justice: true } },
+                read: { level: 'local', data: { data_justice: true } },
+                create: { level: 'local', data: { data_justice: true } },
+                update: { level: 'local', data: { data_justice: true } },
+                export: { level: 'local', data: { data_justice: true } },
             },
             plan: {
                 list: { level: 'local', data: {} },

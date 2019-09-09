@@ -30,7 +30,9 @@ module.exports = {
                 {
                     type: 'deny', label: 'hors fermeture des sites', comments: null, option: 'close_shantytown',
                 },
-                { type: 'view', label: 'Consulter les procédures judiciaires', comments: null },
+                {
+                    type: 'view', label: 'Consulter les procédures judiciaires', comments: null, option: 'hide_justice',
+                },
             ],
             [{ type: 'edit', label: 'Mettre à jour les %dispositifs%', comments: 'hors financements' }],
         ],
@@ -51,7 +53,9 @@ module.exports = {
                 {
                     type: 'deny', label: 'hors création des sites', comments: null, option: 'create_and_close_shantytown',
                 },
-                { type: 'view', label: 'Consulter les procédures judiciaires', comments: null },
+                {
+                    type: 'view', label: 'Consulter les procédures judiciaires', comments: null, option: 'hide_justice',
+                },
             ],
             [{ type: 'view', label: 'Mettre à jour les %dispositifs%', comments: 'hors financements' }],
         ],

@@ -975,6 +975,8 @@ module.exports = (models) => {
             });
 
             try {
+                // reload the user to take options into account (they might have changed above)
+                user = await models.user.findOne(req.params.id, { extended: true }, req.user, 'activate');
                 await sendMail(user, MAIL_TEMPLATES.access_granted(user, req.user, activationLink, expiracyDate), req.user);
             } catch (error) {
                 return res.status(500).send({

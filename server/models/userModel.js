@@ -158,6 +158,12 @@ function serializeUser(user, filters, permissionMap) {
                     }
                     break;
 
+                case 'hide_justice':
+                    if (permissions.shantytown && permissions.shantytown.list && !permissions.shantytown.list.data_justice) {
+                        return [...options, id];
+                    }
+                    break;
+
                 default:
                 }
 
