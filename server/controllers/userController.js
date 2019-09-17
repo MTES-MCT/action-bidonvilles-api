@@ -341,11 +341,49 @@ module.exports = (models) => {
             Object.assign(data, { organization: organization.id });
         },
 
-        association(data) {
+        async association(data) {
             if (data.association === null || data.association === '') {
                 throw new Error('Le nom de la structure est obligatoire');
             }
+
+            if (data.association === 'Autre') {
+                return;
+            }
+
+            let association;
+            try {
+                association = await models.organization.findAssociationName(data.association);
+            } catch (error) {
+                throw new Error('Une erreur est survenue lors de la vérification du nom de l\'association');
+            }
+
+            if (association === null) {
+                throw new Error('L\'association sélectionnée n\'a pas été trouvée en base de données');
+            }
         },
+
+        async newAssociationName(data) {
+            if (data.association !== 'Autre') {
+                return;
+            }
+
+            if (data.newAssociationName === null || data.newAssociationName === '') {
+                throw new Error('Le nom complet de l\'association est obligatoire');
+            }
+
+            let association;
+            try {
+                association = await models.organization.findAssociationName(data.newAssociationName);
+            } catch (error) {
+                throw new Error('Une erreur est survenue lors de la vérification du nom complet de l\'association');
+            }
+
+            if (association !== null) {
+                throw new Error('Il existe déjà une association enregistrée sous ce nom');
+            }
+        },
+
+        newAssociationAbbreviation() {},
 
         async departement(data) {
             if (data.departement === null) {
@@ -403,7 +441,9 @@ module.exports = (models) => {
             organization_type: req.body.organization_type,
             organization_public: req.body.organization_public,
             territorial_collectivity: req.body.territorial_collectivity,
-            association: req.body.association && req.body.association.label,
+            association: req.body.association,
+            newAssociationName: req.body.newAssociationName,
+            newAssociationAbbreviation: req.body.newAssociationAbbreviation,
             departement: req.body.departement,
             organization_administration: req.body.organization_administration,
         }, extendedData);
@@ -438,6 +478,8 @@ module.exports = (models) => {
             association() {
                 return [
                     { key: 'association', sanitizer: 'string' },
+                    { key: 'newAssociationName', sanitizer: 'string' },
+                    { key: 'newAssociationAbbreviation', sanitizer: 'string' },
                     { key: 'departement', sanitizer: 'string' },
                 ];
             },
@@ -467,17 +509,34 @@ module.exports = (models) => {
         return sequelize.transaction(async (t) => {
             // create association if necessary
             if (data.organization_category === 'association') {
-                let organization = await models.organization.findOneAssociation(
-                    data.association,
-                    data.departement,
-                );
+                let create = null;
+                let organization = null;
+                if (data.association === 'Autre') {
+                    create = {
+                        name: data.newAssociationName,
+                        abbreviation: data.newAssociationAbbreviation || null,
+                    };
+                } else {
+                    organization = await models.organization.findOneAssociation(
+                        data.association,
+                        data.departement,
+                    );
 
-                if (organization === null) {
-                    const association = await models.organization.findAssociationName(data.association);
+                    if (organization === null) {
+                        const association = await models.organization.findAssociationName(data.association);
+
+                        create = {
+                            name: association !== null ? association.name : data.association,
+                            abbreviation: association !== null ? association.abbreviation : null,
+                        };
+                    }
+                }
+
+                if (create !== null) {
                     const type = (await models.organizationType.findByCategory('association'))[0].id;
                     [[organization]] = (await models.organization.create(
-                        association !== null ? association.name : data.association,
-                        association !== null ? association.abbreviation : null,
+                        create.name,
+                        create.abbreviation,
                         type,
                         null,
                         data.departement,

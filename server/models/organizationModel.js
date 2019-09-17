@@ -1,6 +1,42 @@
 module.exports = database => ({
     findByCategory: (categoryUid, search = null) => database.query(
         `SELECT
+                organizations.organization_id AS id,
+                organizations.name,
+                organizations.abbreviation,
+                organizations.location_type,
+                organizations."region_code",
+                organizations."region_name",
+                organizations."departement_code",
+                organizations."departement_name",
+                organizations."epci_code",
+                organizations."epci_name",
+                organizations."city_code",
+                organizations."city_name"
+            FROM localized_organizations AS organizations
+            LEFT JOIN organization_types ON organizations.fk_type = organization_types.organization_type_id
+            WHERE
+                organization_types.fk_category = :categoryUid
+                AND
+                organizations.active = TRUE
+                ${search !== null ? ' AND (organizations.name ILIKE :search OR organizations.abbreviation ILIKE :search)' : ''}
+            ORDER BY
+                CASE organization_types.fk_category
+                    WHEN 'association' THEN organizations.name
+                    ELSE '' END
+                ASC,
+                departement_code ASC, REPLACE(region_name, 'Î', 'I') ASC, epci_name ASC, city_name ASC`,
+        {
+            type: database.QueryTypes.SELECT,
+            replacements: {
+                categoryUid,
+                search: `%${search}%`,
+            },
+        },
+    ),
+
+    findByType: typeId => database.query(
+        `SELECT
             organizations.organization_id AS id,
             organizations.name,
             organizations.location_type,
@@ -15,36 +51,15 @@ module.exports = database => ({
         FROM localized_organizations AS organizations
         LEFT JOIN organization_types ON organizations.fk_type = organization_types.organization_type_id
         WHERE
-            organization_types.fk_category = :categoryUid
+            organizations.fk_type = :typeId
             AND
             organizations.active = TRUE
-            ${search !== null ? ' AND (organizations.name ILIKE :search OR organizations.abbreviation ILIKE :search)' : ''}
-        ORDER BY region_code ASC, departement_code ASC, epci_name ASC, city_name ASC`,
-        {
-            type: database.QueryTypes.SELECT,
-            replacements: {
-                categoryUid,
-                search: `%${search}%`,
-            },
-        },
-    ),
-
-    findByType: typeId => database.query(
-        `SELECT
-            organization_id AS id,
-            name,
-            location_type,
-            "region_code",
-            "region_name",
-            "departement_code",
-            "departement_name",
-            "epci_code",
-            "epci_name",
-            "city_code",
-            "city_name"
-        FROM localized_organizations
-        WHERE fk_type = :typeId AND active = TRUE
-        ORDER BY departement_code ASC, REPLACE(region_name, 'Î', 'I') ASC, epci_name ASC, city_name ASC`,
+        ORDER BY
+            CASE organization_types.fk_category
+                WHEN 'association' THEN organizations.name
+                ELSE '' END
+            ASC,
+            departement_code ASC, REPLACE(region_name, 'Î', 'I') ASC, epci_name ASC, city_name ASC`,
         {
             type: database.QueryTypes.SELECT,
             replacements: {
