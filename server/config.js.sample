@@ -1,7 +1,6 @@
 const path = require('path');
 
-module.exports = {
-    assetsSrc: path.resolve(__dirname, '../assets'),
+const config = {
     frontUrl: 'http://localhost:1234',
     port: 810,
     auth: {
@@ -15,3 +14,6 @@ module.exports = {
         privateKey: 'MAILJET_API_PRIVATE_KEY',
     },
 };
+config.backUrl = `http://localhost:${config.port}`;
+
+module.exports = config;

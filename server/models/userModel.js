@@ -73,6 +73,7 @@ function serializeUser(user, filters, permissionMap) {
         organization: {
             id: user.organization_id,
             name: user.organization_name,
+            abbreviation: user.organization_abbreviation,
             active: user.organization_active,
             type: {
                 id: user.organization_type_id,
@@ -153,6 +154,12 @@ function serializeUser(user, filters, permissionMap) {
 
                 case 'create_and_close_shantytown':
                     if (permissions && permissions.shantytown && permissions.shantytown.close && permissions.shantytown.close.allowed) {
+                        return [...options, id];
+                    }
+                    break;
+
+                case 'hide_justice':
+                    if (permissions.shantytown && permissions.shantytown.list && !permissions.shantytown.list.data_justice) {
                         return [...options, id];
                     }
                     break;
@@ -239,6 +246,7 @@ module.exports = (database) => {
                 roles_admin.name AS role_name,
                 organizations.organization_id,
                 organizations.name AS organization_name,
+                organizations.abbreviation AS organization_abbreviation,
                 organizations.location_type,
                 organizations.active AS organization_active,
                 organizations.region_code,

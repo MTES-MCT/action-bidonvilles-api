@@ -5,7 +5,7 @@ const escape = require('escape-html');
 
 
 module.exports = (user, date) => ({
-    Subject: 'Nouvelle demande d\'ouverture de compte à la plateforme Résorption Bidonvilles',
+    Subject: '[ resorption-bidonvilles ] - Nouvelle demande d\'ouverture de compte',
 
     TextPart: `Cher administrateur,
 
@@ -83,6 +83,4 @@ module.exports = (user, date) => ({
                 </div>
             </body>
         </html>`,
-
-    InlinedAttachments: signature.InlinedAttachments,
 });

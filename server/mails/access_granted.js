@@ -2,6 +2,7 @@ const { toString: dateToString } = require('#server/utils/date');
 const signature = require('./signature');
 const { frontUrl } = require('#server/config');
 const permissionsDescription = require('#server/permissions_description');
+const { generateUserSignature } = require('#server/utils/mail');
 
 // ajouter picto
 function formatPermissionItem(type, item) {
@@ -57,25 +58,23 @@ function formatPermissions(user) {
 
 module.exports = (activatedUser, administrator, activationLink, expiracyDate) => {
     const { TextPart, HTMLPart } = formatPermissions(activatedUser);
+    const adminSignature = generateUserSignature(administrator);
 
     return {
-        Subject: 'Activez votre compte à la plateforme Résorption Bidonvilles.',
+        Subject: '[ resorption-bidonvilles ] - Accès à votre compte',
 
         TextPart: `Bonjour,
 
-        Suite à votre demande du ${dateToString(new Date(activatedUser.created_at * 1000))} d'accès à la plateforme Résorption Bidonvilles, l'administrateur de votre territoire vous a ouvert un accès en tant que ${activatedUser.role}, ce qui vous donne les droits suivants.
+        Vous avez demandé un accès à la plateforme numérique Résorption Bidonvilles le ${dateToString(new Date(activatedUser.created_at * 1000))}.
+        L'${administrator.role} vous a ouvert un accès en tant que ${activatedUser.role}, ce qui vous permet de :
 
         ${TextPart}
 
-        Découvrez la plateforme Résorption Bidonvilles en activant votre compte dès maintenant (lien valide jusqu'au ${dateToString(expiracyDate, true)}).
+        Pour utiliser la plateforme, activez dès maintenant votre compte en créant votre mot de passe (lien valide jusqu'au ${dateToString(expiracyDate, true)}).
 
         ${activationLink}
 
-        Bienvenue sur la plateforme !
-
-        ${administrator.last_name.toUpperCase()} ${administrator.first_name}
-        ${administrator.position} - ${administrator.organization.name}
-        ${administrator.role} de resorption-bidonvilles.com
+        ${adminSignature.TextPart}
         -
 
         ${signature.TextPart}`,
@@ -94,10 +93,11 @@ module.exports = (activatedUser, administrator, activationLink, expiracyDate) =>
                                 <td bgcolor="#ffffff">
                                     Bonjour,<br/>
                                     <br/>
-                                    Suite à votre demande du ${dateToString(new Date(activatedUser.created_at * 1000))} d'accès à la plateforme <a href="${frontUrl}">Résorption Bidonvilles</a>, l'administrateur de votre territoire vous a ouvert un accès en tant que ${activatedUser.role}, ce qui vous donne les droits suivants.<br/>
+                                    Vous avez demandé un accès à la plateforme numérique <a href="${frontUrl}">Résorption Bidonvilles</a> le ${dateToString(new Date(activatedUser.created_at * 1000))}.<br/>
+                                    L'${administrator.role} vous a ouvert un accès en tant que ${activatedUser.role}, ce qui vous permet de :<br/>
                                     <br/>
                                     ${HTMLPart}<br/>
-                                    Découvrez la plateforme Résorption Bidonvilles en activant votre compte dès maintenant (lien valide jusqu'au ${dateToString(expiracyDate, true)}).<br/>
+                                    Pour utiliser la plateforme, activez dès maintenant votre compte en créant votre mot de passe (lien valide jusqu'au ${dateToString(expiracyDate, true)}).<br/>
                                     <br/>
                                 </td>
                             </tr>
@@ -120,11 +120,8 @@ module.exports = (activatedUser, administrator, activationLink, expiracyDate) =>
                                 <td bgcolor="#ffffff">
                                     <br/>
                                     <br/>
-                                    Bienvenue sur la plateforme !<br/>
+                                    ${adminSignature.HTMLPart}
                                     <br/>
-                                    ${administrator.last_name.toUpperCase()} ${administrator.first_name}<br/>
-                                    ${administrator.position} - ${administrator.organization.name}<br/>
-                                    ${administrator.role} de resorption-bidonvilles.com<br/>
                                     <br/>
                                 </td>
                             </tr>
@@ -134,7 +131,5 @@ module.exports = (activatedUser, administrator, activationLink, expiracyDate) =>
                 </div>
             </body>
         </html>`,
-
-        InlinedAttachments: signature.InlinedAttachments,
     };
 };
