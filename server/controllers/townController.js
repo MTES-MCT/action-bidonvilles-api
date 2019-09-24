@@ -580,7 +580,9 @@ module.exports = models => ({
                     ),
                 );
 
-                await town.setSocialOrigins(socialOrigins);
+                if (populationTotal > 10) {
+                    await town.setSocialOrigins(socialOrigins);
+                }
             });
 
             const departements = await sequelize.query(
@@ -755,7 +757,9 @@ module.exports = models => ({
                     ),
                 );
 
-                await town.setSocialOrigins(socialOrigins);
+                if (populationTotal > 10) {
+                    await town.setSocialOrigins(socialOrigins);
+                }
             });
 
             return res.status(200).send(town);
