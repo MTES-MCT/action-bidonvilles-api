@@ -438,6 +438,7 @@ function serializeComment(comment) {
             position: comment.userPosition,
             organization: comment.organizationAbbreviation || comment.organizationName,
         },
+        shantytown: comment.shantytownId,
     };
 }
 
@@ -1158,6 +1159,14 @@ module.exports = models => ({
                 },
             });
         }
+    },
+
+    async getAllComments(req, res) {
+        const comments = await models.shantytown.findComments();
+
+        return res.status(200).send({
+            comments: comments.map(serializeComment),
+        });
     },
 
 });

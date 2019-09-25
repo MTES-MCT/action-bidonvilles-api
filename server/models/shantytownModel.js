@@ -355,4 +355,26 @@ module.exports = database => ({
         const towns = await query(database, { shantytown_id: [shantytownId] }, user, 'read');
         return towns.length === 1 ? towns[0] : null;
     },
+
+    findComments: () => database.query(
+        `SELECT
+                shantytown_comments.shantytown_comment_id AS "commentId",
+                shantytown_comments.fk_shantytown AS "shantytownId",
+                shantytown_comments.description AS "commentDescription",
+                shantytown_comments.created_at AS "commentCreatedAt",
+                shantytown_comments.created_by AS "commentCreatedBy",
+                users.first_name AS "userFirstName",
+                users.last_name AS "userLastName",
+                users.position AS "userPosition",
+                organizations.name AS "organizationName",
+                organizations.abbreviation AS "organizationAbbreviation"
+            FROM shantytown_comments
+            LEFT JOIN users ON shantytown_comments.created_by = users.user_id
+            LEFT JOIN organizations ON users.fk_organization = organizations.organization_id
+            ORDER BY shantytown_comments.created_at DESC
+            LIMIT 100`,
+        {
+            type: database.QueryTypes.SELECT,
+        },
+    ),
 });
