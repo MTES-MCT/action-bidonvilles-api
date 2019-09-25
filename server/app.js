@@ -267,7 +267,7 @@ module.exports = (middlewares, controllers) => {
         '/stats',
         [
             middlewares.auth.authenticate,
-            (...args) => middlewares.auth.checkPermissions(['stats.list'], ...args),
+            (...args) => middlewares.auth.checkPermissions(['stats.read'], ...args),
         ],
         controllers.stats.all,
     );
