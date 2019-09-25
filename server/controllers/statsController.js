@@ -10,7 +10,8 @@ module.exports = () => ({
                     departements.name
                 FROM shantytowns
                 LEFT JOIN users ON shantytowns.created_by = users.user_id
-                LEFT JOIN departements ON departements.code = users.fk_departement
+                LEFT JOIN cities ON shantytowns.fk_city = cities.code
+                LEFT JOIN departements ON cities.fk_departement = departements.code
                 WHERE
                     users.email NOT LIKE '%dihal%'
                     AND
@@ -31,12 +32,13 @@ module.exports = () => ({
                     departements.code,
                     departements.name
                 FROM (
-                    SELECT shantytown_id, created_by, created_at, updated_by, updated_at FROM "shantytowns" WHERE updated_at <> created_at
+                    SELECT shantytown_id, fk_city, created_by, created_at, updated_by, updated_at FROM "shantytowns" WHERE updated_at <> created_at
                     UNION
-                    SELECT shantytown_id, created_by, created_at, updated_by, updated_at FROM "ShantytownHistories" WHERE updated_at <> created_at
+                    SELECT shantytown_id, fk_city, created_by, created_at, updated_by, updated_at FROM "ShantytownHistories" WHERE updated_at <> created_at
                 ) AS "towns"
                 LEFT JOIN users ON towns.updated_by = users.user_id
-                LEFT JOIN departements ON departements.code = users.fk_departement
+                LEFT JOIN cities ON towns.fk_city = cities.code
+                LEFT JOIN departements ON cities.fk_departement = departements.code
                 WHERE
                     users.email NOT LIKE '%dihal%'
                     AND
@@ -58,7 +60,8 @@ module.exports = () => ({
                     departements.name
                 FROM shantytowns
                 LEFT JOIN users ON shantytowns.updated_by = users.user_id
-                LEFT JOIN departements ON departements.code = users.fk_departement
+                LEFT JOIN cities ON shantytowns.fk_city = cities.code
+                LEFT JOIN departements ON cities.fk_departement = departements.code
                 WHERE
                     users.email NOT LIKE '%dihal%'
                     AND
