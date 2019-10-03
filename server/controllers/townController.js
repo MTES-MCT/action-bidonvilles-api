@@ -3,6 +3,27 @@ const Cities = require('#db/models').City;
 const ShantyTowns = require('#db/models').Shantytown;
 const ShantyTownComments = require('#db/models').ShantytownComment;
 const { ClosingSolution } = require('#db/models');
+const { fromTsToFormat: tsToString, toFormat: dateToString } = require('#server/utils/date');
+const { createExport } = require('#server/utils/excel');
+
+function fromGeoLevelToTableName(geoLevel) {
+    switch (geoLevel) {
+    case 'region':
+        return 'regions';
+
+    case 'departement':
+        return 'departements';
+
+    case 'epci':
+        return 'epci';
+
+    case 'city':
+        return 'cities';
+
+    default:
+        return null;
+    }
+}
 
 function addError(errors, field, error) {
     if (!Object.prototype.hasOwnProperty.call(errors, field)) {
@@ -445,9 +466,11 @@ function serializeComment(comment) {
 module.exports = models => ({
     async list(req, res) {
         try {
-            const filters = {};
+            const filters = [];
             if (req.query.status) {
-                filters.status = req.query.status.split(',');
+                filters.push({
+                    status: req.query.status.split(','),
+                });
             }
 
             return res.status(200).send(
@@ -1167,6 +1190,576 @@ module.exports = models => ({
         return res.status(200).send({
             comments: comments.map(serializeComment),
         });
+    },
+
+    async export(req, res) {
+        function isLocationAllowed(user, location) {
+            if (user.permissions.shantytown.export.geographic_level === 'nation') {
+                return true;
+            }
+
+            if (user.organization.location.type === 'nation') {
+                return true;
+            }
+
+            return user.organization.location[location.type]
+                && location[location.type]
+                && user.organization.location[location.type].code === location[location.type].code;
+        }
+
+        if (!Object.prototype.hasOwnProperty.call(req.query, 'locationType')
+            || !Object.prototype.hasOwnProperty.call(req.query, 'locationCode')) {
+            return res.status(400).send({
+                success: false,
+                response: {
+                    error: {
+                        user_message: 'Le périmètre géographique à exporter est obligatoire',
+                        developer_message: 'locationType and/or locationCode are missing',
+                    },
+                },
+            });
+        }
+
+        let location;
+        try {
+            location = await models.geo.getLocation(req.query.locationType, req.query.locationCode);
+        } catch (error) {
+            return res.status(500).send({
+                success: false,
+                response: {
+                    error: {
+                        user_message: 'Une erreur est survenue lors de la lecture en base de données',
+                        developer_message: 'could not get location',
+                    },
+                },
+            });
+        }
+
+        if (!isLocationAllowed(req.user, location)) {
+            return res.status(400).send({
+                success: false,
+                response: {
+                    error: {
+                        user_message: 'Vous n\'êtes pas autorisé(e) à exporter le périmètre géographique demandé',
+                        developer_message: 'the requested location is not allowed to current user',
+                    },
+                },
+            });
+        }
+
+        const closedTowns = parseInt(req.query.closedTowns, 10) === 1;
+        const filters = [
+            {
+                status: {
+                    not: closedTowns === true,
+                    value: 'open',
+                },
+            },
+        ];
+
+        if (location.type !== 'nation') {
+            filters.push({
+                location: {
+                    query: `${fromGeoLevelToTableName(location.type)}.code`,
+                    value: location[location.type].code,
+                },
+            });
+        }
+
+        let shantytowns;
+        try {
+            shantytowns = await models.shantytown.findAll(
+                req.user,
+                filters,
+                'export',
+            );
+        } catch (error) {
+            return res.status(500).send({
+                success: false,
+                response: {
+                    error: {
+                        user_message: 'Une erreur est survenue lors de la lecture en base de données',
+                        developer_message: 'Failed to fetch towns',
+                    },
+                },
+            });
+        }
+
+        if (shantytowns.length === 0) {
+            return res.status(500).send({
+                success: false,
+                response: {
+                    error: {
+                        user_message: 'Il n\'y a aucun site à exporter pour le périmètre géographique demandé',
+                        developer_message: 'no shantytown to be exported',
+                    },
+                },
+            });
+        }
+
+        let closingSolutions;
+        try {
+            closingSolutions = await models.closingSolution.findAll();
+        } catch (error) {
+            return res.status(500).send({
+                success: false,
+                response: {
+                    error: {
+                        user_message: 'Une erreur est survenue lors de la lecture en base de données',
+                        developer_message: 'Failed to fetch closing solutions',
+                    },
+                },
+            });
+        }
+
+        const COLUMN_WIDTHS = {
+            XSMALL: 15,
+            SMALL: 20,
+            MEDIUM: 25,
+            LARGE: 35,
+        };
+
+        const STATUS_DETAILS = {
+            closed_by_justice: 'Exécution d\'une décision de justice',
+            closed_by_admin: 'Exécution d\'une décision administrative',
+            other: 'Autre',
+            unknown: 'Raison inconnue',
+        };
+
+        // properties
+        const properties = {
+            priority: {
+                title: 'Priorité',
+                data: ({ priority }) => priority,
+                bold: true,
+                width: COLUMN_WIDTHS.XSMALL,
+            },
+            departement: {
+                title: 'Département',
+                data: ({ departement }) => `${departement.code} - ${departement.name}`,
+                align: 'left',
+                width: COLUMN_WIDTHS.LARGE,
+            },
+            city: {
+                title: 'Commune',
+                data: ({ city }) => city.name,
+                bold: true,
+                align: 'left',
+                width: COLUMN_WIDTHS.MEDIUM,
+            },
+            address: {
+                title: 'Adresse',
+                data: ({ addressSimple }) => addressSimple,
+                bold: true,
+                align: 'left',
+                width: COLUMN_WIDTHS.MEDIUM,
+            },
+            addressDetails: {
+                title: 'Informations d\'accès',
+                data: ({ addressDetails }) => addressDetails,
+                width: COLUMN_WIDTHS.LARGE,
+            },
+            fieldType: {
+                title: 'Type de site',
+                data: ({ fieldType }) => fieldType.label,
+                width: COLUMN_WIDTHS.SMALL,
+            },
+            builtAt: {
+                title: 'Date d\'installation',
+                data: ({ builtAt }) => tsToString(builtAt, 'd/m/Y'),
+                width: COLUMN_WIDTHS.SMALL,
+            },
+            declaredAt: {
+                title: 'Date de signalement',
+                data: ({ declaredAt }) => tsToString(declaredAt, 'd/m/Y'),
+                width: COLUMN_WIDTHS.SMALL,
+            },
+            closedAt: {
+                title: 'Date de fermeture',
+                data: ({ closedAt }) => tsToString(closedAt, 'd/m/Y'),
+                width: COLUMN_WIDTHS.SMALL,
+            },
+            status: {
+                title: 'Cause de la fermeture',
+                data: ({ status }) => STATUS_DETAILS[status],
+                width: COLUMN_WIDTHS.SMALL,
+            },
+            ownerType: {
+                title: 'Type de propriétaire',
+                data: ({ ownerType }) => ownerType.label,
+                width: COLUMN_WIDTHS.SMALL,
+            },
+            owner: {
+                title: 'Identité du propriétaire',
+                data: ({ owner }) => owner,
+                width: COLUMN_WIDTHS.MEDIUM,
+            },
+            populationTotal: {
+                title: 'Nombre de personnes',
+                data: ({ populationTotal }) => populationTotal,
+                width: COLUMN_WIDTHS.SMALL,
+                sum: true,
+            },
+            populationCouples: {
+                title: 'Nombre de ménages',
+                data: ({ populationCouples }) => populationCouples,
+                width: COLUMN_WIDTHS.SMALL,
+                sum: true,
+            },
+            populationMinors: {
+                title: 'Nombre de mineurs',
+                data: ({ populationMinors }) => populationMinors,
+                width: COLUMN_WIDTHS.SMALL,
+                sum: true,
+            },
+            socialOrigins: {
+                title: 'Origines',
+                data: ({ socialOrigins }) => (socialOrigins.length > 0 ? socialOrigins.map(({ label }) => label).join(';') : null),
+                width: COLUMN_WIDTHS.MEDIUM,
+            },
+            electricityType: {
+                title: 'Accès à l\'électricité',
+                data: ({ electricityType }) => electricityType.label,
+                width: COLUMN_WIDTHS.SMALL,
+            },
+            accessToWater: {
+                title: 'Accès à l\'eau',
+                data: ({ accessToWater }) => {
+                    if (accessToWater === true) {
+                        return 'oui';
+                    }
+
+                    if (accessToWater === false) {
+                        return 'non';
+                    }
+
+                    return null;
+                },
+                width: COLUMN_WIDTHS.SMALL,
+            },
+            trashEvacuation: {
+                title: 'Évacuation des déchets',
+                data: ({ trashEvacuation }) => {
+                    if (trashEvacuation === true) {
+                        return 'oui';
+                    }
+
+                    if (trashEvacuation === false) {
+                        return 'non';
+                    }
+
+                    return null;
+                },
+                width: COLUMN_WIDTHS.SMALL,
+            },
+            censusStatus: {
+                title: 'Statut du diagnostic social',
+                data: ({ censusStatus }) => {
+                    switch (censusStatus) {
+                    case null: return 'Inconnu';
+                    case 'none': return 'Non prévu';
+                    case 'scheduled': return 'Prévu';
+                    case 'done': return 'Réalisé';
+                    default: return null;
+                    }
+                },
+                width: COLUMN_WIDTHS.SMALL,
+            },
+            censusConductedAt: {
+                title: 'Date du diagnostic',
+                data: ({ censusConductedAt }) => tsToString(censusConductedAt, 'd/m/Y'),
+                width: COLUMN_WIDTHS.SMALL,
+            },
+            censusConductedBy: {
+                title: 'Service en charge du diagnostic',
+                data: ({ censusConductedBy }) => censusConductedBy,
+                width: COLUMN_WIDTHS.SMALL,
+            },
+            ownerComplaint: {
+                title: 'Dépôt de plainte par le propriétaire',
+                data: ({ ownerComplaint }) => {
+                    if (ownerComplaint === true) {
+                        return 'oui';
+                    }
+
+                    if (ownerComplaint === false) {
+                        return 'non';
+                    }
+
+                    return null;
+                },
+                width: COLUMN_WIDTHS.SMALL,
+            },
+            justiceProcedure: {
+                title: 'Existence d\'une procédure judiciaire',
+                data: ({ justiceProcedure }) => {
+                    if (justiceProcedure === true) {
+                        return 'oui';
+                    }
+
+                    if (justiceProcedure === false) {
+                        return 'non';
+                    }
+
+                    return null;
+                },
+                width: COLUMN_WIDTHS.SMALL,
+            },
+            justiceRendered: {
+                title: 'Décision de justice rendue',
+                data: ({ justiceRendered }) => {
+                    if (justiceRendered === true) {
+                        return 'oui';
+                    }
+
+                    if (justiceRendered === false) {
+                        return 'non';
+                    }
+
+                    return null;
+                },
+                width: COLUMN_WIDTHS.SMALL,
+            },
+            justiceRenderedAt: {
+                title: 'Date de la décision',
+                data: ({ justiceRenderedAt }) => tsToString(justiceRenderedAt, 'd/m/Y'),
+                width: COLUMN_WIDTHS.SMALL,
+            },
+            justiceRenderedBy: {
+                title: 'Origine de la décision',
+                data: ({ justiceRenderedBy }) => justiceRenderedBy,
+                width: COLUMN_WIDTHS.MEDIUM,
+            },
+            justiceChallenged: {
+                title: 'Contentieux',
+                data: ({ justiceChallenged }) => {
+                    if (justiceChallenged === true) {
+                        return 'oui';
+                    }
+
+                    if (justiceChallenged === false) {
+                        return 'non';
+                    }
+
+                    return null;
+                },
+                width: COLUMN_WIDTHS.SMALL,
+            },
+            policeStatus: {
+                title: 'Concours de la force publique',
+                data: ({ policeStatus }) => {
+                    switch (policeStatus) {
+                    case null: return 'Inconnu';
+                    case 'none': return 'Non demandé';
+                    case 'requested': return 'Demandé';
+                    case 'granted': return 'Obtenu';
+                    default: return null;
+                    }
+                },
+                width: COLUMN_WIDTHS.SMALL,
+            },
+            policeRequestedAt: {
+                title: 'Date de la demande du CFP',
+                data: ({ policeRequestedAt }) => tsToString(policeRequestedAt, 'd/m/Y'),
+                width: COLUMN_WIDTHS.SMALL,
+            },
+            policeGrantedAt: {
+                title: 'Date d\'octroi du CFP',
+                data: ({ policeGrantedAt }) => tsToString(policeGrantedAt, 'd/m/Y'),
+                width: COLUMN_WIDTHS.SMALL,
+            },
+            bailiff: {
+                title: 'Étude d\'huissiers',
+                data: ({ bailiff }) => bailiff,
+                width: COLUMN_WIDTHS.MEDIUM,
+            },
+            updatedAt: {
+                title: 'Site mis à jour le',
+                data: ({ updatedAt }) => tsToString(updatedAt, 'd/m/Y'),
+                width: COLUMN_WIDTHS.SMALL,
+            },
+        };
+
+        closingSolutions.forEach(({ solutionId }) => {
+            properties[`closingSolution${solutionId}_population`] = {
+                title: 'Nombre de personnes',
+                data: ({ closingSolutions: solutions }) => {
+                    const solution = solutions.find(({ id }) => id === solutionId);
+                    if (solution === undefined) {
+                        return '';
+                    }
+
+                    return solution.peopleAffected;
+                },
+                width: COLUMN_WIDTHS.SMALL,
+                sum: true,
+            };
+            properties[`closingSolution${solutionId}_households`] = {
+                title: 'Nombre de ménages',
+                data: ({ closingSolutions: solutions }) => {
+                    const solution = solutions.find(({ id }) => id === solutionId);
+                    if (solution === undefined) {
+                        return '';
+                    }
+
+                    return solution.householdsAffected;
+                },
+                width: COLUMN_WIDTHS.SMALL,
+                sum: true,
+            };
+        });
+
+        // sections
+        const options = req.query.options ? req.query.options.split(',') : [];
+        const sections = [];
+        if (options.indexOf('priority') !== -1 && !closedTowns) {
+            sections.push({
+                title: null,
+                properties: [
+                    properties.priority,
+                ],
+            });
+        }
+
+        sections.push({
+            title: 'Localisation',
+            properties: [
+                properties.departement,
+                properties.city,
+                properties.address,
+            ],
+            lastFrozen: true,
+        });
+
+        if (options.indexOf('address_details') !== -1 && !closedTowns) {
+            sections.push({
+                title: '',
+                properties: [
+                    properties.addressDetails,
+                ],
+            });
+        }
+
+        let section = {
+            title: 'Site',
+            properties: [
+                properties.fieldType,
+                properties.builtAt,
+                properties.declaredAt,
+            ],
+        };
+
+        if (closedTowns) {
+            section.properties.push(properties.closedAt);
+            section.properties.push(properties.status);
+        }
+
+        if (options.indexOf('owner') !== -1) {
+            section.properties.push(properties.ownerType);
+            section.properties.push(properties.owner);
+        }
+
+        sections.push(section);
+
+        sections.push({
+            title: 'Habitants',
+            properties: [
+                properties.populationTotal,
+                properties.populationCouples,
+                properties.populationMinors,
+                properties.socialOrigins,
+            ],
+        });
+
+        if (options.indexOf('life_conditions') !== -1) {
+            sections.push({
+                title: 'Conditions de vie',
+                properties: [
+                    properties.electricityType,
+                    properties.accessToWater,
+                    properties.trashEvacuation,
+                ],
+            });
+        }
+
+        if (options.indexOf('demographics') !== -1) {
+            section = {
+                title: 'Diagnostic',
+                properties: [
+                    properties.censusConductedAt,
+                    properties.censusConductedBy,
+                ],
+            };
+
+            if (!closedTowns) {
+                section.properties.unshift(properties.censusStatus);
+            }
+
+            sections.push(section);
+        }
+
+        if (options.indexOf('justice') !== -1 && req.user.permissions.shantytown.export.data_justice === true) {
+            sections.push({
+                title: 'Procédure judiciaire',
+                properties: [
+                    properties.ownerComplaint,
+                    properties.justiceProcedure,
+                    properties.justiceRendered,
+                    properties.justiceRenderedAt,
+                    properties.justiceRenderedBy,
+                    properties.justiceChallenged,
+                    properties.policeStatus,
+                    properties.policeRequestedAt,
+                    properties.policeGrantedAt,
+                    properties.bailiff,
+                ],
+            });
+        }
+
+        if (closedTowns === true) {
+            const subSections = [];
+            closingSolutions.forEach(({ solutionId, label }) => {
+                subSections.push({
+                    title: label.split(' (')[0],
+                    properties: [
+                        properties[`closingSolution${solutionId}_population`],
+                        properties[`closingSolution${solutionId}_households`],
+                    ],
+                });
+            });
+
+            sections.push({
+                title: 'Orientation',
+                subsections: subSections,
+            });
+        }
+
+        sections.push({
+            title: null,
+            properties: [
+                properties.updatedAt,
+            ],
+        });
+
+        // EXPORT NOW (FINALLY)
+        let locationName = '';
+        if (location.type === 'nation') {
+            locationName = 'France';
+        } else if (location.type === 'departement' || location.type === 'city') {
+            locationName = `${location.departement.code} - ${location[location.type].name}`;
+        } else {
+            locationName = location[location.type].name;
+        }
+
+        const buffer = await createExport(
+            closedTowns ? 'fermés' : 'existants',
+            locationName,
+            sections,
+            shantytowns,
+        );
+
+        res.attachment(`${dateToString(new Date(), 'Y-m-d')}-sites-${closedTowns ? 'fermés' : 'existants'}-resorption-bidonvilles.xlsx`);
+        return res.end(buffer);
     },
 
 });

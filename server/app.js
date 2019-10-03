@@ -155,6 +155,12 @@ module.exports = (middlewares, controllers) => {
 
     // towns
     app.get(
+        '/towns/export',
+        middlewares.auth.authenticate,
+        (...args) => middlewares.auth.checkPermissions(['shantytown.export'], ...args),
+        controllers.town.export,
+    );
+    app.get(
         '/towns',
         middlewares.auth.authenticate,
         (...args) => middlewares.auth.checkPermissions(['shantytown.list'], ...args),

@@ -10,7 +10,8 @@ class AuthenticateError extends Error {
 
 module.exports = (models) => {
     async function authenticate(req) {
-        const token = req.headers && req.headers['x-access-token'];
+        const token = (req.headers && req.headers['x-access-token']) || req.query.accessToken;
+
         if (!token) {
             throw new AuthenticateError({
                 code: 1,

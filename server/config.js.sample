@@ -1,4 +1,7 @@
+const path = require('path');
+
 const config = {
+    assetsSrc: path.resolve(__dirname, '../assets'),
     frontUrl: 'http://localhost:1234',
     port: 810,
     auth: {

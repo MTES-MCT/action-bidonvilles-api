@@ -129,18 +129,8 @@ function serializeShantytown(town, permission) {
  *
  * @returns {Array.<Object>}
  */
-async function query(database, filters = {}, user, feature) {
-    const filterParts = [];
-    const where = [];
-    Object.keys(filters).forEach((column) => {
-        filterParts.push(`shantytowns.${column} IN (:${column})`);
-    });
-
-    if (filterParts.length > 0) {
-        where.push(filterParts.join(' OR '));
-    }
-
-    const replacements = Object.assign({}, filters);
+async function query(database, where = [], user, feature) {
+    const replacements = {};
 
     const featureLevel = user.permissions.shantytown[feature].geographic_level;
     const userLevel = user.organization.location.type;
@@ -150,9 +140,22 @@ async function query(database, filters = {}, user, feature) {
             return [];
         }
 
-        where.push(`${fromGeoLevelToTableName(level)}.code = :locationCode`);
-        replacements.locationCode = user.organization.location[level].code;
+        where.push({
+            location: {
+                query: `${fromGeoLevelToTableName(level)}.code`,
+                value: user.organization.location[level].code,
+            },
+        });
     }
+
+    const whereClause = where.map((clauses, index) => {
+        const clauseGroup = Object.keys(clauses).map((column) => {
+            replacements[`${column}${index}`] = clauses[column].value || clauses[column];
+            return `${clauses[column].query || `shantytowns.${column}`} ${clauses[column].not ? 'NOT ' : ''}IN (:${column}${index})`;
+        }).join(' OR ');
+
+        return `(${clauseGroup})`;
+    }).join(' AND ');
 
     const towns = await database.query(
         `SELECT
@@ -217,7 +220,7 @@ async function query(database, filters = {}, user, feature) {
         LEFT JOIN epci ON cities.fk_epci = epci.code
         LEFT JOIN departements ON cities.fk_departement = departements.code
         LEFT JOIN regions ON departements.fk_region = regions.code
-        ${where.length > 0 ? `WHERE (${where.join(') AND (')})` : ''}
+        ${where.length > 0 ? `WHERE ${whereClause}` : ''}
         ORDER BY departements.code ASC, cities.name ASC`,
         {
             type: database.QueryTypes.SELECT,
@@ -349,10 +352,15 @@ async function query(database, filters = {}, user, feature) {
 }
 
 module.exports = database => ({
-    findAll: (user, filters = []) => query(database, filters, user, 'list'),
+    findAll: (user, filters = [], feature = 'list') => query(database, filters, user, feature),
 
     findOne: async (user, shantytownId) => {
-        const towns = await query(database, { shantytown_id: [shantytownId] }, user, 'read');
+        const towns = await query(
+            database,
+            [{ shantytown_id: shantytownId }],
+            user,
+            'read',
+        );
         return towns.length === 1 ? towns[0] : null;
     },
 
