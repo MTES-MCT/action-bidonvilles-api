@@ -9,47 +9,7 @@ function trim(str) {
     return str.replace(/^\s*|\s*$/g, '');
 }
 
-function generateSearch(table) {
-    const map = {
-        cities: {
-            label: 'Commune',
-            type: 'city',
-        },
-        epci: {
-            label: 'Intercommunalité',
-            type: 'epci',
-        },
-        departements: {
-            label: 'Département',
-            type: 'departement',
-        },
-        regions: {
-            label: 'Région',
-            type: 'region',
-        },
-    };
-
-    return `
-    SELECT
-        '${map[table].label}' AS "label",
-        '${map[table].type}' AS "type",
-        code,
-        name
-    FROM
-        ${table}
-    WHERE
-        REPLACE(name, '-', ' ') ILIKE REPLACE(?, '-', ' ')
-        ${table === 'cities' ? 'AND fk_main IS NULL' : ''}
-    ORDER BY
-        CASE
-            WHEN REPLACE(name, '-', ' ') ILIKE REPLACE(?, '-', ' ') THEN 1
-            ELSE 2
-        END,
-        name ASC
-    LIMIT 2`;
-}
-
-module.exports = () => ({
+module.exports = models => ({
     async searchCities(req, res) {
         const { query: { q } } = url.parse(req.url, true);
 
@@ -163,23 +123,7 @@ module.exports = () => ({
         }
 
         try {
-            const results = await sequelize.query(
-                `(${generateSearch('cities')}) UNION (${generateSearch('epci')}) UNION (${generateSearch('departements')}) UNION (${generateSearch('regions')}) ORDER BY "type" DESC`,
-                {
-                    replacements: [
-                        `%${query}%`,
-                        `${query}%`,
-                        `%${query}%`,
-                        `${query}%`,
-                        `%${query}%`,
-                        `${query}%`,
-                        `%${query}%`,
-                        `${query}%`,
-                    ],
-                    type: sequelize.QueryTypes.SELECT,
-                },
-            );
-
+            const results = await models.geo.search(query);
             return res.status(200).send(results);
         } catch (error) {
             return res.status(500).send({

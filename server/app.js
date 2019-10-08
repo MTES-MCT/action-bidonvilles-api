@@ -24,6 +24,13 @@ module.exports = (middlewares, controllers) => {
         controllers.config.list,
     );
 
+    // directory
+    app.get(
+        '/directory',
+        middlewares.auth.authenticate,
+        controllers.directory.list,
+    );
+
     // user
     app.get(
         '/users',
@@ -236,6 +243,11 @@ module.exports = (middlewares, controllers) => {
     );
 
     // organizations
+    app.get(
+        '/organizations/search',
+        middlewares.auth.authenticate,
+        controllers.organization.search,
+    );
     app.get(
         '/organization-categories',
         controllers.organization.categories,

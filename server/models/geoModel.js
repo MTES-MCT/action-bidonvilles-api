@@ -1,3 +1,43 @@
+function generateSearch(table) {
+    const map = {
+        cities: {
+            label: 'Commune',
+            type: 'city',
+        },
+        epci: {
+            label: 'Intercommunalité',
+            type: 'epci',
+        },
+        departements: {
+            label: 'Département',
+            type: 'departement',
+        },
+        regions: {
+            label: 'Région',
+            type: 'region',
+        },
+    };
+
+    return `
+    SELECT
+        '${map[table].label}' AS "label",
+        '${map[table].type}' AS "type",
+        code,
+        name
+    FROM
+        ${table}
+    WHERE
+        REPLACE(name, '-', ' ') ILIKE REPLACE(?, '-', ' ')
+        ${table === 'cities' ? 'AND fk_main IS NULL' : ''}
+    ORDER BY
+        CASE
+            WHEN REPLACE(name, '-', ' ') ILIKE REPLACE(?, '-', ' ') THEN 1
+            ELSE 2
+        END,
+        name ASC
+    LIMIT 2`;
+}
+
 module.exports = (database) => {
     const methods = {
         nation: () => ({
@@ -140,5 +180,21 @@ module.exports = (database) => {
 
     return {
         getLocation: (type, code) => methods[type](code),
+        search: query => database.query(
+            `(${generateSearch('cities')}) UNION (${generateSearch('epci')}) UNION (${generateSearch('departements')}) UNION (${generateSearch('regions')}) ORDER BY "type" DESC`,
+            {
+                replacements: [
+                    `%${query}%`,
+                    `${query}%`,
+                    `%${query}%`,
+                    `${query}%`,
+                    `%${query}%`,
+                    `${query}%`,
+                    `%${query}%`,
+                    `${query}%`,
+                ],
+                type: database.QueryTypes.SELECT,
+            },
+        ),
     };
 };
