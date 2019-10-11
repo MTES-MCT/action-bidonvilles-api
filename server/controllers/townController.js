@@ -1569,7 +1569,7 @@ module.exports = models => ({
                 width: COLUMN_WIDTHS.SMALL,
             },
             bailiff: {
-                title: 'Étude d\'huissiers',
+                title: 'Nom de l\'étude d\'huissiers',
                 data: ({ bailiff }) => bailiff,
                 width: COLUMN_WIDTHS.MEDIUM,
             },

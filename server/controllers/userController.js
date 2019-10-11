@@ -1,5 +1,6 @@
 const validator = require('validator');
 const { sequelize } = require('#db/models');
+const semver = require('semver');
 
 const {
     generateAccessTokenFor, hashPassword, generateSalt, getAccountActivationLink,
@@ -383,7 +384,7 @@ module.exports = (models) => {
             }
         },
 
-        newAssociationAbbreviation() {},
+        newAssociationAbbreviation() { },
 
         async departement(data) {
             if (data.departement === null) {
@@ -668,7 +669,10 @@ module.exports = (models) => {
          * Returns information about... yourself!
          */
         async me(req, res) {
-            return res.status(200).send(req.user);
+            const user = await models.user.findOne(req.user.id, {
+                extended: true,
+            });
+            return res.status(200).send(user);
         },
 
         /**
@@ -1439,6 +1443,35 @@ module.exports = (models) => {
                         },
                     });
                 }
+            }
+
+            return res.status(200).send({});
+        },
+
+        async setLastChangelog(req, res) {
+            const changelog = semver.valid(req.body.version);
+            if (changelog === null) {
+                return res.status(400).send({
+                    error: {
+                        user_message: 'Le numéro de version passé en paramètre est invalide',
+                    },
+                });
+            }
+
+            if (semver.gte(req.user.last_changelog, changelog)) {
+                return res.status(200).send({});
+            }
+
+            try {
+                await models.user.update(req.user.id, {
+                    last_changelog: changelog,
+                });
+            } catch (error) {
+                return res.status(500).send({
+                    error: {
+                        user_message: 'Une erreur est survenue lors de l\'écriture en base de données',
+                    },
+                });
             }
 
             return res.status(200).send({});

@@ -15,6 +15,8 @@ module.exports = models => ({
             plan_types: models.planType.findAll(),
             electricity_types: models.electricityType.findAll(),
             permissions_description: permissionsDescription,
+            user: models.user.findOne(req.user.id, { extended: true }),
+            changelog: models.changelog.getLastChangelogFor(req.user),
         };
 
         const promises = Object.values(queries);
@@ -23,7 +25,6 @@ module.exports = models => ({
         return Promise.all(promises)
             .then((results) => {
                 const response = {
-                    user: req.user,
                     activation_token_expires_in: parseInt(activationTokenExpiresIn, 10) * 3600,
                 };
                 names.forEach((name, index) => {

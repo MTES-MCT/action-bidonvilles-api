@@ -15,19 +15,36 @@ module.exports = (middlewares, controllers) => {
     );
     app.get(
         '/refreshToken',
-        middlewares.auth.authenticate,
+        [
+            middlewares.auth.authenticate,
+            middlewares.appVersion.sync,
+        ],
         controllers.user.renewToken,
     );
     app.get(
         '/config',
-        middlewares.auth.authenticate,
+        [
+            middlewares.auth.authenticate,
+            middlewares.appVersion.sync,
+        ],
         controllers.config.list,
+    );
+    app.post(
+        '/changelog',
+        [
+            middlewares.auth.authenticate,
+            middlewares.appVersion.sync,
+        ],
+        controllers.user.setLastChangelog,
     );
 
     // directory
     app.get(
         '/directory',
-        middlewares.auth.authenticate,
+        [
+            middlewares.auth.authenticate,
+            middlewares.appVersion.sync,
+        ],
         controllers.directory.list,
     );
 
@@ -37,12 +54,16 @@ module.exports = (middlewares, controllers) => {
         [
             middlewares.auth.authenticate,
             (...args) => middlewares.auth.checkPermissions(['user.list'], ...args),
+            middlewares.appVersion.sync,
         ],
         controllers.user.list,
     );
     app.get(
         '/me',
-        middlewares.auth.authenticate,
+        [
+            middlewares.auth.authenticate,
+            middlewares.appVersion.sync,
+        ],
         controllers.user.me,
     );
     app.get(
@@ -50,17 +71,24 @@ module.exports = (middlewares, controllers) => {
         [
             middlewares.auth.authenticate,
             (...args) => middlewares.auth.checkPermissions(['user.read'], ...args),
+            middlewares.appVersion.sync,
         ],
         controllers.user.get,
     );
     app.post(
         '/me',
-        middlewares.auth.authenticate,
+        [
+            middlewares.auth.authenticate,
+            middlewares.appVersion.sync,
+        ],
         controllers.user.edit,
     );
     app.post(
         '/me/default-export',
-        middlewares.auth.authenticate,
+        [
+            middlewares.auth.authenticate,
+            middlewares.appVersion.sync,
+        ],
         controllers.user.setDefaultExport,
     );
     app.post(
@@ -68,22 +96,27 @@ module.exports = (middlewares, controllers) => {
         async (...args) => {
             try {
                 await middlewares.auth.authenticate(...args, false);
-                return controllers.user.create(...args);
             } catch (error) {
+                await middlewares.appVersion.sync(...args);
                 return controllers.user.signup(...args);
             }
+
+            await middlewares.appVersion.sync(...args);
+            return controllers.user.create(...args);
         },
     );
     app.post(
         '/users/:id/sendActivationLink',
         middlewares.auth.authenticate,
         (...args) => middlewares.auth.checkPermissions(['user.activate'], ...args),
+        middlewares.appVersion.sync,
         controllers.user.sendActivationLink,
     );
     app.post(
         '/users/:id/denyAccess',
         middlewares.auth.authenticate,
         (...args) => middlewares.auth.checkPermissions(['user.activate'], ...args),
+        middlewares.appVersion.sync,
         controllers.user.denyAccess,
     );
     app.post(
@@ -93,6 +126,7 @@ module.exports = (middlewares, controllers) => {
     app.post(
         '/users/:id/upgrade',
         middlewares.auth.authenticate,
+        middlewares.appVersion.sync,
         controllers.user.upgrade,
     );
     app.get(
@@ -103,6 +137,7 @@ module.exports = (middlewares, controllers) => {
         '/users/:id',
         middlewares.auth.authenticate,
         (...args) => middlewares.auth.checkPermissions(['user.deactivate'], ...args),
+        middlewares.appVersion.sync,
         controllers.user.remove,
     );
     app.post(
@@ -123,18 +158,21 @@ module.exports = (middlewares, controllers) => {
         '/plans',
         middlewares.auth.authenticate,
         (...args) => middlewares.auth.checkPermissions(['plan.list'], ...args),
+        middlewares.appVersion.sync,
         controllers.plan.list,
     );
     app.get(
         '/plans/:id',
         middlewares.auth.authenticate,
         (...args) => middlewares.auth.checkPermissions(['plan.read'], ...args),
+        middlewares.appVersion.sync,
         controllers.plan.find,
     );
     app.delete(
         '/plans/:id',
         middlewares.auth.authenticate,
         (...args) => middlewares.auth.checkPermissions(['plan.delete'], ...args),
+        middlewares.appVersion.sync,
         controllers.plan.delete,
     );
     app.post(
@@ -142,6 +180,7 @@ module.exports = (middlewares, controllers) => {
         [
             middlewares.auth.authenticate,
             (...args) => middlewares.auth.checkPermissions(['plan.create'], ...args),
+            middlewares.appVersion.sync,
         ],
         controllers.plan.create,
     );
@@ -149,6 +188,7 @@ module.exports = (middlewares, controllers) => {
         '/plans/:id/towns',
         middlewares.auth.authenticate,
         (...args) => middlewares.auth.checkPermissions(['shantytown.create'], ...args),
+        middlewares.appVersion.sync,
         controllers.plan.link,
     );
     app.post(
@@ -156,6 +196,7 @@ module.exports = (middlewares, controllers) => {
         [
             middlewares.auth.authenticate,
             (...args) => middlewares.auth.checkPermissions(['plan.update'], ...args),
+            middlewares.appVersion.sync,
         ],
         controllers.plan.updateDetails,
     );
@@ -165,18 +206,21 @@ module.exports = (middlewares, controllers) => {
         '/towns/export',
         middlewares.auth.authenticate,
         (...args) => middlewares.auth.checkPermissions(['shantytown.export'], ...args),
+        middlewares.appVersion.sync,
         controllers.town.export,
     );
     app.get(
         '/towns',
         middlewares.auth.authenticate,
         (...args) => middlewares.auth.checkPermissions(['shantytown.list'], ...args),
+        middlewares.appVersion.sync,
         controllers.town.list,
     );
     app.get(
         '/towns/:id',
         middlewares.auth.authenticate,
         (...args) => middlewares.auth.checkPermissions(['shantytown.read'], ...args),
+        middlewares.appVersion.sync,
         controllers.town.find,
     );
     app.post(
@@ -184,6 +228,7 @@ module.exports = (middlewares, controllers) => {
         [
             middlewares.auth.authenticate,
             (...args) => middlewares.auth.checkPermissions(['shantytown.create'], ...args),
+            middlewares.appVersion.sync,
         ],
         controllers.town.add,
     );
@@ -192,6 +237,7 @@ module.exports = (middlewares, controllers) => {
         [
             middlewares.auth.authenticate,
             (...args) => middlewares.auth.checkPermissions(['shantytown.update'], ...args),
+            middlewares.appVersion.sync,
         ],
         controllers.town.edit,
     );
@@ -200,6 +246,7 @@ module.exports = (middlewares, controllers) => {
         [
             middlewares.auth.authenticate,
             (...args) => middlewares.auth.checkPermissions(['shantytown.close'], ...args),
+            middlewares.appVersion.sync,
         ],
         controllers.town.close,
     );
@@ -208,6 +255,7 @@ module.exports = (middlewares, controllers) => {
         [
             middlewares.auth.authenticate,
             (...args) => middlewares.auth.checkPermissions(['shantytown.delete'], ...args),
+            middlewares.appVersion.sync,
         ],
         controllers.town.delete,
     );
@@ -216,6 +264,7 @@ module.exports = (middlewares, controllers) => {
         [
             middlewares.auth.authenticate,
             (...args) => middlewares.auth.checkPermissions(['shantytown_comment.create'], ...args),
+            middlewares.appVersion.sync,
         ],
         controllers.town.addComment,
     );
@@ -223,6 +272,7 @@ module.exports = (middlewares, controllers) => {
         '/towns/:id/comments/:commentId',
         [
             middlewares.auth.authenticate,
+            middlewares.appVersion.sync,
         ],
         controllers.town.updateComment,
     );
@@ -230,6 +280,7 @@ module.exports = (middlewares, controllers) => {
         '/towns/:id/comments/:commentId',
         [
             middlewares.auth.authenticate,
+            middlewares.appVersion.sync,
         ],
         controllers.town.deleteComment,
     );
@@ -238,6 +289,7 @@ module.exports = (middlewares, controllers) => {
         [
             middlewares.auth.authenticate,
             (...args) => middlewares.auth.checkPermissions(['shantytown_comment.moderate'], ...args),
+            middlewares.appVersion.sync,
         ],
         controllers.town.getAllComments,
     );
@@ -246,6 +298,7 @@ module.exports = (middlewares, controllers) => {
     app.get(
         '/organizations/search',
         middlewares.auth.authenticate,
+        middlewares.appVersion.sync,
         controllers.organization.search,
     );
     app.get(
@@ -276,11 +329,13 @@ module.exports = (middlewares, controllers) => {
     app.get(
         '/cities/search',
         middlewares.auth.authenticate,
+        middlewares.appVersion.sync,
         controllers.geo.searchCities,
     );
     app.get(
         '/epci/search',
         middlewares.auth.authenticate,
+        middlewares.appVersion.sync,
         controllers.geo.searchEpci,
     );
     app.get(
@@ -294,6 +349,7 @@ module.exports = (middlewares, controllers) => {
         [
             middlewares.auth.authenticate,
             (...args) => middlewares.auth.checkPermissions(['stats.read'], ...args),
+            middlewares.appVersion.sync,
         ],
         controllers.stats.all,
     );

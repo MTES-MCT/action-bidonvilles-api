@@ -5,6 +5,7 @@ const { activationTokenExpiresIn } = require('#server/config');
  * @typedef {Object} UserFilters
  * @property {Boolean} [extended=false] Whether extended data should be returned or not
  * @property {Boolean} [auth=false]     Whether auth data should be returned or not
+ * @property {Boolean} [app=false]      Whether app version data should be returned or not
  *
  * Please find below the details about each filter:
  * - extended data is any data useful for the logged in user only. Typically, data that you
@@ -172,6 +173,13 @@ function serializeUser(user, filters, permissionMap) {
         });
     }
 
+    if (filters.app === true) {
+        Object.assign(serialized, {
+            last_version: user.last_version,
+            last_changelog: user.last_changelog,
+        });
+    }
+
     return serialized;
 }
 
@@ -239,6 +247,8 @@ module.exports = (database) => {
                 users.activated_on,
                 users.default_export,
                 users.created_at,
+                users.last_version,
+                users.last_changelog,
                 CASE WHEN users.fk_role IS NULL THEN FALSE
                     ELSE TRUE
                 END AS is_admin,
@@ -472,7 +482,7 @@ module.exports = (database) => {
 
             const allowedProperties = [
                 'first_name', 'last_name', 'position', 'phone', 'password', 'defaultExport', 'fk_status', 'last_activation_link_sent_on',
-                'activated_by', 'activated_on',
+                'activated_by', 'activated_on', 'last_version', 'last_changelog',
             ];
             const propertiesToColumns = {
                 first_name: 'first_name',
@@ -485,6 +495,8 @@ module.exports = (database) => {
                 last_activation_link_sent_on: 'last_activation_link_sent_on',
                 activated_by: 'activated_by',
                 activated_on: 'activated_on',
+                last_version: 'last_version',
+                last_changelog: 'last_changelog',
             };
             const setClauses = [];
             const replacements = {};

@@ -33,6 +33,7 @@ module.exports = (models) => {
 
         const user = await models.user.findOne(decoded.userId, {
             extended: true,
+            app: true,
         });
         if (user === null) {
             throw new AuthenticateError({
