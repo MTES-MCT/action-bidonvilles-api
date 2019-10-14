@@ -206,7 +206,6 @@ module.exports = (middlewares, controllers) => {
         '/towns/export',
         middlewares.auth.authenticate,
         (...args) => middlewares.auth.checkPermissions(['shantytown.export'], ...args),
-        middlewares.appVersion.sync,
         controllers.town.export,
     );
     app.get(
