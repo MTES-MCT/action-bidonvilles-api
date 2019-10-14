@@ -35,7 +35,7 @@ function generateSearch(table) {
             ELSE 2
         END,
         name ASC
-    LIMIT 2`;
+    LIMIT 4`;
 }
 
 module.exports = (database) => {
