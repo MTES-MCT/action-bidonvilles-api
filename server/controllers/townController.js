@@ -1202,9 +1202,9 @@ module.exports = models => ({
                 return true;
             }
 
-            return user.organization.location[location.type]
-                && location[location.type]
-                && user.organization.location[location.type].code === location[location.type].code;
+            return location[user.organization.location.type]
+                && user.organization.location[user.organization.location.type]
+                && user.organization.location[user.organization.location.type].code === location[user.organization.location.type].code;
         }
 
         if (!Object.prototype.hasOwnProperty.call(req.query, 'locationType')
