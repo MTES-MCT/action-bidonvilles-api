@@ -97,7 +97,6 @@ module.exports = (middlewares, controllers) => {
             try {
                 await middlewares.auth.authenticate(...args, false);
             } catch (error) {
-                await middlewares.appVersion.sync(...args);
                 return controllers.user.signup(...args);
             }
 
