@@ -3,7 +3,7 @@ const semver = require('semver');
 module.exports = (models) => {
     const appVersionMiddleware = {};
 
-    appVersionMiddleware.sync = async (req, res, next) => {
+    appVersionMiddleware.sync = async (req, res, next, respond = true) => {
         const version = req.headers && req.headers['x-app-version'];
 
         if (semver.lt(req.user.last_version, version)) {
@@ -17,7 +17,9 @@ module.exports = (models) => {
             }
         }
 
-        next();
+        if (respond === true) {
+            next();
+        }
     };
 
     return appVersionMiddleware;

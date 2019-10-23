@@ -100,7 +100,7 @@ module.exports = (middlewares, controllers) => {
                 return controllers.user.signup(...args);
             }
 
-            await middlewares.appVersion.sync(...args);
+            await middlewares.appVersion.sync(...args, false);
             return controllers.user.create(...args);
         },
     );
