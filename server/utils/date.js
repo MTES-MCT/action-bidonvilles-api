@@ -26,11 +26,11 @@ function toString(date, showHours = false) {
 function toFormat(date, format) {
     return format
         .replace(/d/g, `${date.getDate()}`.padStart(2, '0'))
-        .replace(/m/g, `${date.getMonth() + 1}`.padStart(2, '0'))
-        .replace(/M/g, MONTHS[date.getMonth()])
         .replace(/Y/g, date.getFullYear())
+        .replace(/m/g, `${date.getMonth() + 1}`.padStart(2, '0'))
         .replace(/h/g, `${date.getHours()}`.padStart(2, '0'))
-        .replace(/m/g, `${date.getMinutes()}`.padStart(2, '0'));
+        .replace(/i/g, `${date.getMinutes()}`.padStart(2, '0'))
+        .replace(/M/g, MONTHS[date.getMonth()]);
 }
 
 function fromTsToFormat(ts, format) {
