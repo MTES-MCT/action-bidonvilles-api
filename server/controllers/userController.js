@@ -1458,7 +1458,7 @@ module.exports = (models) => {
                 });
             }
 
-            if (semver.gte(req.user.last_changelog, changelog)) {
+            if (req.user.last_changelog !== null && semver.gte(req.user.last_changelog, changelog)) {
                 return res.status(200).send({});
             }
 

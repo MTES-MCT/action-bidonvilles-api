@@ -6,7 +6,7 @@ module.exports = (models) => {
     appVersionMiddleware.sync = async (req, res, next, respond = true) => {
         const version = req.headers && req.headers['x-app-version'];
 
-        if (semver.lt(req.user.last_version, version)) {
+        if (req.user.last_version === null || semver.lt(req.user.last_version, version)) {
             try {
                 await models.user.update(req.user.id, {
                     last_version: version,
