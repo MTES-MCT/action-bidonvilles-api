@@ -84,7 +84,8 @@ module.exports = models => ({
                     numberOfNewUsersLastMonth,
                     numberOfCollaboratorAndAssociationUsers,
                     numberOfCollaboratorAndAssociationOrganizations,
-                    numberOfShantytownOperations: Object.values(numberOfShantytownOperations).reduce((sum, { total }) => sum + parseInt(total, 10), 0),
+                    numberOfShantytownOperations: Object.values(numberOfShantytownOperations)
+                        .reduce((sum, { rows }) => sum + rows.reduce((subtotal, { total }) => subtotal + parseInt(total, 10), 0), 0),
                     numberOfExports,
                     numberOfComments,
                     numberOfDirectoryViews,
