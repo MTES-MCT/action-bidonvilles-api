@@ -1,92 +1,96 @@
-const { sequelize } = require('#db/models');
-
-module.exports = () => ({
+module.exports = models => ({
     all: async (req, res) => {
-        const [creations, editions, closures] = await Promise.all([
-            sequelize.query(
-                `SELECT
-                    COUNT(*) AS total,
-                    departements.code,
-                    departements.name
-                FROM shantytowns
-                LEFT JOIN users ON shantytowns.created_by = users.user_id
-                LEFT JOIN cities ON shantytowns.fk_city = cities.code
-                LEFT JOIN departements ON cities.fk_departement = departements.code
-                WHERE
-                    users.email NOT LIKE '%dihal%'
-                    AND
-                    users.email NOT LIKE '%beta.gouv%'
-                    AND
-                    users.email <> 'sophie.jacquemont@developpement-durable.gouv.fr'
-                    AND
-                    users.email <> 'dubuc.laure@gmail.com'
-                GROUP BY departements.code, departements.name
-                ORDER BY departements.code ASC`,
-                {
-                    type: sequelize.QueryTypes.SELECT,
-                },
-            ),
-            sequelize.query(
-                `SELECT
-                    COUNT(*) AS total,
-                    departements.code,
-                    departements.name
-                FROM (
-                    SELECT shantytown_id, fk_city, created_by, created_at, updated_by, updated_at FROM "shantytowns" WHERE updated_at <> created_at
-                    UNION
-                    SELECT shantytown_id, fk_city, created_by, created_at, updated_by, updated_at FROM "ShantytownHistories" WHERE updated_at <> created_at
-                ) AS "towns"
-                LEFT JOIN users ON towns.updated_by = users.user_id
-                LEFT JOIN cities ON towns.fk_city = cities.code
-                LEFT JOIN departements ON cities.fk_departement = departements.code
-                WHERE
-                    users.email NOT LIKE '%dihal%'
-                    AND
-                    users.email NOT LIKE '%beta.gouv%'
-                    AND
-                    users.email <> 'sophie.jacquemont@developpement-durable.gouv.fr'
-                    AND
-                    users.email <> 'dubuc.laure@gmail.com'
-                GROUP BY departements.code, departements.name
-                ORDER BY departements.code ASC`,
-                {
-                    type: sequelize.QueryTypes.SELECT,
-                },
-            ),
-            sequelize.query(
-                `SELECT
-                    COUNT(*) AS total,
-                    departements.code,
-                    departements.name
-                FROM shantytowns
-                LEFT JOIN users ON shantytowns.updated_by = users.user_id
-                LEFT JOIN cities ON shantytowns.fk_city = cities.code
-                LEFT JOIN departements ON cities.fk_departement = departements.code
-                WHERE
-                    users.email NOT LIKE '%dihal%'
-                    AND
-                    users.email NOT LIKE '%beta.gouv%'
-                    AND
-                    users.email <> 'sophie.jacquemont@developpement-durable.gouv.fr'
-                    AND
-                    users.email <> 'dubuc.laure@gmail.com'
-                    AND
-                    shantytowns.closed_at IS NOT NULL
-                GROUP BY departements.code, departements.name
-                ORDER BY departements.code ASC`,
-                {
-                    type: sequelize.QueryTypes.SELECT,
-                },
-            ),
+        const [
+            numberOfDepartements,
+            numberOfActiveUsers,
+            numberOfCollaboratorAndAssociationUsers,
+            numberOfCollaboratorAndAssociationOrganizations,
+            numberOfShantytownOperations,
+            numberOfExports,
+            numberOfComments,
+            numberOfDirectoryViews,
+            meanTimeBeforeCreationDeclaration,
+            meanTimeBeforeClosingDeclaration,
+            numberOfReviewedComments,
+        ] = await Promise.all([
+            models.stats.numberOfDepartements(),
+            models.stats.numberOfActiveUsers(),
+            models.stats.numberOfCollaboratorAndAssociationUsers(),
+            models.stats.numberOfCollaboratorAndAssociationOrganizations(),
+            models.stats.numberOfShantytownOperations(),
+            models.stats.numberOfExports(),
+            models.stats.numberOfComments(),
+            models.stats.numberOfDirectoryViews(),
+            models.stats.meanTimeBeforeCreationDeclaration(),
+            models.stats.meanTimeBeforeClosingDeclaration(),
+            models.stats.numberOfReviewedComments(),
         ]);
 
         return res.status(200).send({
             success: true,
             response: {
                 statistics: {
-                    created: creations,
-                    updated: editions,
-                    closed: closures,
+                    numberOfDepartements,
+                    numberOfActiveUsers,
+                    numberOfCollaboratorAndAssociationUsers,
+                    numberOfCollaboratorAndAssociationOrganizations,
+                    numberOfShantytownOperations,
+                    numberOfExports,
+                    numberOfComments,
+                    numberOfDirectoryViews,
+                    meanTimeBeforeCreationDeclaration,
+                    meanTimeBeforeClosingDeclaration,
+                    numberOfReviewedComments,
+                },
+            },
+        });
+    },
+
+    public: async (req, res) => {
+        const [
+            numberOfDepartements,
+            numberOfActiveUsers,
+            numberOfNewUsersLastMonth,
+            numberOfCollaboratorAndAssociationUsers,
+            numberOfCollaboratorAndAssociationOrganizations,
+            numberOfShantytownOperations,
+            numberOfExports,
+            numberOfComments,
+            numberOfDirectoryViews,
+            meanTimeBeforeCreationDeclaration,
+            meanTimeBeforeClosingDeclaration,
+            numberOfReviewedComments,
+        ] = await Promise.all([
+            models.stats.numberOfDepartements(),
+            models.stats.numberOfActiveUsers(),
+            models.stats.numberOfNewUsersLastMonth(),
+            models.stats.numberOfCollaboratorAndAssociationUsers(),
+            models.stats.numberOfCollaboratorAndAssociationOrganizations(),
+            models.stats.numberOfShantytownOperations(),
+            models.stats.numberOfExports(),
+            models.stats.numberOfComments(),
+            models.stats.numberOfDirectoryViews(),
+            models.stats.meanTimeBeforeCreationDeclaration(),
+            models.stats.meanTimeBeforeClosingDeclaration(),
+            models.stats.numberOfReviewedComments(),
+        ]);
+
+        return res.status(200).send({
+            success: true,
+            response: {
+                statistics: {
+                    numberOfDepartements,
+                    numberOfActiveUsers,
+                    numberOfNewUsersLastMonth,
+                    numberOfCollaboratorAndAssociationUsers,
+                    numberOfCollaboratorAndAssociationOrganizations,
+                    numberOfShantytownOperations: Object.values(numberOfShantytownOperations).reduce((sum, { total }) => sum + parseInt(total, 10), 0),
+                    numberOfExports,
+                    numberOfComments,
+                    numberOfDirectoryViews,
+                    meanTimeBeforeCreationDeclaration,
+                    meanTimeBeforeClosingDeclaration,
+                    numberOfReviewedComments,
                 },
             },
         });

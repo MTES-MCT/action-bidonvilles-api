@@ -84,7 +84,7 @@ module.exports = (models) => {
         }
     };
 
-    authMiddleware.checkPermissions = (requiredPermissions, req, res, next) => {
+    authMiddleware.checkPermissions = (requiredPermissions, req, res, next, respond = true) => {
         if (!req.user || !req.user.permissions || !requiredPermissions) {
             res.status(500).send({
                 error: {
@@ -93,6 +93,11 @@ module.exports = (models) => {
                     developer_message: 'Tried to access a secured page without authentication',
                 },
             });
+
+            if (respond !== true) {
+                throw new Error('');
+            }
+
             return;
         }
 
@@ -104,10 +109,17 @@ module.exports = (models) => {
                     developer_message: 'Tried to access a secured page without all required permissions',
                 },
             });
+
+            if (respond !== true) {
+                throw new Error('');
+            }
+
             return;
         }
 
-        next();
+        if (respond === true) {
+            next();
+        }
     };
 
     return authMiddleware;

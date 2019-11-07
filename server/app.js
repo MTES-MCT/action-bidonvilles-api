@@ -344,12 +344,22 @@ module.exports = (middlewares, controllers) => {
     // stats
     app.get(
         '/stats',
-        [
-            middlewares.auth.authenticate,
-            (...args) => middlewares.auth.checkPermissions(['stats.read'], ...args),
-            middlewares.appVersion.sync,
-        ],
-        controllers.stats.all,
+        async (...args) => {
+            try {
+                await middlewares.auth.authenticate(...args, false);
+            } catch (error) {
+                return controllers.stats.public(...args);
+            }
+
+            try {
+                middlewares.auth.checkPermissions(['stats.read'], ...args, false);
+            } catch (error) {
+                return undefined;
+            }
+
+            await middlewares.appVersion.sync(...args, false);
+            return controllers.stats.all(...args);
+        },
     );
 
     // user activities
