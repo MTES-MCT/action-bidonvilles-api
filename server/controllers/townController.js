@@ -5,6 +5,9 @@ const ShantyTownComments = require('#db/models').ShantytownComment;
 const { ClosingSolution } = require('#db/models');
 const { fromTsToFormat: tsToString, toFormat: dateToString } = require('#server/utils/date');
 const { createExport } = require('#server/utils/excel');
+const validator = require('validator');
+const { send: sendMail } = require('#server/utils/mail');
+const COMMENT_DELETION_MAIL = require('#server/mails/comment_deletion.js');
 
 function fromGeoLevelToTableName(geoLevel) {
     switch (geoLevel) {
@@ -1111,13 +1114,10 @@ module.exports = models => ({
     },
 
     async deleteComment(req, res) {
-        let comment;
+        let town;
+
         try {
-            comment = await ShantyTownComments.findOne({
-                where: {
-                    shantytown_comment_id: req.params.commentId,
-                },
-            });
+            town = await models.shantytown.findOne(req.user, req.params.id);
         } catch (error) {
             return res.status(500).send({
                 error: {
@@ -1127,11 +1127,43 @@ module.exports = models => ({
             });
         }
 
-        if (comment.createdBy !== req.user.id && !hasPermission(req.user, 'moderate', 'shantytown_comment')) {
+        const comment = town.comments.find(({ id }) => id === parseInt(req.params.commentId, 10));
+        if (comment === undefined) {
+            return res.status(404).send({
+                error: {
+                    developer_message: 'The comment to be deleted does not exist',
+                    user_message: 'Le commentaire à supprimer n\'a pas été retrouvé en base de données',
+                },
+            });
+        }
+
+        let author;
+        try {
+            author = await models.user.findOne(comment.createdBy.id);
+        } catch (error) {
+            return res.status(500).send({
+                error: {
+                    developer_message: 'Failed to retrieve the author of the comment',
+                    user_message: 'Une erreur est survenue lors de la lecture en base de données',
+                },
+            });
+        }
+
+        if (author.id !== req.user.id && !hasPermission(req.user, 'moderate', 'shantytown_comment')) {
             return res.status(400).send({
                 error: {
                     user_message: 'Vous n\'avez pas accès à ces données',
                     developer_message: 'Tried to access a secured page without authentication',
+                },
+            });
+        }
+
+        const message = validator.trim(req.body.message || '');
+        if (message === '') {
+            return res.status(400).send({
+                error: {
+                    user_message: 'Vous devez préciser le motif de suppression du commentaire',
+                    developer_message: 'Message is missing',
                 },
             });
         }
@@ -1145,35 +1177,6 @@ module.exports = models => ({
                     },
                 },
             );
-
-            const rawComments = await sequelize.query(
-                `SELECT
-                    shantytown_comments.shantytown_comment_id AS "commentId",
-                    shantytown_comments.fk_shantytown AS "shantytownId",
-                    shantytown_comments.description AS "commentDescription",
-                    shantytown_comments.created_at AS "commentCreatedAt",
-                    shantytown_comments.created_by AS "commentCreatedBy",
-                    users.first_name AS "userFirstName",
-                    users.last_name AS "userLastName",
-                    users.position AS "userPosition",
-                    organizations.name AS "organizationName",
-                    organizations.abbreviation AS "organizationAbbreviation"
-                FROM shantytown_comments
-                LEFT JOIN users ON shantytown_comments.created_by = users.user_id
-                LEFT JOIN organizations ON users.fk_organization = organizations.organization_id
-                WHERE shantytown_comments.fk_shantytown = :id
-                ORDER BY shantytown_comments.created_at DESC`,
-                {
-                    type: sequelize.QueryTypes.SELECT,
-                    replacements: {
-                        id: req.params.id,
-                    },
-                },
-            );
-
-            return res.status(200).send({
-                comments: rawComments.map(serializeComment),
-            });
         } catch (error) {
             return res.status(500).send({
                 error: {
@@ -1182,6 +1185,16 @@ module.exports = models => ({
                 },
             });
         }
+
+        try {
+            await sendMail(author, COMMENT_DELETION_MAIL(town, comment, message, req.user), req.user);
+        } catch (error) {
+            // ignore
+        }
+
+        return res.status(200).send({
+            comments: town.comments.filter(({ id }) => id !== parseInt(req.params.commentId, 10)),
+        });
     },
 
     async getAllComments(req, res) {

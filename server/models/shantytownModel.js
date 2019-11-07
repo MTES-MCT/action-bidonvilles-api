@@ -300,77 +300,78 @@ function serializeShantytown(town, permission) {
 /**
  * Base SQL request
  */
+const SQL = {
+    selection: {
+        'shantytowns.shantytown_id': 'id',
+        'shantytowns.priority': 'priority',
+        'shantytowns.status': 'status',
+        'shantytowns.declared_at': 'declaredAt',
+        'shantytowns.built_at': 'builtAt',
+        'shantytowns.closed_at': 'closedAt',
+        'shantytowns.latitude': 'latitude',
+        'shantytowns.longitude': 'longitude',
+        'shantytowns.address': 'address',
+        'shantytowns.address_details': 'addressDetails',
+        '(SELECT regexp_matches(shantytowns.address, \'^(.+) [0-9]+ [^,]+, [0-9]+,? [^, ]+(, [^,(]+( \\([^)]+\\))?)?$\'))[1]': 'addressSimple',
+        'shantytowns.population_total': 'populationTotal',
+        'shantytowns.population_couples': 'populationCouples',
+        'shantytowns.population_minors': 'populationMinors',
+        'shantytowns.access_to_water': 'accessToWater',
+        'shantytowns.trash_evacuation': 'trashEvacuation',
+        'shantytowns.owner': 'owner',
+        'shantytowns.census_status::text': 'censusStatus',
+        'shantytowns.census_conducted_by': 'censusConductedBy',
+        'shantytowns.census_conducted_at': 'censusConductedAt',
+        'shantytowns.owner_complaint': 'ownerComplaint',
+        'shantytowns.justice_procedure': 'justiceProcedure',
+        'shantytowns.justice_rendered': 'justiceRendered',
+        'shantytowns.justice_rendered_at': 'justiceRenderedAt',
+        'shantytowns.justice_rendered_by': 'justiceRenderedBy',
+        'shantytowns.justice_challenged': 'justiceChallenged',
+        'shantytowns.police_status::text': 'policeStatus',
+        'shantytowns.police_requested_at': 'policeRequestedAt',
+        'shantytowns.police_granted_at': 'policeGrantedAt',
+        'shantytowns.bailiff': 'bailiff',
+        'shantytowns.updated_at': 'updatedAt',
+        'users.user_id': 'updatedById',
+        'users.first_name': 'updatedByFirstName',
+        'users.last_name': 'updatedByLastName',
+        'users.position': 'updatedByPosition',
+        'organizations.organization_id': 'updatedByOrganization',
+        'cities.code': 'cityCode',
+        'cities.name': 'cityName',
+        'cities.fk_main': 'cityMain',
+        'epci.code': 'epciCode',
+        'epci.name': 'epciName',
+        'departements.code': 'departementCode',
+        'departements.name': 'departementName',
+        'regions.code': 'regionCode',
+        'regions.name': 'regionName',
+        'electricity_types.electricity_type_id': 'electricityTypeId',
+        'electricity_types.label': 'electricityTypeLabel',
+        'field_types.field_type_id': 'fieldTypeId',
+        'field_types.label': 'fieldTypeLabel',
+        'owner_types.owner_type_id': 'ownerTypeId',
+        'owner_types.label': 'ownerTypeLabel',
+    },
+    joins: [
+        { table: 'owner_types', on: 'shantytowns.fk_owner_type = owner_types.owner_type_id' },
+        { table: 'field_types', on: 'shantytowns.fk_field_type = field_types.field_type_id' },
+        { table: 'electricity_types', on: 'shantytowns.fk_electricity_type = electricity_types.electricity_type_id' },
+        { table: 'cities', on: 'shantytowns.fk_city = cities.code' },
+        { table: 'epci', on: 'cities.fk_epci = epci.code' },
+        { table: 'departements', on: 'cities.fk_departement = departements.code' },
+        { table: 'regions', on: 'departements.fk_region = regions.code' },
+        { table: 'users', on: 'shantytowns.updated_by = users.user_id' },
+        { table: 'organizations', on: 'users.fk_organization = organizations.organization_id' },
+    ],
+};
+
 function getBaseSql(table, whereClause = null, order = null) {
     return `SELECT
-        shantytowns.shantytown_id AS id,
-        shantytowns.priority,
-        shantytowns.status,
-        shantytowns.declared_at AS "declaredAt",
-        shantytowns.built_at AS "builtAt",
-        shantytowns.closed_at AS "closedAt",
-        shantytowns.latitude,
-        shantytowns.longitude,
-        shantytowns.address,
-        shantytowns.address_details AS "addressDetails",
-        (SELECT regexp_matches(address, '^(.+) [0-9]+ [^,]+, [0-9]+,? [^, ]+(, [^,(]+( \\([^)]+\\))?)?$'))[1] AS "addressSimple",
-        shantytowns.population_total AS "populationTotal",
-        shantytowns.population_couples AS "populationCouples",
-        shantytowns.population_minors AS "populationMinors",
-        shantytowns.access_to_water AS "accessToWater",
-        shantytowns.trash_evacuation AS "trashEvacuation",
-        shantytowns.owner,
-        shantytowns.census_status AS "censusStatus",
-        shantytowns.census_conducted_by AS "censusConductedBy",
-        shantytowns.census_conducted_at AS "censusConductedAt",
-        shantytowns.owner_complaint AS "ownerComplaint",
-        shantytowns.justice_procedure AS "justiceProcedure",
-        shantytowns.justice_rendered AS "justiceRendered",
-        shantytowns.justice_rendered_at AS "justiceRenderedAt",
-        shantytowns.justice_rendered_by AS "justiceRenderedBy",
-        shantytowns.justice_challenged AS "justiceChallenged",
-        shantytowns.police_status AS "policeStatus",
-        shantytowns.police_requested_at AS "policeRequestedAt",
-        shantytowns.police_granted_at AS "policeGrantedAt",
-        shantytowns.bailiff,
-        shantytowns.updated_at AS "updatedAt",
-
-        users.user_id AS "updatedById",
-        users.first_name AS "updatedByFirstName",
-        users.last_name AS "updatedByLastName",
-        users.position AS "updatedByPosition",
-        organizations.organization_id AS "updatedByOrganization",
-
-        cities.code AS "cityCode",
-        cities.name AS "cityName",
-        cities.fk_main AS "cityMain",
-
-        epci.code AS "epciCode",
-        epci.name AS "epciName",
-
-        departements.code AS "departementCode",
-        departements.name AS "departementName",
-
-        regions.code AS "regionCode",
-        regions.name AS "regionName",
-
-        electricity_types.electricity_type_id AS "electricityTypeId",
-        electricity_types.label AS "electricityTypeLabel",
-
-        field_types.field_type_id AS "fieldTypeId",
-        field_types.label AS "fieldTypeLabel",
-
-        owner_types.owner_type_id AS "ownerTypeId",
-        owner_types.label AS "ownerTypeLabel"
+        ${Object.keys(SQL.selection).map(key => `${key} AS "${SQL.selection[key]}"`).join(',')}
     FROM "${table}" AS shantytowns
-    LEFT JOIN owner_types ON shantytowns.fk_owner_type = owner_types.owner_type_id
-    LEFT JOIN field_types ON shantytowns.fk_field_type = field_types.field_type_id
-    LEFT JOIN electricity_types ON shantytowns.fk_electricity_type = electricity_types.electricity_type_id
-    LEFT JOIN cities ON shantytowns.fk_city = cities.code
-    LEFT JOIN epci ON cities.fk_epci = epci.code
-    LEFT JOIN departements ON cities.fk_departement = departements.code
-    LEFT JOIN regions ON departements.fk_region = regions.code
-    LEFT JOIN users ON shantytowns.updated_by = users.user_id
-    LEFT JOIN organizations ON users.fk_organization = organizations.organization_id
+    ${SQL.joins.map(({ table: t, on }) => `LEFT JOIN ${t} ON ${on}`).join('\n')}
     ${whereClause !== null ? `WHERE ${whereClause}` : ''}
     ${order !== null ? `ORDER BY ${order}` : ''}`;
 }
@@ -633,4 +634,128 @@ module.exports = database => ({
             type: database.QueryTypes.SELECT,
         },
     ),
+
+    getHistory: async (user) => {
+        const activities = await database.query(
+            `
+            SELECT
+                activities.*,
+                author.first_name AS author_first_name,
+                author.last_name AS author_last_name,
+                author.fk_organization AS author_organization
+            FROM
+                ((
+                    SELECT
+                        CASE WHEN shantytowns.updated_at = shantytowns.created_at THEN shantytowns.created_at
+                             ELSE shantytowns.updated_at
+                             END
+                        AS "date",
+                        shantytowns.created_at AS created_at,
+                        COALESCE(shantytowns.updated_by, shantytowns.created_by) AS author_id,
+                        0 AS comment_id,
+                        NULL AS content,
+                        'shantytown' AS entity,
+                        ${Object.keys(SQL.selection).map(key => `${key} AS "${SQL.selection[key]}"`).join(',')}
+                    FROM "ShantytownHistories" shantytowns
+                    LEFT JOIN shantytowns AS s ON shantytowns.shantytown_id = s.shantytown_id
+                    ${SQL.joins.map(({ table, on }) => `LEFT JOIN ${table} ON ${on}`).join('\n')}
+                    WHERE s.shantytown_id IS NOT NULL /* filter out history of deleted shantytowns */
+                )
+                UNION
+                (
+                    SELECT
+                        shantytowns.updated_at AS "date",
+                        shantytowns.created_at AS created_at,
+                        COALESCE(shantytowns.updated_by, shantytowns.created_by) AS author_id,
+                        0 AS comment_id,
+                        NULL AS content,
+                        'shantytown' AS entity,
+                        ${Object.keys(SQL.selection).map(key => `${key} AS "${SQL.selection[key]}"`).join(', ')}
+                    FROM shantytowns
+                    ${SQL.joins.map(({ table, on }) => `LEFT JOIN ${table} ON ${on}`).join('\n')}
+                )
+                UNION
+                (
+                    SELECT
+                        comments.created_at AS "date",
+                        NULL AS created_at,
+                        comments.created_by AS author_id,
+                        comments.shantytown_comment_id AS comment_id,
+                        comments.description AS content,
+                        'comment' AS entity,
+                        ${Object.keys(SQL.selection).map(key => `${key} AS "${SQL.selection[key]}"`).join(',')}
+                    FROM shantytown_comments comments
+                    LEFT JOIN shantytowns ON comments.fk_shantytown = shantytowns.shantytown_id
+                    ${SQL.joins.map(({ table, on }) => `LEFT JOIN ${table} ON ${on}`).join('\n')}
+                    WHERE shantytowns.shantytown_id IS NOT NULL /* filter out history of deleted shantytowns */
+                )) activities
+            LEFT JOIN users author ON activities.author_id = author.user_id
+            ORDER BY activities.date ASC
+            `,
+            {
+                type: database.QueryTypes.SELECT,
+            },
+        );
+
+        const previousVersions = {};
+
+        return activities
+            .map((activity) => {
+                const o = {
+                    date: activity.date.getTime() / 1000,
+                    author: {
+                        name: `${activity.author_first_name} ${activity.author_last_name.toUpperCase()}`,
+                        organization: activity.author_organization,
+                    },
+                    shantytown: {
+                        id: activity.id,
+                        name: activity.addressSimple,
+                        city: activity.cityName,
+                    },
+                    entity: activity.entity,
+                };
+
+                // ====== COMMENTS
+                if (activity.entity === 'comment') {
+                    return Object.assign(o, {
+                        action: 'creation',
+                        comment_id: activity.comment_id,
+                        content: activity.content,
+                    });
+                }
+
+                // ====== SHANTYTOWNS
+                const previousVersion = previousVersions[activity.id] || null;
+                const serializedShantytown = serializeShantytown(activity, user.permissions.shantytown.list);
+                previousVersions[activity.id] = serializedShantytown;
+
+                let action;
+                if (previousVersion === null) {
+                    action = 'creation';
+                } else {
+                    o.shantytown.name = previousVersion.addressSimple;
+
+                    if (previousVersion.closedAt === null && activity.closedAt !== null) {
+                        action = 'closing';
+                    } else {
+                        const diff = getDiff(previousVersion, serializedShantytown);
+                        if (diff.length === 0) {
+                            return null;
+                        }
+
+                        return Object.assign(o, {
+                            action: 'update',
+                            diff,
+                        });
+                    }
+                }
+
+                return Object.assign(o, {
+                    action,
+                });
+            })
+            .filter(activity => activity !== null)
+            .reverse();
+    },
+
 });

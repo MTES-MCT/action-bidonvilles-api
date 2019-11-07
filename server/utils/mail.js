@@ -1,4 +1,4 @@
-const { mail: mailConfig } = require('#server/config');
+const { mail: mailConfig, frontUrl } = require('#server/config');
 const mailjet = require('node-mailjet').connect(mailConfig.publicKey, mailConfig.privateKey);
 
 module.exports = {
@@ -11,7 +11,7 @@ module.exports = {
 
         return {
             TextPart: signature.join('\n'),
-            HTMLPart: signature.join('<br/>'),
+            HTMLPart: signature.join('<br/>').replace('resorption-bidonvilles.com', `<a href="${frontUrl}">resorption-bidonvilles.com</a>`),
         };
     },
 

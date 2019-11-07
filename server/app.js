@@ -352,5 +352,13 @@ module.exports = (middlewares, controllers) => {
         controllers.stats.all,
     );
 
+    // user activities
+    app.get(
+        '/user-activities',
+        middlewares.auth.authenticate,
+        middlewares.appVersion.sync,
+        controllers.userActivity.list,
+    );
+
     return app;
 };
