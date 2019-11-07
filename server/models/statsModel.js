@@ -236,9 +236,9 @@ module.exports = database => ({
         const [creations, updates, closings] = await Promise.all(promises);
 
         return {
-            creations: creations[0],
-            updates: updates[0],
-            closings: closings[0],
+            creations,
+            updates,
+            closings,
         };
     },
 
