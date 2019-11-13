@@ -27,7 +27,7 @@ function generateSearch(table) {
     FROM
         ${table}
     WHERE
-        REPLACE(name, '-', ' ') ILIKE REPLACE(?, '-', ' ')
+        REPLACE(REPLACE(name, '-', ' '), 'Î', 'I') ILIKE REPLACE(?, '-', ' ')
         ${table === 'cities' ? 'AND fk_main IS NULL' : ''}
     ORDER BY
         CASE
