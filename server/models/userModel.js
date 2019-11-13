@@ -617,7 +617,7 @@ module.exports = (database) => {
                     organizations.active = TRUE
                     AND
                     users.fk_status = 'active'
-                ORDER BY organizations.name, users.first_name, users.last_name
+                ORDER BY organizations.name, users.last_name, users.first_name
                 `,
                 {
                     type: database.QueryTypes.SELECT,
