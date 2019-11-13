@@ -1602,7 +1602,7 @@ module.exports = (models) => {
                 },
             };
 
-            closingSolutions.forEach(({ solutionId }) => {
+            closingSolutions.forEach(({ id: solutionId }) => {
                 properties[`closingSolution${solutionId}_population`] = {
                     title: 'Nombre de personnes',
                     data: ({ closingSolutions: solutions }) => {
@@ -1740,7 +1740,7 @@ module.exports = (models) => {
 
             if (closedTowns === true) {
                 const subSections = [];
-                closingSolutions.forEach(({ solutionId, label }) => {
+                closingSolutions.forEach(({ id: solutionId, label }) => {
                     subSections.push({
                         title: label.split(' (')[0],
                         properties: [
