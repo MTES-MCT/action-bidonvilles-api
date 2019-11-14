@@ -1,4 +1,7 @@
-const { Stats_Directory_Views } = require('#db/models');
+const {
+    Stats_Exports,
+    Stats_Directory_Views,
+} = require('#db/models');
 
 module.exports = models => ({
     all: async (req, res) => {
@@ -20,9 +23,9 @@ module.exports = models => ({
             models.stats.numberOfCollaboratorAndAssociationUsers(),
             models.stats.numberOfCollaboratorAndAssociationOrganizations(),
             models.stats.numberOfShantytownOperations(),
-            models.stats.numberOfExports(),
+            Stats_Exports.count(),
             models.stats.numberOfComments(),
-            models.stats.numberOfDirectoryViews(),
+            Stats_Directory_Views.count(),
             models.stats.meanTimeBeforeCreationDeclaration(),
             models.stats.meanTimeBeforeClosingDeclaration(),
             models.stats.numberOfReviewedComments(),
@@ -69,9 +72,9 @@ module.exports = models => ({
             models.stats.numberOfCollaboratorAndAssociationUsers(),
             models.stats.numberOfCollaboratorAndAssociationOrganizations(),
             models.stats.numberOfShantytownOperations(),
-            models.stats.numberOfExports(),
+            Stats_Exports.count(),
             models.stats.numberOfComments(),
-            models.stats.numberOfDirectoryViews(),
+            Stats_Directory_Views.count(),
             models.stats.meanTimeBeforeCreationDeclaration(),
             models.stats.meanTimeBeforeClosingDeclaration(),
             models.stats.numberOfReviewedComments(),
