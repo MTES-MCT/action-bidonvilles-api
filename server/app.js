@@ -362,6 +362,13 @@ module.exports = (middlewares, controllers) => {
         },
     );
 
+    app.post(
+        '/statistics/directory-views',
+        middlewares.auth.authenticate,
+        middlewares.appVersion.sync,
+        controllers.stats.directoryView,
+    );
+
     // user activities
     app.get(
         '/user-activities',

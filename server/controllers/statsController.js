@@ -1,3 +1,5 @@
+const { Stats_Directory_Views } = require('#db/models');
+
 module.exports = models => ({
     all: async (req, res) => {
         const [
@@ -95,5 +97,54 @@ module.exports = models => ({
                 },
             },
         });
+    },
+
+    async directoryView(req, res) {
+        const organizationId = parseInt(req.body.organization, 10);
+
+        try {
+            const organization = await models.organization.findOneById(organizationId);
+
+            if (organization === null) {
+                return res.status(400).send({
+                    success: false,
+                    response: {
+                        error: {
+                            user_message: 'La structure consultée n\'a pas été trouvéee en base de données',
+                            developer_message: `Could not find the organization ${organizationId}`,
+                        },
+                    },
+                });
+            }
+        } catch (error) {
+            return res.status(500).send({
+                success: false,
+                response: {
+                    error: {
+                        user_message: 'Une erreur est survenue lors de la lecture en base de données',
+                        developer_message: error.message,
+                    },
+                },
+            });
+        }
+
+        try {
+            await Stats_Directory_Views.create({
+                organization: organizationId,
+                viewed_by: req.user.id,
+            });
+        } catch (error) {
+            return res.status(500).send({
+                success: false,
+                response: {
+                    error: {
+                        user_message: 'Une erreur est survenue lors de l\'écriture en base de données',
+                        developer_message: error.message,
+                    },
+                },
+            });
+        }
+
+        return res.status(201).send({});
     },
 });
