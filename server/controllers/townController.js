@@ -272,6 +272,7 @@ function serializeComment(comment) {
             lastName: comment.userLastName,
             position: comment.userPosition,
             organization: comment.organizationAbbreviation || comment.organizationName,
+            organizationId: comment.organizationId,
         },
         shantytown: comment.shantytownId,
     };
@@ -1019,6 +1020,7 @@ module.exports = (models) => {
                         users.first_name AS "userFirstName",
                         users.last_name AS "userLastName",
                         users.position AS "userPosition",
+                        organizations.organization_id AS "organizationId",
                         organizations.name AS "organizationName",
                         organizations.abbreviation AS "organizationAbbreviation"
                     FROM shantytown_comments
