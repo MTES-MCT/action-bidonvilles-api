@@ -242,10 +242,6 @@ module.exports = database => ({
         };
     },
 
-    numberOfExports() {
-        return Promise.resolve(-1);
-    },
-
     numberOfComments: async () => {
         const rows = await database.query(
             'SELECT COUNT(*) AS total FROM shantytown_comments',
@@ -255,10 +251,6 @@ module.exports = database => ({
         );
 
         return rows[0].total;
-    },
-
-    numberOfDirectoryViews() {
-        return Promise.resolve(-1);
     },
 
     meanTimeBeforeCreationDeclaration: async () => {

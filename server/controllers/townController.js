@@ -1,8 +1,8 @@
-const { sequelize } = require('#db/models');
-const Cities = require('#db/models').City;
-const ShantyTowns = require('#db/models').Shantytown;
-const ShantyTownComments = require('#db/models').ShantytownComment;
-const { ClosingSolution } = require('#db/models');
+const {
+    sequelize,
+    City: Cities, ShantyTowns, ShantyTownComments,
+    ClosingSolution, Stats_Exports,
+} = require('#db/models');
 const { fromTsToFormat: tsToString, toFormat: dateToString } = require('#server/utils/date');
 const { createExport } = require('#server/utils/excel');
 const validator = require('validator');
@@ -1783,6 +1783,35 @@ module.exports = (models) => {
             );
 
             res.attachment(`${dateToString(new Date(), 'Y-m-d')}-sites-${closedTowns ? 'fermés' : 'existants'}-resorption-bidonvilles.xlsx`);
+
+            // add that export to the stats
+            const stat = {
+                fk_region: null,
+                fk_departement: null,
+                fk_epci: null,
+                fk_city: null,
+                closed_shantytowns: closedTowns,
+                exported_by: req.user.id,
+            };
+
+            if (location.type !== 'nation') {
+                stat[`fk_${location.type}`] = location[location.type].code;
+            }
+
+            try {
+                await Stats_Exports.create(stat);
+            } catch (error) {
+                return res.status(500).send({
+                    success: false,
+                    response: {
+                        error: {
+                            user_message: 'Une erreur est survenue lors de l\'écriture en base de données',
+                            developer_message: 'Failed to store statistics',
+                        },
+                    },
+                });
+            }
+
             return res.end(buffer);
         },
 
