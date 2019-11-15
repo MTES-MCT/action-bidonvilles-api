@@ -1,7 +1,10 @@
 const {
     sequelize,
-    City: Cities, ShantyTowns, ShantyTownComments,
-    ClosingSolution, Stats_Exports,
+    City: Cities,
+    Shantytown: ShantyTowns,
+    ShantytownComment: ShantyTownComments,
+    ClosingSolution,
+    Stats_Exports,
 } = require('#db/models');
 const { fromTsToFormat: tsToString, toFormat: dateToString } = require('#server/utils/date');
 const { createExport } = require('#server/utils/excel');
