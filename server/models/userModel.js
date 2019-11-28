@@ -147,25 +147,25 @@ function serializeUser(user, filters, permissionMap) {
             permissions,
             permission_options: roleDescription ? roleDescription.options.reduce((options, { id }) => {
                 switch (id) {
-                case 'close_shantytown':
-                    if (permissions.shantytown && permissions.shantytown.close && permissions.shantytown.close.allowed) {
-                        return [...options, id];
-                    }
-                    break;
+                    case 'close_shantytown':
+                        if (permissions.shantytown && permissions.shantytown.close && permissions.shantytown.close.allowed) {
+                            return [...options, id];
+                        }
+                        break;
 
-                case 'create_and_close_shantytown':
-                    if (permissions && permissions.shantytown && permissions.shantytown.close && permissions.shantytown.close.allowed) {
-                        return [...options, id];
-                    }
-                    break;
+                    case 'create_and_close_shantytown':
+                        if (permissions && permissions.shantytown && permissions.shantytown.close && permissions.shantytown.close.allowed) {
+                            return [...options, id];
+                        }
+                        break;
 
-                case 'hide_justice':
-                    if (permissions.shantytown && permissions.shantytown.list && !permissions.shantytown.list.data_justice) {
-                        return [...options, id];
-                    }
-                    break;
+                    case 'hide_justice':
+                        if (permissions.shantytown && permissions.shantytown.list && !permissions.shantytown.list.data_justice) {
+                            return [...options, id];
+                        }
+                        break;
 
-                default:
+                    default:
                 }
 
                 return options;
@@ -422,6 +422,24 @@ module.exports = (database) => {
         findAll: user => query([], { auth: false, extended: false }, user, 'list'),
 
         /**
+         * Returns a specific set of users
+         *
+         * @param {Array.<Number>} userIds
+         *
+         * @returns {Array.<User>}
+         */
+        findByIds: (user, userIds) => query(
+            [
+                {
+                    user_id: userIds,
+                },
+            ],
+            { auth: false, extended: false },
+            user,
+            'list',
+        ),
+
+        /**
          * Searches for a single user by user_id
          *
          * @param {Number}      userId
@@ -457,6 +475,57 @@ module.exports = (database) => {
             );
 
             return users.length === 1 ? users[0] : null;
+        },
+
+        /**
+         * Searches for the users members of an organization
+         *
+         * @param {Number}       organizationId
+         * @param {UseerFilters} [filters]
+         *
+         * @returns {Array.<User>}
+         */
+        findByOrganization: (organizationId, filters = {}) => query(
+            [
+                {
+                    organization: {
+                        query: 'organizations.organization_id',
+                        value: [organizationId],
+                    },
+                },
+            ],
+            filters,
+        ),
+
+        findByOrganizationCategory: (organizationCategoryId, geographicFilter = undefined, filters = {}) => {
+            const where = [
+                {
+                    organizationCategory: {
+                        query: 'organization_categories.uid',
+                        value: [organizationCategoryId],
+                    },
+                },
+            ];
+
+            if (geographicFilter !== undefined) {
+                if (geographicFilter.type === 'departement') {
+                    where.push({
+                        departement: {
+                            query: 'organizations.departement_code',
+                            value: [geographicFilter.value],
+                        },
+                    });
+                } else if (geographicFilter.type === 'region') {
+                    where.push({
+                        departement: {
+                            query: 'organizations.region_code',
+                            value: [geographicFilter.value],
+                        },
+                    });
+                }
+            }
+
+            return query(where, filters);
         },
 
         create: async (user, transaction = undefined) => {

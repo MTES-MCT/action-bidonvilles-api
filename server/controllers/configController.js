@@ -10,12 +10,15 @@ module.exports = models => ({
             departements: models.departement.findAll(),
             regions: models.region.findAll(),
             closing_solutions: models.closingSolution.findAll(),
-            funding_types: models.fundingType.findAll(),
-            plan_types: models.planType.findAll(),
+            etp_types: models.etpType.findAll(),
+            finance_types: models.financeType.findAll(),
+            plan_categories: models.planCategory.findAll(),
+            topics: models.topic.findAll(),
             electricity_types: models.electricityType.findAll(),
             permissions_description: permissionsDescription,
             user: models.user.findOne(req.user.id, { extended: true }),
             changelog: models.changelog.getLastChangelogFor(req.user),
+
         };
 
         const promises = Object.values(queries);
