@@ -43,59 +43,40 @@ module.exports = database => ({
         return rows[0].total;
     },
 
-    numberOfNewUsersLastMonth: async () => {
+    numberOfNewUsersPerMonth: async () => {
         const now = new Date();
-        const lastMonth = new Date(now.getFullYear(), now.getMonth() - 1, 1);
-        const monthBefore = new Date(now.getFullYear(), now.getMonth() - 2, 1);
+        const limit = new Date(now.getFullYear(), now.getMonth() - 7, 1);
 
-        const promises = [
-            database.query(
-                `SELECT
-                    COUNT(*) AS total
-                FROM users
-                WHERE
-                    users.activated_on IS NOT NULL
-                    AND
-                    EXTRACT(MONTH FROM users.activated_on) = :month
-                    AND
-                    EXTRACT(YEAR FROM users.activated_on) = :year
-                `,
-                {
-                    type: database.QueryTypes.SELECT,
-                    replacements: {
-                        month: lastMonth.getMonth() + 1,
-                        year: lastMonth.getFullYear(),
-                    },
+        const rows = await database.query(
+            `SELECT
+                EXTRACT(MONTH FROM users.activated_on) AS month,
+                COUNT(*) AS total
+            FROM users
+            WHERE
+                users.activated_on IS NOT NULL
+                AND
+                EXTRACT(EPOCH FROM users.activated_on) >= :limit
+            GROUP BY EXTRACT(MONTH FROM users.activated_on)
+            ORDER BY month ASC`,
+            {
+                type: database.QueryTypes.SELECT,
+                replacements: {
+                    limit: limit.getTime() / 1000,
                 },
-            ),
-            database.query(
-                `SELECT
-                    COUNT(*) AS total
-                FROM users
-                WHERE
-                    users.activated_on IS NOT NULL
-                    AND
-                    EXTRACT(MONTH FROM users.activated_on) = :month
-                    AND
-                    EXTRACT(YEAR FROM users.activated_on) = :year
-                `,
-                {
-                    type: database.QueryTypes.SELECT,
-                    replacements: {
-                        month: monthBefore.getMonth() + 1,
-                        year: monthBefore.getFullYear(),
-                    },
-                },
-            ),
-        ];
+            },
+        );
 
-        const [lastMonthRows, monthBeforeRows] = await Promise.all(promises);
+        const result = [];
+        for (let i = 1; i <= 6; i += 1) {
+            const date = new Date(now.getFullYear(), now.getMonth() - i, 1);
+            const row = rows.find(({ month }) => parseInt(month, 10) === date.getMonth() + 1);
+            result.unshift({
+                month: toFormat(date, 'M Y'),
+                total: row !== undefined ? row.total : 0,
+            });
+        }
 
-        return {
-            month: toFormat(lastMonth, 'M Y'),
-            total: lastMonthRows[0].total,
-            diff: monthBeforeRows[0].total > 0 ? (lastMonthRows[0].total - monthBeforeRows[0].total) / monthBeforeRows[0].total : '-',
-        };
+        return result;
     },
 
     numberOfCollaboratorAndAssociationUsers: async () => {

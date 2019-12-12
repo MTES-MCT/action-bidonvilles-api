@@ -8,7 +8,7 @@ module.exports = models => ({
         const [
             numberOfDepartements,
             numberOfActiveUsers,
-            numberOfNewUsersLastMonth,
+            numberOfNewUsersPerMonth,
             numberOfCollaboratorAndAssociationUsers,
             numberOfCollaboratorAndAssociationOrganizations,
             numberOfShantytownOperations,
@@ -21,7 +21,7 @@ module.exports = models => ({
         ] = await Promise.all([
             models.stats.numberOfDepartements(),
             models.stats.numberOfActiveUsers(),
-            models.stats.numberOfNewUsersLastMonth(),
+            models.stats.numberOfNewUsersPerMonth(),
             models.stats.numberOfCollaboratorAndAssociationUsers(),
             models.stats.numberOfCollaboratorAndAssociationOrganizations(),
             models.stats.numberOfShantytownOperations(),
@@ -39,7 +39,7 @@ module.exports = models => ({
                 statistics: {
                     numberOfDepartements,
                     numberOfActiveUsers,
-                    numberOfNewUsersLastMonth,
+                    numberOfNewUsersPerMonth,
                     numberOfCollaboratorAndAssociationUsers,
                     numberOfCollaboratorAndAssociationOrganizations,
                     numberOfShantytownOperations,
@@ -58,7 +58,7 @@ module.exports = models => ({
         const [
             numberOfDepartements,
             numberOfActiveUsers,
-            numberOfNewUsersLastMonth,
+            numberOfNewUsersPerMonth,
             numberOfCollaboratorAndAssociationUsers,
             numberOfCollaboratorAndAssociationOrganizations,
             numberOfShantytownOperations,
@@ -71,7 +71,7 @@ module.exports = models => ({
         ] = await Promise.all([
             models.stats.numberOfDepartements(),
             models.stats.numberOfActiveUsers(),
-            models.stats.numberOfNewUsersLastMonth(),
+            models.stats.numberOfNewUsersPerMonth(),
             models.stats.numberOfCollaboratorAndAssociationUsers(),
             models.stats.numberOfCollaboratorAndAssociationOrganizations(),
             models.stats.numberOfShantytownOperations(),
@@ -89,7 +89,7 @@ module.exports = models => ({
                 statistics: {
                     numberOfDepartements,
                     numberOfActiveUsers,
-                    numberOfNewUsersLastMonth,
+                    numberOfNewUsersPerMonth,
                     numberOfCollaboratorAndAssociationUsers,
                     numberOfCollaboratorAndAssociationOrganizations,
                     numberOfShantytownOperations: Object.values(numberOfShantytownOperations)
