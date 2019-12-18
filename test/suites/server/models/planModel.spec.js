@@ -52,7 +52,6 @@ describe('[/server/models] planModel', () => {
                         started_at,
                         ended_at,
                         targeted_on_towns,
-                        fk_ngo,
                         fk_type,
                         fk_departement
                     FROM plans WHERE plan_id = 1`,

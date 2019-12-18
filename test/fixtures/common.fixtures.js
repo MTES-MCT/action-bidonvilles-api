@@ -139,17 +139,6 @@ module.exports = randomStr => [
         ],
     },
     {
-        table: 'action_types',
-        rows: [
-            {
-                label: 'A',
-            },
-            {
-                label: 'B',
-            },
-        ],
-    },
-    {
         table: 'funding_types',
         rows: [
             {
@@ -190,16 +179,6 @@ module.exports = randomStr => [
             },
             {
                 label: 'Whatever 2',
-            },
-        ],
-    },
-    {
-        table: 'ngos',
-        rows: [
-            {
-                name: randomStr,
-                created_by: 1,
-                updated_by: 1,
             },
         ],
     },

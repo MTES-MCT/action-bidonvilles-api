@@ -22,9 +22,6 @@ const mockModels = {
     closingSolution: {
         findAll: sinon.stub(),
     },
-    actionType: {
-        findAll: sinon.stub(),
-    },
     role: {
         findAll: sinon.stub(),
     },
@@ -37,6 +34,12 @@ const mockModels = {
     electricityType: {
         findAll: sinon.stub(),
     },
+    user: {
+        findOne: sinon.stub(),
+    },
+    changelog: {
+        getLastChangelogFor: sinon.stub(),
+    },
 };
 
 const { list } = require('#server/controllers/configController')(mockModels);
@@ -44,7 +47,7 @@ const { list } = require('#server/controllers/configController')(mockModels);
 const { expect } = chai;
 chai.use(sinonChai);
 
-describe('[server/controllers] configController', () => {
+describe.only('[server/controllers] configController', () => {
     let httpRes;
     let httpReq;
     let response;
@@ -58,7 +61,6 @@ describe('[server/controllers] configController', () => {
             let regions;
             let closingSolutions;
             let user;
-            let actionTypes;
             let roles;
             let fundingTypes;
             let planTypes;
@@ -78,7 +80,6 @@ describe('[server/controllers] configController', () => {
                 departements = [global.generate('string'), global.generate('string')];
                 regions = [global.generate('string'), global.generate('string')];
                 closingSolutions = [global.generate('string'), global.generate('string')];
-                actionTypes = [global.generate('string'), global.generate('string')];
                 roles = [global.generate('string'), global.generate('string')];
                 fundingTypes = [global.generate('string'), global.generate('string')];
                 planTypes = [global.generate('string'), global.generate('string')];
@@ -90,7 +91,6 @@ describe('[server/controllers] configController', () => {
                 mockModels.departement.findAll.resolves(departements);
                 mockModels.region.findAll.resolves(regions);
                 mockModels.closingSolution.findAll.resolves(closingSolutions);
-                mockModels.actionType.findAll.resolves(actionTypes);
                 mockModels.role.findAll.resolves(roles);
                 mockModels.fundingType.findAll.resolves(fundingTypes);
                 mockModels.planType.findAll.resolves(planTypes);
@@ -113,7 +113,6 @@ describe('[server/controllers] configController', () => {
                     departements,
                     regions,
                     closing_solutions: closingSolutions,
-                    action_types: actionTypes,
                     roles,
                     funding_types: fundingTypes,
                     plan_types: planTypes,

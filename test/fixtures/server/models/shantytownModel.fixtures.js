@@ -194,7 +194,6 @@ function getEmptyTownOutput(townId, version = 'unfiltered', withDistrict = false
             id: 1,
             label: 'Inconnu',
         },
-        actions: [],
         updatedAt: closedDate.getTime() / 1000,
     });
 }

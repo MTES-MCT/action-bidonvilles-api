@@ -1,7 +1,7 @@
 const { Model } = require('sequelize');
 
 module.exports = (sequelize, DataTypes) => {
-    class Plan extends Model {}
+    class Plan extends Model { }
 
     let models;
     Plan.associate = (argModels) => {
@@ -40,25 +40,6 @@ module.exports = (sequelize, DataTypes) => {
             ended_at: {
                 type: DataTypes.DATE,
                 allowNull: true,
-            },
-            ngo: {
-                type: DataTypes.INTEGER,
-                allowNull: false,
-                allowNullMsg: 'L\'opérateur en charge du dispositif est obligatoire',
-                validate: {
-                    async ngoExists() {
-                        const ngo = await models.Ngo.findOne({
-                            where: {
-                                id: parseInt(this.ngo, 10),
-                            },
-                        });
-
-                        if (ngo === null) {
-                            throw new Error('L\'opérateur sélectionné n\'existe pas');
-                        }
-                    },
-                },
-                field: 'fk_ngo',
             },
             type: {
                 type: DataTypes.INTEGER,

@@ -18,10 +18,6 @@ function serializePlan(plan) {
             id: plan.planTypeId,
             label: plan.planTypeLabel,
         },
-        ngo: {
-            id: plan.ngoId,
-            name: plan.ngoName,
-        },
         towns: [],
         details: null,
         departement: {
@@ -33,20 +29,20 @@ function serializePlan(plan) {
 
 function fromGeoLevelToTableName(geoLevel) {
     switch (geoLevel) {
-    case 'region':
-        return 'regions';
+        case 'region':
+            return 'regions';
 
-    case 'departement':
-        return 'departements';
+        case 'departement':
+            return 'departements';
 
-    case 'epci':
-        return 'epci';
+        case 'epci':
+            return 'epci';
 
-    case 'city':
-        return 'cities';
+        case 'city':
+            return 'cities';
 
-    default:
-        return null;
+        default:
+            return null;
     }
 }
 
@@ -88,14 +84,11 @@ module.exports = (database) => {
                 plans.targeted_on_towns AS "targetedOnTowns",
                 plans.created_by AS "createdBy",
                 plans.updated_by AS "updatedBy",
-                ngos.ngo_id AS "ngoId",
-                ngos.name AS "ngoName",
                 plan_types.plan_type_id AS "planTypeId",
                 plan_types.label AS "planTypeLabel",
                 departements.code AS "departementCode",
                 departements.name AS "departementName"
             FROM plans
-            LEFT JOIN ngos ON plans.fk_ngo = ngos.ngo_id
             LEFT JOIN plan_types ON plans.fk_type = plan_types.plan_type_id
             LEFT JOIN departements ON plans.fk_departement = departements.code
             LEFT JOIN regions ON departements.fk_region = regions.code
@@ -265,7 +258,6 @@ module.exports = (database) => {
                         name,
                         started_at,
                         targeted_on_towns,
-                        fk_ngo,
                         fk_type,
                         fk_departement,
                         created_by,
@@ -275,7 +267,6 @@ module.exports = (database) => {
                     :name,
                     :startedAt,
                     :targeted,
-                    :ngo,
                     :type,
                     :departement,
                     :createdBy,
@@ -287,7 +278,6 @@ module.exports = (database) => {
                         name: data.name || null,
                         startedAt: data.startedAt,
                         targeted: data.targetedOnTowns,
-                        ngo: data.ngo,
                         type: data.type,
                         departement: data.departement,
                         createdBy: data.createdBy,

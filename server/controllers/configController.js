@@ -10,7 +10,6 @@ module.exports = models => ({
             departements: models.departement.findAll(),
             regions: models.region.findAll(),
             closing_solutions: models.closingSolution.findAll(),
-            action_types: models.actionType.findAll(),
             funding_types: models.fundingType.findAll(),
             plan_types: models.planType.findAll(),
             electricity_types: models.electricityType.findAll(),

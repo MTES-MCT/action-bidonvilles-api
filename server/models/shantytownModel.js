@@ -15,20 +15,20 @@ function fromDateToTimestamp(date) {
 
 function fromGeoLevelToTableName(geoLevel) {
     switch (geoLevel) {
-    case 'region':
-        return 'regions';
+        case 'region':
+            return 'regions';
 
-    case 'departement':
-        return 'departements';
+        case 'departement':
+            return 'departements';
 
-    case 'epci':
-        return 'epci';
+        case 'epci':
+            return 'epci';
 
-    case 'city':
-        return 'cities';
+        case 'city':
+            return 'cities';
 
-    default:
-        return null;
+        default:
+            return null;
     }
 }
 
@@ -258,7 +258,6 @@ function serializeShantytown(town, permission) {
         socialOrigins: [],
         comments: [],
         closingSolutions: [],
-        actions: [],
         changelog: [],
         updatedAt: town.updatedAt !== null ? (town.updatedAt.getTime() / 1000) : null,
         updatedBy: {

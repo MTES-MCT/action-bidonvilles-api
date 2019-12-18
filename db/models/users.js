@@ -49,15 +49,6 @@ module.exports = function (sequelize, DataTypes) {
             },
             field: 'fk_departement',
         },
-        ngo: {
-            type: DataTypes.INTEGER,
-            allowNull: true,
-            references: {
-                model: 'ngos',
-                key: 'ngo_id',
-            },
-            field: 'fk_ngo',
-        },
         createdAt: {
             type: DataTypes.DATE,
             defaultValue: DataTypes.NOW,
@@ -79,7 +70,6 @@ module.exports = function (sequelize, DataTypes) {
     User.associate = (models) => {
         User.belongsTo(models.Departement, { foreignKey: 'fk_departement' });
         User.belongsTo(models.Role, { foreignKey: 'fk_role' });
-        User.belongsTo(models.Ngo, { foreignKey: 'fk_ngo' });
     };
 
     return User;

@@ -4,7 +4,13 @@
         "mocha": true
     },
     "rules": {
-        "indent": [ "error", 4 ],
+        "indent": [
+            "error",
+            4,
+            {
+                "SwitchCase": 1
+            }
+        ],
         "import/no-extraneous-dependencies": false,
         "prefer-promise-reject-errors": 0,
         "max-len": "off",
@@ -14,11 +20,22 @@
         "import/resolver": {
             "alias": {
                 "map": [
-                    ["#server", "./server"],
-                    ["#db", "./db"],
-                    ["#fixtures", "./test/fixtures"]
+                    [
+                        "#server",
+                        "./server"
+                    ],
+                    [
+                        "#db",
+                        "./db"
+                    ],
+                    [
+                        "#fixtures",
+                        "./test/fixtures"
+                    ]
                 ],
-                "extensions": [".js"]
+                "extensions": [
+                    ".js"
+                ]
             }
         }
     },
