@@ -1,28 +1,18 @@
 const { frontUrl, backUrl } = require('../../server/config');
 
 const changelog = {
-    app_version: '0.0.75',
-    date: new Date(2019, 9, 1),
+    app_version: '0.1.1',
+    date: new Date(2019, 12, 12),
     items: [
         {
-            title: 'Mise en place des accès différenciés pour les différents types d\'utilisateurs',
-            description: `<p>À chaque acteur, ses droits d'accès.</p><p>Tout acteur de la résorption des bidonvilles peut effectuer une demande d'accès. Désormais, l'administrateur local identifié parmi les correspondants valide et paramètre l'accès du nouvel utilisateur.</p><p><a href="${frontUrl}/typologie-des-acces" target="_blank">Guide des accès et de l'administrateur</a></p>`,
-            image: `${backUrl}/assets/changelog/0.0.75/item_1.jpg`,
+            title: 'De nombreuses demandes d\'accès sont en attente sur la plateforme',
+            description: `<p><strong>Pour les administrateurs locaux, il convient d'accepter ou de refuser les accès des partenaires dans des délais rapides.</strong></p><p>vous pouvez suivre les demandes en cours depuis l'onglet ADMINISTRATION de la plateforme.</p><p><a href="${frontUrl}/typologie-des-acces" target="_blank">Guide des accès et de l'administrateur</a></p><p><a href="${frontUrl}/charte-d-engagement" target="_blank">Charte d'engagement des utilisateurs</a></p>`,
+            image: `${backUrl}/assets/changelog/0.1.1/item_1.png`,
         },
         {
-            title: 'Amélioration de l\'affichage de la liste de sites',
-            description: '<p>Le tableau récapitulatif des sites a été optimisé pour mieux visualiser la situation. Vous pouvez le retrouver dans l\'onglet site.</p>',
-            image: `${backUrl}/assets/changelog/0.0.75/item_2.jpg`,
-        },
-        {
-            title: 'Amélioration de l\'export d\'un tableau Excel lisible et exploitable',
-            description: '<p>Vous pouvez plus facilement exploiter les données grâce à l\'optimisation de la fonctionnalité d\'export des sites. Les sites fermés et ouverts ont été différenciés pour un suivi plus adapté. L\'export s\'effectue depuis la liste des sites.</p>',
-            image: `${backUrl}/assets/changelog/0.0.75/item_3.jpg`,
-        },
-        {
-            title: 'Mise en place d\'un annuaire des partenaires des actions de résorption',
-            description: '<p>Un annuaire avec l\'ensemble des utilisateurs est disponible depuis le menu principal.</p>',
-            image: `${backUrl}/assets/changelog/0.0.75/item_4.jpg`,
+            title: 'Des mises à jour par les responsables du suivi des sites sont attendues',
+            description: '<p><strong>Pour les personnes en charge du suivi des sites, il convient de mettre à jour la plateforme.</strong></p><p>Deux fois par an, la Dihal réalise un état des lieux national des bidonvilles, campements et squats. La Dihal va réaliser un nouvel état des lieux à la date de référence 31/12/2019 à partir des données de la plateforme.</p><p><strong>Nous vous demandons donc de réaliser les mises à jour nécessaires, et ce jusqu\'au mercredi 15/01/2020 soir.</strong></p>',
+            image: `${backUrl}/assets/changelog/0.1.1/item_2.png`,
         },
     ],
 };
