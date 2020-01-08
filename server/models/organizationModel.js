@@ -102,9 +102,7 @@ module.exports = database => ({
             WHERE
                 organization_types.name_singular = :typeName
                 AND
-                organizations.${typeLevel}_code = :code
-                AND
-                organizations.active = TRUE`,
+                organizations.${typeLevel}_code = :code`,
             {
                 type: database.QueryTypes.SELECT,
                 replacements: {
@@ -203,23 +201,23 @@ module.exports = database => ({
         }
 
         switch (organization.location_type) {
-        case 'city':
-            name += ` - ${organization.city_code}`;
-            break;
-        case 'epci':
-            if (name.indexOf(organization.epci_name) === -1) {
-                name += ` - ${organization.epci_name}`;
-            }
-            break;
-        case 'departement':
-            name += ` - ${organization.departement_code}`;
-            break;
-        case 'region':
-            if (name.indexOf(organization.region_name) === -1) {
-                name += ` - ${organization.region_name}`;
-            }
-            break;
-        default:
+            case 'city':
+                name += ` - ${organization.city_code}`;
+                break;
+            case 'epci':
+                if (name.indexOf(organization.epci_name) === -1) {
+                    name += ` - ${organization.epci_name}`;
+                }
+                break;
+            case 'departement':
+                name += ` - ${organization.departement_code}`;
+                break;
+            case 'region':
+                if (name.indexOf(organization.region_name) === -1) {
+                    name += ` - ${organization.region_name}`;
+                }
+                break;
+            default:
         }
 
         return name;
