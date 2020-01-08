@@ -74,7 +74,7 @@ module.exports = database => ({
                 organization_types.fk_category
             FROM organizations
             LEFT JOIN organization_types ON organizations.fk_type = organization_types.organization_type_id
-            WHERE organizations.organization_id = :id AND organizations.active = TRUE`,
+            WHERE organizations.organization_id = :id`,
             {
                 type: database.QueryTypes.SELECT,
                 replacements: {
