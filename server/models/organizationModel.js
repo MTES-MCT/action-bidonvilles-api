@@ -17,8 +17,6 @@ module.exports = database => ({
             LEFT JOIN organization_types ON organizations.fk_type = organization_types.organization_type_id
             WHERE
                 organization_types.fk_category = :categoryUid
-                AND
-                organizations.active = TRUE
                 ${search !== null ? ' AND (organizations.name ILIKE :search OR organizations.abbreviation ILIKE :search)' : ''}
             ORDER BY
                 CASE organization_types.fk_category
@@ -53,8 +51,6 @@ module.exports = database => ({
         LEFT JOIN organization_types ON organizations.fk_type = organization_types.organization_type_id
         WHERE
             organizations.fk_type = :typeId
-            AND
-            organizations.active = TRUE
         ORDER BY
             CASE organization_types.fk_category
                 WHEN 'association' THEN organizations.name
