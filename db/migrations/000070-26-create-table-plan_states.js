@@ -20,7 +20,7 @@ module.exports = {
                 },
                 fk_audience_in: {
                     type: Sequelize.INTEGER,
-                    allowNull: false,
+                    allowNull: true,
                 },
                 fk_audience_out_positive: {
                     type: Sequelize.INTEGER,

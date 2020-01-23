@@ -28,13 +28,37 @@ function serializePlan(plan) {
         government_contacts: plan.managers,
         departement: plan.managers[0].organization.location.departement.code,
         operator_contacts: plan.operators,
-        fundings: [
-
-        ],
+        finances: plan.finances,
+        states: plan.states || [],
         topics: plan.topics,
         createdBy: plan.createdBy,
         updatedBy: plan.updatedBy,
     };
+
+    base.audience = base.states.reduce((acc, { audience }) => {
+        // in
+        acc.total += audience.in.total;
+        acc.families += audience.in.families;
+        acc.women += audience.in.women;
+        acc.minors += audience.in.minors;
+
+        // out
+        ['out_positive', 'out_abandoned', 'out_excluded'].forEach((key) => {
+            if (audience[key]) {
+                acc.total -= audience[key].total;
+                acc.families -= audience[key].families;
+                acc.women -= audience[key].women;
+                acc.minors -= audience[key].minors;
+            }
+        });
+
+        return acc;
+    }, {
+        total: 0,
+        families: 0,
+        women: 0,
+        minors: 0,
+    });
 
     switch (plan.locationType) {
         case 'location':
@@ -333,8 +357,9 @@ module.exports = (database) => {
 
         // plan states
         const planStateIds = planStates.map(({ plan_state_id: id }) => id);
+        let serializedEtp = {};
         if (planStateIds.length > 0) {
-            await database.query(
+            const etp = await database.query(
                 `SELECT
                     plan_state_etp.fk_plan_state,
                     plan_state_etp.total,
@@ -350,6 +375,23 @@ module.exports = (database) => {
                     },
                 },
             );
+
+            serializedEtp = etp.reduce((acc, {
+                fk_plan_state, total, etp_type_uid, etp_type_name,
+            }) => {
+                if (!acc[fk_plan_state]) {
+                    acc[fk_plan_state] = [];
+                }
+
+                acc[fk_plan_state].push({
+                    type: {
+                        uid: etp_type_uid,
+                        name: etp_type_name,
+                    },
+                    total,
+                });
+                return acc;
+            }, {});
         }
 
         const parsedPlanStates = planStates.reduce((acc, state) => {
@@ -359,30 +401,31 @@ module.exports = (database) => {
 
             acc[state.fk_plan].push({
                 id: state.plan_state_id,
-                date: state.date,
+                date: new Date(state.date).getTime(),
+                etp: serializedEtp[state.plan_state_id] || [],
                 audience: {
                     in: {
                         total: state.in_total,
                         families: state.in_families,
-                        wowen: state.in_women,
+                        women: state.in_women,
                         minors: state.in_minors,
                     },
                     out_positive: state.out_positive_total !== null ? {
                         total: state.out_positive_total,
                         families: state.out_positive_families,
-                        wowen: state.out_positive_women,
+                        women: state.out_positive_women,
                         minors: state.out_positive_minors,
                     } : null,
                     out_abandoned: state.out_abandoned_total !== null ? {
                         total: state.out_abandoned_total,
                         families: state.out_abandoned_families,
-                        wowen: state.out_abandoned_women,
+                        women: state.out_abandoned_women,
                         minors: state.out_abandoned_minors,
                     } : null,
                     out_excluded: state.out_excluded_total !== null ? {
                         total: state.out_excluded_total,
                         families: state.out_excluded_families,
-                        wowen: state.out_excluded_women,
+                        women: state.out_excluded_women,
                         minors: state.out_excluded_minors,
                     } : null,
                 },
@@ -434,6 +477,10 @@ module.exports = (database) => {
                     wc: state.wc,
                     douches: state.douches,
                     electricite: state.electricite,
+                    frequence_dechets: {
+                        uid: state.frequence_dechets_uid,
+                        name: state.frequence_dechets_name,
+                    },
                 } : null,
             });
 
@@ -515,219 +562,5 @@ module.exports = (database) => {
                 },
             },
         ),
-
-        create: async (data) => {
-            const response = await database.query(
-                `INSERT INTO
-                    plans(
-                        name,
-                        started_at,
-                        targeted_on_towns,
-                        fk_type,
-                        fk_departement,
-                        created_by,
-                        updated_by
-                    )
-                VALUES (
-                    :name,
-                    :startedAt,
-                    :targeted,
-                    :type,
-                    :departement,
-                    :createdBy,
-                    :updatedBy
-                )
-                RETURNING plan_id`,
-                {
-                    replacements: {
-                        name: data.name || null,
-                        startedAt: data.startedAt,
-                        targeted: data.targetedOnTowns,
-                        type: data.type,
-                        departement: data.departement,
-                        createdBy: data.createdBy,
-                        updatedBy: data.createdBy,
-                    },
-                },
-            );
-
-            const planId = response[0][0].plan_id;
-
-            if (data.funding && data.funding.length > 0) {
-                const year = (new Date()).getFullYear();
-                const replacements = [];
-                let replacementValues = {};
-                data.funding.forEach(({ amount, details, type }, index) => {
-                    replacementValues = Object.assign({}, replacementValues, {
-                        [`year${index}`]: year,
-                        [`amount${index}`]: parseFloat(amount),
-                        [`details${index}`]: details,
-                        [`plan${index}`]: planId,
-                        [`type${index}`]: parseInt(type, 10),
-                        [`created${index}`]: data.createdBy,
-                        [`updated${index}`]: data.createdBy,
-                    });
-
-                    replacements.push([
-                        `:year${index}`,
-                        `:amount${index}`,
-                        `:details${index}`,
-                        `:plan${index}`,
-                        `:type${index}`,
-                        `:created${index}`,
-                        `:updated${index}`,
-                    ].join(','));
-                });
-
-                await database.query(
-                    `INSERT INTO plan_fundings(
-                        year, amount, details, fk_plan, fk_type, created_by, updated_by
-                    )
-                    VALUES (${replacements.join('),(')})`,
-                    {
-                        replacements: replacementValues,
-                    },
-                );
-            }
-
-            if (data.targetedOnTowns === true && data.towns && data.towns.length) {
-                const replacements = [];
-                let replacementValues = {};
-                data.towns.forEach((townId, index) => {
-                    replacementValues = Object.assign({}, replacementValues, {
-                        [`plan${index}`]: planId,
-                        [`town${index}`]: townId,
-                        [`created${index}`]: data.createdBy,
-                        [`updated${index}`]: data.createdBy,
-                    });
-
-                    replacements.push([
-                        `:plan${index}`,
-                        `:town${index}`,
-                        `:created${index}`,
-                        `:updated${index}`,
-                    ].join(','));
-                });
-
-                await database.query(
-                    `INSERT INTO plan_details(
-                        fk_plan, fk_shantytown, created_by, updated_by
-                    )
-                    VALUES (${replacements.join('),(')})`,
-                    {
-                        replacements: replacementValues,
-                    },
-                );
-            } else {
-                await database.query(
-                    `INSERT INTO plan_details(
-                        fk_plan, fk_shantytown, created_by, updated_by
-                    )
-                    VALUES (:planId, NULL, :creatorId, :creatorId)`,
-                    {
-                        replacements: {
-                            planId,
-                            creatorId: data.createdBy,
-                        },
-                    },
-                );
-            }
-
-            return planId;
-        },
-
-        addTown: async (planId, townId, createdBy) => {
-            await database.query(
-                `INSERT INTO plan_details(
-                    fk_plan, fk_shantytown, created_by, updated_by
-                )
-                VALUES (:planId, :townId, :createdBy, :createdBy)`,
-                {
-                    replacements: {
-                        planId,
-                        townId,
-                        createdBy,
-                    },
-                },
-            );
-        },
-
-        updateDetails: async (id, data) => {
-            await database.query(
-                `UPDATE
-                    plan_details
-                SET
-                    households_affected = :householdsAffected,
-                    people_affected = :peopleAffected,
-                    children_schoolable = :childrenSchoolable,
-                    households_who_got_housing_with_help = :householdsWhoGotHousingWithHelp,
-                    households_who_got_housing_without_help = :householdsWhoGotHousingWithoutHelp,
-                    households_who_were_hosted = :householdsWhoWereHosted,
-                    children_schooled = :childrenSchooled,
-                    people_accessing_health = :peopleAccessingHealth,
-                    people_helped_for_employment = :peopleHelpedForEmployment,
-                    people_who_got_employment = :peopleWhoGotEmployment,
-                    households_domiciled = :householdsDomiciled,
-                    people_included = :peopleIncluded,
-                    people_successfully_helped = :peopleSuccessfullyHelped,
-                    people_excluded = :peopleExcluded,
-                    people_who_resigned = :peopleWhoResigned,
-                    people_pole_emploi = :peoplePoleEmploi,
-                    people_mission_locale = :peopleMissionLocale,
-                    people_with_bank_account = :peopleWithBankAccount,
-                    people_trainee = :peopleTrainee,
-                    average_duration = :averageDuration,
-                    households = :households,
-                    people = :people,
-                    european_people = :europeanPeople,
-                    french_people = :frenchPeople,
-                    non_european_people = :nonEuropeanPeople,
-                    young_kids = :youngKids,
-                    other_kids = :otherKids,
-                    schooled_kids = :schooledKids,
-                    people_asking_for_cmu = :peopleAskingForCmu,
-                    people_with_cmu = :peopleWithCmu,
-                    minors_with_admin_procedure = :minorsWithAdminProcedure,
-                    minors_with_justice_procedure = :minorsWithJusticeProcedure
-                WHERE plan_shantytown_id = :id`,
-                {
-                    replacements: {
-                        id,
-                        householdsAffected: data.householdsAffected || null,
-                        peopleAffected: data.peopleAffected || null,
-                        childrenSchoolable: data.childrenSchoolable || null,
-                        householdsWhoGotHousingWithHelp: data.householdsWhoGotHousingWithHelp || null,
-                        householdsWhoGotHousingWithoutHelp: data.householdsWhoGotHousingWithoutHelp || null,
-                        householdsWhoWereHosted: data.householdsWhoWereHosted || null,
-                        childrenSchooled: data.childrenSchooled || null,
-                        peopleAccessingHealth: data.peopleAccessingHealth || null,
-                        peopleHelpedForEmployment: data.peopleHelpedForEmployment || null,
-                        peopleWhoGotEmployment: data.peopleWhoGotEmployment || null,
-                        householdsDomiciled: data.householdsDomiciled || null,
-                        peopleIncluded: data.peopleIncluded || null,
-                        peopleSuccessfullyHelped: data.peopleSuccessfullyHelped || null,
-                        peopleExcluded: data.peopleExcluded || null,
-                        peopleWhoResigned: data.peopleWhoResigned || null,
-                        peoplePoleEmploi: data.peoplePoleEmploi || null,
-                        peopleMissionLocale: data.peopleMissionLocale || null,
-                        peopleWithBankAccount: data.peopleWithBankAccount || null,
-                        peopleTrainee: data.peopleTrainee || null,
-                        averageDuration: data.averageDuration || null,
-                        households: data.households || null,
-                        people: data.people || null,
-                        europeanPeople: data.europeanPeople || null,
-                        frenchPeople: data.frenchPeople || null,
-                        nonEuropeanPeople: data.nonEuropeanPeople || null,
-                        youngKids: data.youngKids || null,
-                        otherKids: data.otherKids || null,
-                        schooledKids: data.schooledKids || null,
-                        peopleAskingForCmu: data.peopleAskingForCmu || null,
-                        peopleWithCmu: data.peopleWithCmu || null,
-                        minorsWithAdminProcedure: data.minorsWithAdminProcedure || null,
-                        minorsWithJusticeProcedure: data.minorsWithJusticeProcedure || null,
-                    },
-                },
-            );
-        },
     };
 };

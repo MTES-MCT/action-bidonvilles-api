@@ -31,15 +31,15 @@ module.exports = {
                     allowNull: false,
                 },
                 difficulte_cantine: {
-                    type: Sequelize.INTEGER,
+                    type: Sequelize.BOOLEAN,
                     allowNull: false,
                 },
                 difficculte_place_up2a: {
-                    type: Sequelize.INTEGER,
+                    type: Sequelize.BOOLEAN,
                     allowNull: false,
                 },
                 difficulte_transport: {
-                    type: Sequelize.INTEGER,
+                    type: Sequelize.BOOLEAN,
                     allowNull: false,
                 },
                 created_by: {
