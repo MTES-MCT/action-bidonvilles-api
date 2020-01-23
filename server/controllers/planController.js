@@ -124,7 +124,7 @@ function sanitize(data) {
     return sanitizedData;
 }
 
-function sanitizeState(data) {
+function sanitizeState(plan, data) {
     const sanitizedData = {};
 
     // date
@@ -133,7 +133,118 @@ function sanitizeState(data) {
         sanitizedData.date = date;
     }
 
-    return data;
+    // etp
+    if (Array.isArray(data.etp)) {
+        sanitizedData.etp = data.etp.map(({ total, type }) => ({
+            total: parseFloat(total) || 0,
+            type,
+        }));
+    }
+
+    // audience
+    const audience = data.audience || {
+        in: {
+            total: 0, families: 0, women: 0, minors: 0,
+        },
+        out_positive: {
+            total: 0, families: 0, women: 0, minors: 0,
+        },
+        out_abandoned: {
+            total: 0, families: 0, women: 0, minors: 0,
+        },
+        out_excluded: {
+            total: 0, families: 0, women: 0, minors: 0,
+        },
+    };
+
+    function extractAudience(key) {
+        return {
+            total: parseInt(audience[key].people, 10),
+            families: parseInt(audience[key].households, 10),
+            women: parseInt(audience[key].women, 10),
+            minors: parseInt(audience[key].minors, 10),
+        };
+    }
+
+    if (plan.states.length === 0) {
+        sanitizedData.audience = {
+            in: extractAudience('in'),
+            out_positive: null,
+            out_abandoned: null,
+            out_excluded: null,
+        };
+    } else {
+        sanitizedData.audience = {
+            in: extractAudience('in'),
+            out_positive: extractAudience('out_positive'),
+            out_abandoned: extractAudience('out_abandoned'),
+            out_excluded: extractAudience('out_excluded'),
+        };
+    }
+
+    const topics = plan.topics.map(({ uid }) => uid);
+
+    // indicateurs droit commun
+    sanitizedData.domiciliation = parseInt(data.domiciliation, 10);
+    sanitizedData.droits_caf = parseInt(data.droits_caf, 10);
+    sanitizedData.emploi_stable = parseInt(data.emploi_stable, 10);
+
+    // indicateurs santé
+    if (topics.indexOf('health') !== -1) {
+        sanitizedData.ame_valide = parseInt(data.ame_valide, 10);
+        sanitizedData.puma_valide = parseInt(data.puma_valide, 10);
+        sanitizedData.ame_en_cours = parseInt(data.ame_en_cours, 10);
+        sanitizedData.puma_en_cours = parseInt(data.puma_en_cours, 10);
+        sanitizedData.orientation = parseInt(data.orientation, 10);
+        sanitizedData.accompagnement = parseInt(data.accompagnement, 10);
+    }
+
+    // indicateurs logement
+    if (topics.indexOf('housing') !== -1) {
+        sanitizedData.siao = parseInt(data.siao, 10);
+        sanitizedData.logement_social = parseInt(data.logement_social, 10);
+        sanitizedData.dalo = parseInt(data.dalo, 10);
+        sanitizedData.accompagnes = parseInt(data.accompagnes, 10);
+        sanitizedData.non_accompagnes = parseInt(data.non_accompagnes, 10);
+        sanitizedData.heberges = parseInt(data.heberges, 10);
+    }
+
+    // indicateurs sécurisation
+    if (topics.indexOf('safety') !== -1) {
+        sanitizedData.points_eau = parseInt(data.points_eau, 10);
+        sanitizedData.wc = parseInt(data.wc, 10);
+        sanitizedData.douches = parseInt(data.douches, 10);
+        sanitizedData.electricite = parseInt(data.electricite, 10);
+        sanitizedData.frequence_dechets = data.frequence_dechets;
+    }
+
+    // indicateurs éducation
+    if (topics.indexOf('school') !== -1) {
+        sanitizedData.scolarisables = parseInt(data.scolarisables, 10);
+        sanitizedData.maternelles = parseInt(data.maternelles, 10);
+        sanitizedData.elementaires = parseInt(data.elementaires, 10);
+        sanitizedData.colleges = parseInt(data.colleges, 10);
+        sanitizedData.lycees = parseInt(data.lycees, 10);
+        sanitizedData.difficulte_cantine = data.difficultes && data.difficultes.indexOf('cantine') !== -1;
+        sanitizedData.difficulte_place_up2a = data.difficultes && data.difficultes.indexOf('place_up2a') !== -1;
+        sanitizedData.difficulte_transport = data.difficultes && data.difficultes.indexOf('transport') !== -1;
+    }
+
+    // indicateurs formation
+    if (topics.indexOf('work') !== -1) {
+        sanitizedData.pole_emploi = parseInt(data.pole_emploi, 10);
+        sanitizedData.pole_emploi_femmes = parseInt(data.pole_emploi_femmes, 10);
+        sanitizedData.mission_locale = parseInt(data.mission_locale, 10);
+        sanitizedData.mission_locale_femmes = parseInt(data.mission_locale_femmes, 10);
+        sanitizedData.contrats = parseInt(data.contrats, 10);
+        sanitizedData.contrats_femmes = parseInt(data.contrats_femmes, 10);
+        sanitizedData.autoentrepreneurs = parseInt(data.autoentrepreneurs, 10);
+        sanitizedData.autoentrepreneurs_femmes = parseInt(data.autoentrepreneurs_femmes, 10);
+        sanitizedData.are = parseInt(data.are, 10);
+        sanitizedData.are_femmes = parseInt(data.are_femmes, 10);
+    }
+
+    return sanitizedData;
 }
 
 module.exports = models => ({
@@ -520,8 +631,20 @@ module.exports = models => ({
     },
 
     async addState(req, res) {
+        let plan;
+        try {
+            plan = await models.plan.findOne(req.user, req.params.id);
+        } catch (error) {
+            return res.status(500).send({
+                error: {
+                    user_message: 'Une erreur est survenue lors de la récupération des données en base',
+                    developer_message: `Could not fetch plan #${req.params.id}`,
+                },
+            });
+        }
+
         // sanitize data
-        const stateData = Object.assign({}, sanitizeState(req.body), {
+        const stateData = Object.assign({}, sanitizeState(plan, req.body), {
             createdBy: req.user.id,
         });
 
@@ -535,8 +658,239 @@ module.exports = models => ({
             errors[field].push(error);
         }
 
+        let etpTypes;
+        try {
+            etpTypes = (await models.etpType.findAll()).reduce((acc, type) => Object.assign({}, acc, {
+                [type.uid]: type,
+            }), {});
+        } catch (error) {
+            return res.status(500).send({
+                success: false,
+                error: {
+                    developer_message: 'Could not fetch the list of etp types from the database',
+                    user_message: 'Une erreur de lecture en base de données est survenue',
+                },
+            });
+        }
+
+        // date
         if (!stateData.date) {
             addError('date', 'La date est obligatoire');
+        } else if (plan.states.length > 0 && stateData.date.getTime() <= plan.states.slice(-1)[0].date) {
+            // @todo ajouter la date de la dernière saisie ici
+            addError('date', 'Vous ne pouvez pas saisir d\'indicateurs pour une date antérieur à la précédente saisie');
+        }
+
+        // etp
+        if (!stateData.etp || stateData.etp.length === 0) {
+            addError('etp', 'Vous devez préciser l\'équipe d\'intervention');
+        } else {
+            stateData.etp.forEach(({ total, type }, index) => {
+                const etpType = etpTypes[type];
+                let etpName;
+                if (etpType === undefined) {
+                    addError('etp', `Le type d'ETP de la ligne n°${index + 1} n'est pas reconnu`);
+                    etpName = `la ligne n°${index + 1}`;
+                } else {
+                    etpName = etpType.name;
+                }
+
+                if (total <= 0) {
+                    addError('etp', `Le nombre d'ETP pour ${etpName} ne peut pas être négatif ou nul`);
+                }
+            });
+        }
+
+        // audience
+        const hasBadValues = Object.keys(stateData.audience).some((key) => {
+            if (stateData.audience[key] === null) {
+                return false;
+            }
+
+            return Object.values(stateData.audience[key]).some(value => Number.isNaN(value) || value < 0);
+        });
+        if (hasBadValues) {
+            addError('audience', 'Les chiffres indiqués ne peuvent pas être négatifs');
+        }
+
+        if (plan.states.length === 0) {
+            if (Number.isNaN(stateData.audience.in.total) || stateData.audience.in.total <= 0) {
+                addError('audience', 'Vous devez préciser le nombre de personnes intégrées au dispositif');
+            }
+
+            if (Number.isNaN(stateData.audience.in.families) || stateData.audience.in.families <= 0) {
+                addError('audience', 'Vous devez préciser le nombre de ménages intégrés au dispositif');
+            }
+        }
+
+        if (stateData.audience.in.total < stateData.audience.in.families) {
+            addError('audience', 'Le nombre de ménages ne peut pas être supérieur au nombre de personnes');
+        }
+        if (stateData.audience.in.women + stateData.audience.in.minors > stateData.audience.in.total) {
+            addError('audience', 'La somme du nombre de femmes et de mineurs ne peut pas être supérieure au nombre de personnes');
+        }
+
+        // check new audience
+        if (plan.states.length > 0) {
+            const newAudience = Object.assign({}, plan.audience);
+
+            newAudience.total += stateData.audience.in.total;
+            newAudience.families += stateData.audience.in.families;
+            newAudience.women += stateData.audience.in.women;
+            newAudience.minors += stateData.audience.in.minors;
+            ['out_positive', 'out_abandoned', 'out_excluded'].forEach((key) => {
+                if (stateData.audience[key]) {
+                    newAudience.total -= stateData.audience[key].total;
+                    newAudience.families -= stateData.audience[key].families;
+                    newAudience.women -= stateData.audience[key].women;
+                    newAudience.minors -= stateData.audience[key].minors;
+                }
+            });
+
+            if (newAudience.total < 0) {
+                addError('audience', `Selon cette saisie, le nouveau nombre de personnes dans le dispositif passerait à ${newAudience.total}, ce qui est impossible`);
+            }
+            if (newAudience.families < 0) {
+                addError('audience', `Selon cette saisie, le nouveau nombre de ménages dans le dispositif passerait à ${newAudience.families}, ce qui est impossible`);
+            }
+            if (newAudience.women < 0) {
+                addError('audience', `Selon cette saisie, le nouveau nombre de femmes dans le dispositif passerait à ${newAudience.women}, ce qui est impossible`);
+            }
+            if (newAudience.minors < 0) {
+                addError('audience', `Selon cette saisie, le nouveau nombre de mineurs dans le dispositif passerait à ${newAudience.minors}, ce qui est impossible`);
+            }
+
+            if (newAudience.total < newAudience.families) {
+                addError('audience', `Selon cette saisie, le nombre de ménages (${newAudience.families}) deviendrait supérieur au nombre de personnes (${newAudience.total})`);
+            }
+            if (newAudience.women + newAudience.minors > newAudience.total) {
+                addError('audience', `Selon cette saisie, la somme du nombre de femmes (${newAudience.women}) et du nombre de mineurs (${newAudience.minors}) deviendrait supérieure au nombre de personnes (${newAudience.total})`);
+            }
+        }
+
+        // indicateurs droit commun
+        const topics = plan.topics.map(({ uid }) => uid);
+        if (Number.isNaN(stateData.domiciliation) || stateData.domiciliation < 0) {
+            addError('domiciliation', 'Ce champ est obligatoire et sa valeur ne peut pas être négative');
+        }
+        if (Number.isNaN(stateData.droits_caf) || stateData.droits_caf < 0) {
+            addError('droits_caf', 'Ce champ est obligatoire et sa valeur ne peut pas être négative');
+        }
+        if (Number.isNaN(stateData.emploi_stable) || stateData.emploi_stable < 0) {
+            addError('emploi_stable', 'Ce champ est obligatoire et sa valeur ne peut pas être négative');
+        }
+
+        // indicateurs santé
+        if (topics.indexOf('health') !== -1) {
+            if (Number.isNaN(stateData.ame_valide) || stateData.ame_valide < 0) {
+                addError('ame_valide', 'Ce champ est obligatoire et sa valeur ne peut pas être négative');
+            }
+            if (Number.isNaN(stateData.puma_valide) || stateData.puma_valide < 0) {
+                addError('puma_valide', 'Ce champ est obligatoire et sa valeur ne peut pas être négative');
+            }
+            if (Number.isNaN(stateData.ame_en_cours) || stateData.ame_en_cours < 0) {
+                addError('ame_en_cours', 'Ce champ est obligatoire et sa valeur ne peut pas être négative');
+            }
+            if (Number.isNaN(stateData.puma_en_cours) || stateData.puma_en_cours < 0) {
+                addError('puma_en_cours', 'Ce champ est obligatoire et sa valeur ne peut pas être négative');
+            }
+            if (Number.isNaN(stateData.orientation) || stateData.orientation < 0) {
+                addError('orientation', 'Ce champ est obligatoire et sa valeur ne peut pas être négative');
+            }
+            if (Number.isNaN(stateData.accompagnement) || stateData.accompagnement < 0) {
+                addError('accompagnement', 'Ce champ est obligatoire et sa valeur ne peut pas être négative');
+            }
+        }
+
+        // indicateurs logement
+        if (topics.indexOf('housing') !== -1) {
+            if (Number.isNaN(stateData.siao) || stateData.siao < 0) {
+                addError('siao', 'Ce champ est obligatoire et sa valeur ne peut pas être négative');
+            }
+            if (Number.isNaN(stateData.logement_social) || stateData.logement_social < 0) {
+                addError('logement_social', 'Ce champ est obligatoire et sa valeur ne peut pas être négative');
+            }
+            if (Number.isNaN(stateData.dalo) || stateData.dalo < 0) {
+                addError('dalo', 'Ce champ est obligatoire et sa valeur ne peut pas être négative');
+            }
+            if (Number.isNaN(stateData.accompagnes) || stateData.accompagnes < 0) {
+                addError('accompagnes', 'Ce champ est obligatoire et sa valeur ne peut pas être négative');
+            }
+            if (Number.isNaN(stateData.non_accompagnes) || stateData.non_accompagnes < 0) {
+                addError('non_accompagnes', 'Ce champ est obligatoire et sa valeur ne peut pas être négative');
+            }
+            if (Number.isNaN(stateData.heberges) || stateData.heberges < 0) {
+                addError('heberges', 'Ce champ est obligatoire et sa valeur ne peut pas être négative');
+            }
+        }
+
+        // indicateurs sécurisation
+        if (topics.indexOf('safety') !== -1) {
+            if (Number.isNaN(stateData.points_eau) || stateData.points_eau < 0) {
+                addError('points_eau', 'Ce champ est obligatoire et sa valeur ne peut pas être négative');
+            }
+            if (Number.isNaN(stateData.wc) || stateData.wc < 0) {
+                addError('wc', 'Ce champ est obligatoire et sa valeur ne peut pas être négative');
+            }
+            if (Number.isNaN(stateData.douches) || stateData.douches < 0) {
+                addError('douches', 'Ce champ est obligatoire et sa valeur ne peut pas être négative');
+            }
+            if (Number.isNaN(stateData.electricite) || stateData.electricite < 0) {
+                addError('electricite', 'Ce champ est obligatoire et sa valeur ne peut pas être négative');
+            }
+        }
+
+        // indicateurs éducation
+        if (topics.indexOf('school') !== -1) {
+            if (Number.isNaN(stateData.scolarisables) || stateData.scolarisables < 0) {
+                addError('scolarisables', 'Ce champ est obligatoire et sa valeur ne peut pas être négative');
+            }
+            if (Number.isNaN(stateData.maternelles) || stateData.maternelles < 0) {
+                addError('maternelles', 'Ce champ est obligatoire et sa valeur ne peut pas être négative');
+            }
+            if (Number.isNaN(stateData.elementaires) || stateData.elementaires < 0) {
+                addError('elementaires', 'Ce champ est obligatoire et sa valeur ne peut pas être négative');
+            }
+            if (Number.isNaN(stateData.colleges) || stateData.colleges < 0) {
+                addError('colleges', 'Ce champ est obligatoire et sa valeur ne peut pas être négative');
+            }
+            if (Number.isNaN(stateData.lycees) || stateData.lycees < 0) {
+                addError('lycees', 'Ce champ est obligatoire et sa valeur ne peut pas être négative');
+            }
+        }
+
+        // indicateurs formation
+        if (topics.indexOf('work') !== -1) {
+            if (Number.isNaN(stateData.pole_emploi) || stateData.pole_emploi < 0) {
+                addError('pole_emploi', 'Ce champ est obligatoire et sa valeur ne peut pas être négative');
+            }
+            if (Number.isNaN(stateData.pole_emploi_femmes) || stateData.pole_emploi_femmes < 0) {
+                addError('pole_emploi_femmes', 'Ce champ est obligatoire et sa valeur ne peut pas être négative');
+            }
+            if (Number.isNaN(stateData.mission_locale) || stateData.mission_locale < 0) {
+                addError('mission_locale', 'Ce champ est obligatoire et sa valeur ne peut pas être négative');
+            }
+            if (Number.isNaN(stateData.mission_locale_femmes) || stateData.mission_locale_femmes < 0) {
+                addError('mission_locale_femmes', 'Ce champ est obligatoire et sa valeur ne peut pas être négative');
+            }
+            if (Number.isNaN(stateData.contrats) || stateData.contrats < 0) {
+                addError('contrats', 'Ce champ est obligatoire et sa valeur ne peut pas être négative');
+            }
+            if (Number.isNaN(stateData.contrats_femmes) || stateData.contrats_femmes < 0) {
+                addError('contrats_femmes', 'Ce champ est obligatoire et sa valeur ne peut pas être négative');
+            }
+            if (Number.isNaN(stateData.autoentrepreneurs) || stateData.autoentrepreneurs < 0) {
+                addError('autoentrepreneurs', 'Ce champ est obligatoire et sa valeur ne peut pas être négative');
+            }
+            if (Number.isNaN(stateData.autoentrepreneurs_femmes) || stateData.autoentrepreneurs_femmes < 0) {
+                addError('autoentrepreneurs_femmes', 'Ce champ est obligatoire et sa valeur ne peut pas être négative');
+            }
+            if (Number.isNaN(stateData.are) || stateData.are < 0) {
+                addError('are', 'Ce champ est obligatoire et sa valeur ne peut pas être négative');
+            }
+            if (Number.isNaN(stateData.are_femmes) || stateData.are_femmes < 0) {
+                addError('are_femmes', 'Ce champ est obligatoire et sa valeur ne peut pas être négative');
+            }
         }
 
         if (Object.keys(errors).length > 0) {
@@ -551,12 +905,267 @@ module.exports = models => ({
         }
 
         // insert into database
-        return res.status(500).send({
-            success: false,
-            error: {
-                user_message: 'Une erreur inconnue est survenue',
-            },
-        });
+        try {
+            await sequelize.transaction(async (t) => {
+                const audienceIds = {
+                    in: null,
+                    out_positive: null,
+                    out_abandoned: null,
+                    out_excluded: null,
+                };
+
+                // audience
+                const audiencePromises = [];
+                if (plan.states.length === 0 || plan.in_and_out === true) {
+                    audiencePromises.push(sequelize.query(
+                        'INSERT INTO audiences(total, families, women, minors) VALUES(:total, :families, :women, :minors) RETURNING audience_id AS id',
+                        {
+                            replacements: {
+                                total: stateData.audience.in.total,
+                                families: stateData.audience.in.families,
+                                women: stateData.audience.in.women,
+                                minors: stateData.audience.in.minors,
+                            },
+                            transaction: t,
+                        },
+                    ));
+                } else {
+                    audiencePromises.push(Promise.resolve(null));
+                }
+
+                if (plan.states.length > 0) {
+                    audiencePromises.push(sequelize.query(
+                        'INSERT INTO audiences(total, families, women, minors) VALUES(:total, :families, :women, :minors) RETURNING audience_id AS id',
+                        {
+                            replacements: {
+                                total: stateData.audience.out_positive.total,
+                                families: stateData.audience.out_positive.families,
+                                women: stateData.audience.out_positive.women,
+                                minors: stateData.audience.out_positive.minors,
+                            },
+                            transaction: t,
+                        },
+                    ));
+                    audiencePromises.push(sequelize.query(
+                        'INSERT INTO audiences(total, families, women, minors) VALUES(:total, :families, :women, :minors) RETURNING audience_id AS id',
+                        {
+                            replacements: {
+                                total: stateData.audience.out_abandoned.total,
+                                families: stateData.audience.out_abandoned.families,
+                                women: stateData.audience.out_abandoned.women,
+                                minors: stateData.audience.out_abandoned.minors,
+                            },
+                            transaction: t,
+                        },
+                    ));
+                    audiencePromises.push(sequelize.query(
+                        'INSERT INTO audiences(total, families, women, minors) VALUES(:total, :families, :women, :minors) RETURNING audience_id AS id',
+                        {
+                            replacements: {
+                                total: stateData.audience.out_excluded.total,
+                                families: stateData.audience.out_excluded.families,
+                                women: stateData.audience.out_excludedout_excluded.women,
+                                minors: stateData.audience.out_excluded.minors,
+                            },
+                            transaction: t,
+                        },
+                    ));
+                } else {
+                    audiencePromises.push(Promise.resolve(null));
+                    audiencePromises.push(Promise.resolve(null));
+                    audiencePromises.push(Promise.resolve(null));
+                }
+
+                const [inId, outPositiveId, outAbandonedId, outExcludedId] = await Promise.all(audiencePromises);
+                audienceIds.in = inId !== null ? inId[0][0].id : null;
+                audienceIds.out_positive = outPositiveId !== null ? outPositiveId[0][0].id : null;
+                audienceIds.out_abandoned = outAbandonedId !== null ? outAbandonedId[0][0].id : null;
+                audienceIds.out_excluded = outExcludedId !== null ? outExcludedId[0][0].id : null;
+
+                // indicateurs droit commun
+                const indicateurPromises = [];
+                indicateurPromises.push(
+                    sequelize.query(
+                        `INSERT INTO indicateurs_droit_commun(domiciliation, droits_caf, emploi_stable, created_by)
+                        VALUES(:domiciliation, :droits_caf, :emploi_stable, :createdBy)
+                        RETURNING indicateurs_droit_commun_id AS id`,
+                        {
+                            replacements: stateData,
+                            transaction: t,
+                        },
+                    ),
+                );
+
+                // indicateurs santé
+                if (topics.indexOf('health') !== -1) {
+                    indicateurPromises.push(
+                        sequelize.query(
+                            `INSERT INTO indicateurs_sante(ame_valide, puma_valide, ame_en_cours, puma_en_cours, orientation, accompagnement, created_by)
+                            VALUES(:ame_valide, :puma_valide, :ame_en_cours, :puma_en_cours, :orientation, :accompagnement, :createdBy)
+                            RETURNING indicateurs_sante_id AS id`,
+                            {
+                                replacements: stateData,
+                                transaction: t,
+                            },
+                        ),
+                    );
+                } else {
+                    indicateurPromises.push(Promise.resolve(null));
+                }
+
+                // indicateurs logement
+                if (topics.indexOf('housing') !== -1) {
+                    indicateurPromises.push(
+                        sequelize.query(
+                            `INSERT INTO indicateurs_logement(siao, logement_social, dalo, accompagnes, non_accompagnes, heberges, created_by)
+                            VALUES(:siao, :logement_social, :dalo, :accompagnes, :non_accompagnes, :heberges, :createdBy)
+                            RETURNING indicateurs_logement_id AS id`,
+                            {
+                                replacements: stateData,
+                                transaction: t,
+                            },
+                        ),
+                    );
+                } else {
+                    indicateurPromises.push(Promise.resolve(null));
+                }
+
+                // indicateurs sécurisation
+                if (topics.indexOf('safety') !== -1) {
+                    indicateurPromises.push(
+                        sequelize.query(
+                            `INSERT INTO indicateurs_securisation(points_eau, wc, douches, electricite, frequence_dechets, created_by)
+                            VALUES(:points_eau, :wc, :douches, :electricite, :frequence_dechets, :createdBy)
+                            RETURNING indicateurs_securisation_id AS id`,
+                            {
+                                replacements: stateData,
+                                transaction: t,
+                            },
+                        ),
+                    );
+                } else {
+                    indicateurPromises.push(Promise.resolve(null));
+                }
+
+                // indicateurs éducation
+                if (topics.indexOf('school') !== -1) {
+                    indicateurPromises.push(
+                        sequelize.query(
+                            `INSERT INTO indicateurs_education(scolarisables, maternelles, elementaires, colleges, lycees, difficulte_cantine, difficculte_place_up2a, difficulte_transport, created_by)
+                            VALUES(:scolarisables, :maternelles, :elementaires, :colleges, :lycees, :difficulte_cantine, :difficulte_place_up2a, :difficulte_transport, :createdBy)
+                            RETURNING indicateurs_education_id AS id`,
+                            {
+                                replacements: stateData,
+                                transaction: t,
+                            },
+                        ),
+                    );
+                } else {
+                    indicateurPromises.push(Promise.resolve(null));
+                }
+
+                // indicateurs formation
+                if (topics.indexOf('work') !== -1) {
+                    indicateurPromises.push(
+                        sequelize.query(
+                            `INSERT INTO indicateurs_formation(pole_emploi, pole_emploi_femmes, mission_locale, mission_locale_femmes, contrats, contrats_femmes, autoentrepreneurs, autoentrepreneurs_femmes, are, are_femmes, created_by)
+                            VALUES(:pole_emploi, :pole_emploi_femmes, :mission_locale, :mission_locale_femmes, :contrats, :contrats_femmes, :autoentrepreneurs, :autoentrepreneurs_femmes, :are, :are_femmes, :createdBy)
+                            RETURNING indicateurs_formation_id AS id`,
+                            {
+                                replacements: stateData,
+                                transaction: t,
+                            },
+                        ),
+                    );
+                } else {
+                    indicateurPromises.push(Promise.resolve(null));
+                }
+
+                const [commun, sante, logement, securisation, education, formation] = await Promise.all(indicateurPromises);
+                const indicateurIds = {
+                    commun: commun[0][0].id,
+                    sante: sante ? sante[0][0].id : null,
+                    logement: logement ? logement[0][0].id : null,
+                    securisation: securisation ? securisation[0][0].id : null,
+                    education: education ? education[0][0].id : null,
+                    formation: formation ? formation[0][0].id : null,
+                };
+
+                const response = await sequelize.query(
+                    `INSERT INTO plan_states(
+                        date,
+                        fk_plan,
+                        fk_audience_in,
+                        fk_audience_out_positive,
+                        fk_audience_out_abandoned,
+                        fk_audience_out_excluded,
+                        fk_indicateurs_commun,
+                        fk_indicateurs_sante,
+                        fk_indicateurs_logement,
+                        fk_indicateurs_formation,
+                        fk_indicateurs_education,
+                        fk_indicateurs_securisation,
+                        created_by
+                    ) VALUES(
+                        :date,
+                        :planId,
+                        :in,
+                        :out_positive,
+                        :out_abandoned,
+                        :out_excluded,
+                        :commun,
+                        :sante,
+                        :logement,
+                        :formation,
+                        :education,
+                        :securisation,
+                        :createdBy
+                    ) RETURNING plan_state_id AS id`,
+                    {
+                        replacements: Object.assign(
+                            {
+                                planId: plan.id,
+                            },
+                            stateData,
+                            audienceIds,
+                            indicateurIds,
+                        ),
+                        transaction: t,
+                    },
+                );
+                // stateData.etp
+                const planStateId = response[0][0].id;
+                return sequelize.query(
+                    `INSERT INTO plan_state_etp(
+                        fk_plan_state,
+                        fk_etp_type,
+                        total,
+                        created_by
+                    ) VALUES ${stateData.etp.map(() => '(?, ?, ?, ?)').join(', ')}`,
+                    {
+                        replacements: stateData.etp.reduce((acc, { total, type }) => [
+                            ...acc,
+                            planStateId,
+                            type,
+                            total,
+                            req.user.id,
+                        ], []),
+                        transaction: t,
+                    },
+                );
+            });
+        } catch (error) {
+            return res.status(500).send({
+                success: false,
+                error: {
+                    user_message: 'Une erreur est survenue lors de l\'écriture en base de données',
+                    developer_message: error,
+                },
+            });
+        }
+
+        // insert into database
+        return res.status(200).send({});
     },
 
     async link(req, res) {
