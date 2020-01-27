@@ -320,7 +320,7 @@ module.exports = (database) => {
 
         // users
         const serializedUsers = await userModel.findByIds(
-            user,
+            null,
             [...planManagers, ...planOperators].map(({ fk_user: id }) => id),
         );
         const hashedUsers = serializedUsers.reduce((acc, u) => Object.assign(acc, {
