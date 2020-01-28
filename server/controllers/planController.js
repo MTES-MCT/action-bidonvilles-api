@@ -630,6 +630,220 @@ module.exports = models => ({
         });
     },
 
+    async update(req, res) {
+        let plan;
+        try {
+            plan = await models.plan.findOne(req.user, req.params.id);
+        } catch (error) {
+            return res.status(500).send({
+                error: {
+                    user_message: 'Une erreur est survenue lors de la récupération des données en base',
+                    developer_message: `Could not fetch plan #${req.params.id}`,
+                },
+            });
+        }
+
+        // sanitize data
+        const planData = Object.assign({}, sanitize(req.body), {
+            updatedBy: req.user.id,
+        });
+
+        // validate data
+        const errors = {};
+        function addError(field, error) {
+            if (errors[field] === undefined) {
+                errors[field] = [];
+            }
+
+            errors[field].push(error);
+        }
+
+        let financeTypes;
+        try {
+            financeTypes = (await models.financeType.findAll()).reduce((acc, type) => Object.assign({}, acc, {
+                [type.uid]: type,
+            }), {});
+        } catch (error) {
+            return res.status(500).send({
+                success: false,
+                error: {
+                    developer_message: 'Could not fetch the list of finance types from the database',
+                    user_message: 'Une erreur de lecture en base de données est survenue',
+                },
+            });
+        }
+
+        let topics;
+        try {
+            topics = (await models.topic.findAll()).reduce((acc, topic) => Object.assign({}, acc, {
+                [topic.uid]: topic,
+            }), {});
+        } catch (error) {
+            return res.status(500).send({
+                success: false,
+                error: {
+                    developer_message: 'Could not fetch the list of topics from the database',
+                    user_message: 'Une erreur de lecture en base de données est survenue',
+                },
+            });
+        }
+
+        if (!planData.name) {
+            addError('name', 'Le nom du dispositif est obligatoire');
+        }
+
+        if (!planData.startedAt) {
+            addError('startedAt', 'La date de début du dispositif est obligatoire');
+        }
+
+        if (planData.expectedToEndAt && planData.expectedToEndAt <= planData.startedAt) {
+            addError('expectedToEndAt', 'La date de fin du dispositif ne peut pas être antérieure à la date de début');
+        }
+
+        if (planData.topics.length === 0) {
+            addError('topics', 'Vous devez sélectionner au moins une thématique');
+        } else {
+            const unknownTopics = planData.topics.filter(uid => topics[uid] === undefined);
+            if (unknownTopics.length > 0) {
+                addError('topics', `Les thématiques suivantes n'ont pas été reconnues : ${unknownTopics.join(', ')}`);
+            }
+        }
+
+        if (!planData.goals) {
+            addError('goals', 'Les objectifs sont obligatoires');
+        }
+
+        if (!planData.government) {
+            addError('government', 'Vous devez désigner la personne en charge du pilotage du dispositif');
+        } else {
+            try {
+                const user = await models.user.findOne(planData.government.id);
+                if (user === null) {
+                    addError('government', 'La personne désignée comme pilote du dispositif n\'a pas été retrouvée en base de données');
+                } else if (user.organization.category.uid !== 'public_establishment') {
+                    addError('government', 'Le pilote du dispositif doit faire partie d\'un service de l\'état');
+                }
+            } catch (error) {
+                addError('government', 'Une erreur est survenue lors de la validation du pilote du dispositif');
+            }
+        }
+
+        if (planData.finances) {
+            planData.finances.forEach(({ year, data }) => {
+                if (year > (new Date()).getFullYear()) {
+                    addError('finances', `Il est impossible de saisir les financements pour l'année ${year}`);
+                } else {
+                    data.forEach(({ amount, type }, index) => {
+                        const typeName = financeTypes[type] ? `'${financeTypes[type].name}'` : `de la ligne n°${index + 1}`;
+
+                        if (!type) {
+                            addError('finances', `Année ${year} : merci de préciser le type de financement pour la ligne n°${index + 1}`);
+                        } else if (financeTypes[type] === undefined) {
+                            addError('finances', `Année ${year} : le type de financement de la ligne n°${index + 1} n'est pas reconnu`);
+                        }
+
+                        if (Number.isNaN(amount)) {
+                            addError('finances', `Année ${year} : le montant du financement ${typeName} est invalide`);
+                        } else if (amount <= 0) {
+                            addError('finances', `Année ${year} : le montant du financement ${typeName} ne peut pas être négatif ou nul`);
+                        }
+                    });
+                }
+            });
+        }
+
+        if (Object.keys(errors).length > 0) {
+            return res.status(400).send({
+                success: false,
+                error: {
+                    developer_message: 'The submitted data contains errors',
+                    user_message: 'Certaines données sont invalides',
+                    fields: errors,
+                },
+            });
+        }
+
+        // update database
+        try {
+            await sequelize.transaction(async (t) => {
+                await sequelize.query(
+                    'UPDATE plans2 SET name = :name, started_at = :startedAt, expected_to_end_at = :expectedToEndAt, goals = :goals, updated_by = :updatedBy WHERE plan_id = :planId',
+                    {
+                        replacements: Object.assign({}, planData, { planId: plan.id }),
+                        transaction: t,
+                    },
+                );
+
+                // reset finances and managers
+                await Promise.all([
+                    sequelize.query('DELETE FROM finances WHERE fk_plan = :planId', { replacements: { planId: plan.id }, transaction: t }),
+                    sequelize.query('DELETE FROM plan_managers WHERE fk_plan = :planId', { replacements: { planId: plan.id }, transaction: t }),
+                ]);
+
+                // insert into finances
+                const financeIds = await Promise.all(
+                    planData.finances.map(({ year }) => sequelize.query(
+                        'INSERT INTO finances(fk_plan, year, created_by) VALUES (:planId, :year, :createdBy) RETURNING finance_id AS id',
+                        {
+                            replacements: {
+                                planId: plan.id,
+                                year,
+                                createdBy: req.user.id,
+                            },
+                            transaction: t,
+                        },
+                    )),
+                );
+
+                // insert into finance_rows
+                await Promise.all(
+                    planData.finances.reduce((acc, { data }, index) => [
+                        ...acc,
+                        ...data.map(({ amount, type, details }) => sequelize.query(
+                            `INSERT INTO finance_rows(fk_finance, fk_finance_type, amount, comments, created_by)
+                            VALUES (:financeId, :type, :amount, :comments, :createdBy)`,
+                            {
+                                replacements: {
+                                    financeId: financeIds[index][0][0].id,
+                                    type,
+                                    amount,
+                                    comments: details,
+                                    createdBy: req.user.id,
+                                },
+                                transaction: t,
+                            },
+                        )),
+                    ], []),
+                );
+
+                // managers
+                return sequelize.query(
+                    `INSERT INTO plan_managers(fk_plan, fk_user, created_by)
+                        VALUES (:planId, :userId, :createdBy)`,
+                    {
+                        replacements: {
+                            planId: plan.id,
+                            userId: planData.government.id,
+                            createdBy: req.user.id,
+                        },
+                        transaction: t,
+                    },
+                );
+            });
+        } catch (error) {
+            console.log(error);
+            return res.status(500).send({
+                success: false,
+                error: {
+                    user_message: 'Une erreur est survenue lors de l\'écriture en base de données',
+                    developer_message: error,
+                },
+            });
+        }
+
+        return res.status(200).send({});
+    },
+
     async addState(req, res) {
         let plan;
         try {
