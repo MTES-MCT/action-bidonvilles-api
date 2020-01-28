@@ -192,6 +192,15 @@ module.exports = (middlewares, controllers) => {
         ],
         controllers.plan.addState,
     );
+    app.post(
+        '/plans/:id',
+        [
+            middlewares.auth.authenticate,
+            (...args) => middlewares.auth.checkPermissions(['plan.create'], ...args),
+            middlewares.appVersion.sync,
+        ],
+        controllers.plan.update,
+    );
     // app.post(
     //     '/plans/:id/towns',
     //     middlewares.auth.authenticate,
