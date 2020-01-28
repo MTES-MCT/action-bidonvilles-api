@@ -108,14 +108,18 @@ function sanitize(data) {
     }
 
     // fundings
+    const currentYear = (new Date()).getFullYear();
     if (Array.isArray(data.finances)) {
         sanitizedData.finances = data.finances
             .filter(({ data: d }) => d && d.length > 0)
             .map(({ year, data: d }) => ({
                 year: parseInt(year, 10),
-                data: d.map(({ type, amount, details }) => ({
+                data: d.map(({
+                    type, amount, realAmount, details,
+                }) => ({
                     type: type !== null ? type : null,
                     amount: parseFloat(amount),
+                    realAmount: parseInt(year, 10) < currentYear && realAmount ? parseFloat(realAmount) : null,
                     details: trim(details),
                 })),
             }));
@@ -569,14 +573,17 @@ module.exports = models => ({
                 await Promise.all(
                     planData.finances.reduce((acc, { data }, index) => [
                         ...acc,
-                        ...data.map(({ amount, type, details }) => sequelize.query(
-                            `INSERT INTO finance_rows(fk_finance, fk_finance_type, amount, comments, created_by)
-                            VALUES (:financeId, :type, :amount, :comments, :createdBy)`,
+                        ...data.map(({
+                            amount, realAmount, type, details,
+                        }) => sequelize.query(
+                            `INSERT INTO finance_rows(fk_finance, fk_finance_type, amount, real_amount, comments, created_by)
+                            VALUES (:financeId, :type, :amount, :realAmount :comments, :createdBy)`,
                             {
                                 replacements: {
                                     financeId: financeIds[index][0][0].id,
                                     type,
                                     amount,
+                                    realAmount,
                                     comments: details,
                                     createdBy: req.user.id,
                                 },
@@ -799,14 +806,17 @@ module.exports = models => ({
                 await Promise.all(
                     planData.finances.reduce((acc, { data }, index) => [
                         ...acc,
-                        ...data.map(({ amount, type, details }) => sequelize.query(
-                            `INSERT INTO finance_rows(fk_finance, fk_finance_type, amount, comments, created_by)
-                            VALUES (:financeId, :type, :amount, :comments, :createdBy)`,
+                        ...data.map(({
+                            amount, realAmount, type, details,
+                        }) => sequelize.query(
+                            `INSERT INTO finance_rows(fk_finance, fk_finance_type, amount, real_amount, comments, created_by)
+                            VALUES (:financeId, :type, :amount, :realAmount, :comments, :createdBy)`,
                             {
                                 replacements: {
                                     financeId: financeIds[index][0][0].id,
                                     type,
                                     amount,
+                                    realAmount,
                                     comments: details,
                                     createdBy: req.user.id,
                                 },
@@ -831,7 +841,6 @@ module.exports = models => ({
                 );
             });
         } catch (error) {
-            console.log(error);
             return res.status(500).send({
                 success: false,
                 error: {

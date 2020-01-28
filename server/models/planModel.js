@@ -28,12 +28,29 @@ function serializePlan(plan) {
         government_contacts: plan.managers,
         departement: plan.managers[0].organization.location.departement.code,
         operator_contacts: plan.operators,
-        finances: plan.finances,
         states: plan.states || [],
         topics: plan.topics,
         createdBy: plan.createdBy,
         updatedBy: plan.updatedBy,
     };
+
+    if (!plan.finances) {
+        base.finances = [];
+    } else {
+        const minYear = plan.finances.slice(-1)[0].year;
+        const currentYear = (new Date()).getFullYear();
+
+        const finances = [];
+        for (let y = currentYear; y >= minYear; y -= 1) {
+            const finance = plan.finances.find(({ year }) => year === y);
+            finances.push({
+                year: y,
+                data: finance ? finance.data : [],
+            });
+        }
+
+        base.finances = finances;
+    }
 
     base.audience = base.states.reduce((acc, { audience }) => {
         // in
@@ -301,6 +318,7 @@ module.exports = (database) => {
                     finances.year,
                     finances.closed,
                     finance_rows.amount,
+                    finance_rows.real_amount,
                     finance_rows.comments,
                     finance_types.uid AS finance_type_uid,
                     finance_types.name AS finance_type_name
@@ -308,7 +326,8 @@ module.exports = (database) => {
                     finances
                 LEFT JOIN finance_rows ON finance_rows.fk_finance = finances.finance_id
                 LEFT JOIN finance_types ON finance_rows.fk_finance_type = finance_types.uid
-                WHERE finances.fk_plan IN (:planIds) ORDER BY fk_plan ASC, finances.year ASC`,
+                WHERE finances.fk_plan IN (:planIds)
+                ORDER BY fk_plan ASC, finances.year DESC`,
                 {
                     type: database.QueryTypes.SELECT,
                     replacements: {
@@ -532,6 +551,7 @@ module.exports = (database) => {
                     name: finance.finance_type_name,
                 },
                 amount: finance.amount,
+                realAmount: finance.real_amount,
                 details: finance.comments,
             });
         });
