@@ -577,7 +577,7 @@ module.exports = models => ({
                             amount, realAmount, type, details,
                         }) => sequelize.query(
                             `INSERT INTO finance_rows(fk_finance, fk_finance_type, amount, real_amount, comments, created_by)
-                            VALUES (:financeId, :type, :amount, :realAmount :comments, :createdBy)`,
+                            VALUES (:financeId, :type, :amount, :realAmount, :comments, :createdBy)`,
                             {
                                 replacements: {
                                     financeId: financeIds[index][0][0].id,
