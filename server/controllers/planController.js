@@ -221,9 +221,8 @@ function sanitizeState(plan, data) {
     if (topics.indexOf('safety') !== -1) {
         sanitizedData.points_eau = getIntOrNull(data.points_eau);
         sanitizedData.wc = getIntOrNull(data.wc);
-        sanitizedData.douches = getIntOrNull(data.douches);
+        sanitizedData.nombre_bennes = getIntOrNull(data.nombre_bennes);
         sanitizedData.electricite = getIntOrNull(data.electricite);
-        sanitizedData.frequence_dechets = data.frequence_dechets;
     }
 
     // indicateurs éducation
@@ -1059,8 +1058,8 @@ module.exports = models => ({
             if (stateData.wc !== null && (Number.isNaN(stateData.wc) || stateData.wc < 0)) {
                 addError('wc', 'Ce champ est obligatoire et sa valeur ne peut pas être négative');
             }
-            if (stateData.douches !== null && (Number.isNaN(stateData.douches) || stateData.douches < 0)) {
-                addError('douches', 'Ce champ est obligatoire et sa valeur ne peut pas être négative');
+            if (stateData.nombre_bennes !== null && (Number.isNaN(stateData.nombre_bennes) || stateData.nombre_bennes < 0)) {
+                addError('nombre_bennes', 'Ce champ est obligatoire et sa valeur ne peut pas être négative');
             }
             if (stateData.electricite !== null && (Number.isNaN(stateData.electricite) || stateData.electricite < 0)) {
                 addError('electricite', 'Ce champ est obligatoire et sa valeur ne peut pas être négative');
@@ -1261,8 +1260,8 @@ module.exports = models => ({
                 if (topics.indexOf('safety') !== -1) {
                     indicateurPromises.push(
                         sequelize.query(
-                            `INSERT INTO indicateurs_securisation(points_eau, wc, douches, electricite, frequence_dechets, created_by)
-                            VALUES(:points_eau, :wc, :douches, :electricite, :frequence_dechets, :createdBy)
+                            `INSERT INTO indicateurs_securisation(points_eau, wc, nombre_bennes, electricite, created_by)
+                            VALUES(:points_eau, :wc, :nombre_bennes, :electricite, :createdBy)
                             RETURNING indicateurs_securisation_id AS id`,
                             {
                                 replacements: stateData,

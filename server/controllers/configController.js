@@ -11,7 +11,6 @@ module.exports = models => ({
             regions: models.region.findAll(),
             closing_solutions: models.closingSolution.findAll(),
             etp_types: models.etpType.findAll(),
-            frequence_dechets: models.frequenceDechet.findAll(),
             finance_types: models.financeType.findAll(),
             plan_categories: models.planCategory.findAll(),
             topics: models.topic.findAll(),

@@ -18,15 +18,11 @@ module.exports = {
                     type: Sequelize.INTEGER,
                     allowNull: true,
                 },
-                douches: {
-                    type: Sequelize.INTEGER,
-                    allowNull: true,
-                },
                 electricite: {
                     type: Sequelize.INTEGER,
                     allowNull: true,
                 },
-                frequence_dechets: {
+                nombre_bennes: {
                     type: Sequelize.STRING,
                     allowNull: false,
                 },
@@ -55,21 +51,6 @@ module.exports = {
                 transaction,
             },
         )
-            .then(() => queryInterface.addConstraint(
-                'indicateurs_securisation',
-                ['frequence_dechets'],
-                {
-                    type: 'foreign key',
-                    name: 'fk_indicateurs_securisation_frequence_dechets',
-                    references: {
-                        table: 'frequence_dechets',
-                        field: 'uid',
-                    },
-                    onUpdate: 'cascade',
-                    onDelete: 'restrict',
-                    transaction,
-                },
-            ))
             .then(() => queryInterface.addConstraint(
                 'indicateurs_securisation',
                 ['created_by'],
@@ -113,13 +94,6 @@ module.exports = {
             .then(() => queryInterface.removeConstraint(
                 'indicateurs_securisation',
                 'fk_indicateurs_securisation_editor',
-                {
-                    transaction,
-                },
-            ))
-            .then(() => queryInterface.removeConstraint(
-                'indicateurs_securisation',
-                'fk_indicateurs_securisation_frequence_dechets',
                 {
                     transaction,
                 },

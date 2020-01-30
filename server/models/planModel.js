@@ -274,10 +274,8 @@ module.exports = (database) => {
                     indicateurs_education.difficulte_transport,
                     indicateurs_securisation.points_eau,
                     indicateurs_securisation.wc,
-                    indicateurs_securisation.douches,
-                    indicateurs_securisation.electricite,
-                    frequence_dechets.uid AS frequence_dechets_uid,
-                    frequence_dechets.name AS frequence_dechets_name
+                    indicateurs_securisation.nombre_bennes,
+                    indicateurs_securisation.electricite
                 FROM plan_states
                 LEFT JOIN audiences audience_in ON plan_states.fk_audience_in = audience_in.audience_id
                 LEFT JOIN audiences audience_out_positive ON plan_states.fk_audience_out_positive = audience_out_positive.audience_id
@@ -289,7 +287,6 @@ module.exports = (database) => {
                 LEFT JOIN indicateurs_formation ON plan_states.fk_indicateurs_formation = indicateurs_formation.indicateurs_formation_id
                 LEFT JOIN indicateurs_education ON plan_states.fk_indicateurs_education = indicateurs_education.indicateurs_education_id
                 LEFT JOIN indicateurs_securisation ON plan_states.fk_indicateurs_securisation = indicateurs_securisation.indicateurs_securisation_id
-                LEFT JOIN frequence_dechets ON indicateurs_securisation.frequence_dechets = frequence_dechets.uid
                 WHERE fk_plan IN (:planIds)
                 ORDER BY fk_plan, date ASC`,
                 {
@@ -491,12 +488,8 @@ module.exports = (database) => {
                 securisation: hashedPlans[state.fk_plan].topics.find(({ uid }) => uid === 'safety') ? {
                     points_eau: state.points_eau,
                     wc: state.wc,
-                    douches: state.douches,
+                    nombre_bennes: state.nombre_bennes,
                     electricite: state.electricite,
-                    frequence_dechets: {
-                        uid: state.frequence_dechets_uid,
-                        name: state.frequence_dechets_name,
-                    },
                 } : null,
             });
 
