@@ -1,6 +1,7 @@
 const validator = require('validator');
-const { sequelize } = require('#db/models');
 const semver = require('semver');
+const jwt = require('jsonwebtoken');
+const { sequelize } = require('#db/models');
 
 const {
     generateAccessTokenFor, hashPassword, generateSalt, getAccountActivationLink,
@@ -18,7 +19,6 @@ MAIL_TEMPLATES.access_granted = require('#server/mails/access_granted');
 MAIL_TEMPLATES.access_denied = require('#server/mails/access_denied');
 MAIL_TEMPLATES.new_password = require('#server/mails/new_password');
 
-const jwt = require('jsonwebtoken');
 const { auth: authConfig } = require('#server/config');
 
 function trim(str) {
@@ -56,62 +56,62 @@ function checkPassword(str) {
 
 function fromOptionToPermissions(option, dataJustice) {
     switch (option.id) {
-    case 'close_shantytown':
-        return [
-            {
-                entity: 'shantytown',
-                feature: 'close',
-                level: 'local',
-                data: { data_justice: dataJustice },
-                allowed: true,
-            },
-        ];
+        case 'close_shantytown':
+            return [
+                {
+                    entity: 'shantytown',
+                    feature: 'close',
+                    level: 'local',
+                    data: { data_justice: dataJustice },
+                    allowed: true,
+                },
+            ];
 
-    case 'create_and_close_shantytown':
-        return [
-            {
-                entity: 'shantytown',
-                feature: 'create',
-                level: 'local',
-                data: { data_justice: dataJustice },
-                allowed: true,
-            },
-            {
-                entity: 'shantytown',
-                feature: 'close',
-                level: 'local',
-                data: { data_justice: dataJustice },
-                allowed: true,
-            },
-        ];
+        case 'create_and_close_shantytown':
+            return [
+                {
+                    entity: 'shantytown',
+                    feature: 'create',
+                    level: 'local',
+                    data: { data_justice: dataJustice },
+                    allowed: true,
+                },
+                {
+                    entity: 'shantytown',
+                    feature: 'close',
+                    level: 'local',
+                    data: { data_justice: dataJustice },
+                    allowed: true,
+                },
+            ];
 
-    case 'hide_justice':
-        return [
-            {
-                entity: 'shantytown',
-                feature: 'list',
-                level: 'local',
-                data: { data_justice: false },
-                allowed: true,
-            },
-            {
-                entity: 'shantytown',
-                feature: 'read',
-                level: 'local',
-                data: { data_justice: false },
-                allowed: true,
-            },
-            {
-                entity: 'shantytown',
-                feature: 'export',
-                level: 'local',
-                data: { data_justice: false },
-                allowed: true,
-            },
-        ];
+        case 'hide_justice':
+            return [
+                {
+                    entity: 'shantytown',
+                    feature: 'list',
+                    level: 'local',
+                    data: { data_justice: false },
+                    allowed: true,
+                },
+                {
+                    entity: 'shantytown',
+                    feature: 'read',
+                    level: 'local',
+                    data: { data_justice: false },
+                    allowed: true,
+                },
+                {
+                    entity: 'shantytown',
+                    feature: 'export',
+                    level: 'local',
+                    data: { data_justice: false },
+                    allowed: true,
+                },
+            ];
 
-    default:
-        return [];
+        default:
+            return [];
     }
 }
 
@@ -506,8 +506,8 @@ module.exports = (models) => {
         };
     }
 
-    function createUser(data) {
-        return sequelize.transaction(async (t) => {
+    async function createUser(data) {
+        const userId = await sequelize.transaction(async (t) => {
             // create association if necessary
             if (data.organization_category === 'association') {
                 let create = null;
@@ -556,6 +556,8 @@ module.exports = (models) => {
                 salt: generateSalt(),
             }), t);
         });
+
+        return models.user.findOne(userId);
     }
 
     return {
@@ -769,9 +771,9 @@ module.exports = (models) => {
             }
 
             // insert user into database
-            let userId;
+            let user;
             try {
-                userId = await createUser(Object.assign({}, sanitizedData, {
+                user = await createUser(Object.assign({}, sanitizedData, {
                     access_request_message: null,
                     created_by: req.user.id,
                 }));
@@ -785,9 +787,7 @@ module.exports = (models) => {
             }
 
             // congratulations
-            return res.status(200).send({
-                id: userId,
-            });
+            return res.status(200).send(user);
         },
 
         /**
@@ -816,9 +816,9 @@ module.exports = (models) => {
             }
 
             // insert user into database
-            let userId;
+            let simpleUser;
             try {
-                userId = await createUser(Object.assign({}, sanitizedData, {
+                simpleUser = await createUser(Object.assign({}, sanitizedData, {
                     created_by: null,
                 }));
             } catch (error) {
@@ -838,7 +838,7 @@ module.exports = (models) => {
             }
 
             try {
-                const user = await models.user.findOne(userId, { extended: true });
+                const user = await models.user.findOne(simpleUser.id, { extended: true });
                 const admins = await models.user.getAdminsFor(user);
                 const mailTemplate = MAIL_TEMPLATES.new_user_alert(user, new Date());
 
@@ -851,9 +851,7 @@ module.exports = (models) => {
             }
 
             // congratulations
-            return res.status(200).send({
-                id: userId,
-            });
+            return res.status(200).send(simpleUser);
         },
 
         async setDefaultExport(req, res) {

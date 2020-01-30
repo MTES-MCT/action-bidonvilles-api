@@ -97,25 +97,6 @@ function serializePlan(plan) {
     return base;
 }
 
-function fromGeoLevelToTableName(geoLevel) {
-    switch (geoLevel) {
-        case 'region':
-            return 'regions';
-
-        case 'departement':
-            return 'departements';
-
-        case 'epci':
-            return 'epci';
-
-        case 'city':
-            return 'cities';
-
-        default:
-            return null;
-    }
-}
-
 module.exports = (database) => {
     // eslint-disable-next-line global-require
     const userModel = require('./userModel')(database);
@@ -129,13 +110,14 @@ module.exports = (database) => {
         const featureLevel = user.permissions.plan[feature].geographic_level;
         const userLevel = user.organization.location.type;
 
+        const locationWhere = [];
         if (featureLevel !== 'nation' && (featureLevel !== 'local' || userLevel !== 'nation')) {
             const level = featureLevel === 'local' ? userLevel : featureLevel;
             if (user.organization.location[level] === null) {
                 return [];
             }
 
-            where.push(`${fromGeoLevelToTableName(level)}.code = :locationCode`);
+            locationWhere.push(`${level}_code = :locationCode`);
             replacements.locationCode = user.organization.location[level].code;
         }
 
@@ -189,12 +171,27 @@ module.exports = (database) => {
         const planIds = rows.map(({ id }) => id);
         const [planManagers, planOperators, planTopics, planStates, planShantytowns, planFinances] = await Promise.all([
             database.query(
-                'SELECT fk_plan, fk_user FROM plan_managers WHERE fk_plan IN (:planIds) ORDER BY fk_plan ASC',
+                `SELECT
+                    fk_plan,
+                    fk_user,
+                    organizations.region_code,
+                    organizations.region_name,
+                    organizations.departement_code,
+                    organizations.departement_name,
+                    organizations.epci_code,
+                    organizations.epci_name,
+                    organizations.city_code,
+                    organizations.city_name
+                FROM plan_managers
+                LEFT JOIN users ON plan_managers.fk_user = users.user_id
+                LEFT JOIN localized_organizations organizations ON users.fk_organization = organizations.organization_id
+                WHERE (${['fk_plan IN (:planIds)', ...locationWhere].join(') AND (')})
+                ORDER BY fk_plan ASC`,
                 {
                     type: database.QueryTypes.SELECT,
-                    replacements: {
+                    replacements: Object.assign({}, replacements, {
                         planIds,
-                    },
+                    }),
                 },
             ),
             database.query(
@@ -448,12 +445,12 @@ module.exports = (database) => {
                         minors: state.out_excluded_minors,
                     } : null,
                 },
-                droit_commun: state.domiciliation !== null ? {
+                droit_commun: {
                     domiciliation: state.domiciliation,
                     droits_caf: state.droits_caf,
                     emploi_stable: state.emploi_stable,
-                } : null,
-                sante: state.ame_valide !== null ? {
+                },
+                sante: hashedPlans[state.fk_plan].topics.find(({ uid }) => uid === 'health') ? {
                     ame_valide: state.ame_valide,
                     puma_valide: state.puma_valide,
                     ame_en_cours: state.ame_en_cours,
@@ -461,7 +458,7 @@ module.exports = (database) => {
                     orientation: state.orientation,
                     accompagnement: state.accompagnement,
                 } : null,
-                logement: state.siao !== null ? {
+                logement: hashedPlans[state.fk_plan].topics.find(({ uid }) => uid === 'housing') ? {
                     siao: state.siao,
                     logement_social: state.logement_social,
                     dalo: state.dalo,
@@ -469,7 +466,7 @@ module.exports = (database) => {
                     non_accompagnes: state.non_accompagnes,
                     heberges: state.heberges,
                 } : null,
-                formation: state.pole_emploi !== null ? {
+                formation: hashedPlans[state.fk_plan].topics.find(({ uid }) => uid === 'work') ? {
                     pole_emploi: state.pole_emploi,
                     pole_emploi_femmes: state.pole_emploi_femmes,
                     mission_locale: state.mission_locale,
@@ -481,7 +478,7 @@ module.exports = (database) => {
                     are: state.are,
                     are_femmes: state.are_femmes,
                 } : null,
-                education: state.scolarisables !== null ? {
+                education: hashedPlans[state.fk_plan].topics.find(({ uid }) => uid === 'school') ? {
                     scolarisables: state.scolarisables,
                     maternelles: state.maternelles,
                     elementaires: state.elementaires,
@@ -491,7 +488,7 @@ module.exports = (database) => {
                     difficculte_place_up2a: state.difficculte_place_up2a,
                     difficulte_transport: state.difficulte_transport,
                 } : null,
-                securisation: state.points_eau !== null ? {
+                securisation: hashedPlans[state.fk_plan].topics.find(({ uid }) => uid === 'safety') ? {
                     points_eau: state.points_eau,
                     wc: state.wc,
                     douches: state.douches,
@@ -556,7 +553,7 @@ module.exports = (database) => {
             });
         });
 
-        return rows.map(serializePlan);
+        return rows.filter(({ managers }) => managers !== undefined && managers.length > 0).map(serializePlan);
     }
 
     return {

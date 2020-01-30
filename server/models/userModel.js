@@ -528,45 +528,6 @@ module.exports = (database) => {
             return query(where, filters);
         },
 
-        create: async (user, transaction = undefined) => {
-            const response = await database.query(
-                `INSERT INTO
-                    users(
-                        first_name,
-                        last_name,
-                        email,
-                        fk_organization,
-                        position,
-                        access_request_message,
-                        salt,
-                        phone,
-                        fk_status,
-                        created_by
-                    )
-
-                    VALUES(
-                        :first_name,
-                        :last_name,
-                        :email,
-                        :organization,
-                        :position,
-                        :access_request_message,
-                        :salt,
-                        '',
-                        'new',
-                        :created_by
-                    )
-                    
-                    RETURNING user_id`,
-                {
-                    replacements: user,
-                    transaction,
-                },
-            );
-
-            return response[0][0].user_id;
-        },
-
         update: async (userId, values) => {
             if (userId === undefined) {
                 throw new Error('The user id is missing');
@@ -745,6 +706,45 @@ module.exports = (database) => {
 
             return organizations;
         },
+    };
+
+    model.create = async (user, transaction = undefined) => {
+        const response = await database.query(
+            `INSERT INTO
+                users(
+                    first_name,
+                    last_name,
+                    email,
+                    fk_organization,
+                    position,
+                    access_request_message,
+                    salt,
+                    phone,
+                    fk_status,
+                    created_by
+                )
+
+                VALUES(
+                    :first_name,
+                    :last_name,
+                    :email,
+                    :organization,
+                    :position,
+                    :access_request_message,
+                    :salt,
+                    '',
+                    'new',
+                    :created_by
+                )
+                
+                RETURNING user_id`,
+            {
+                replacements: user,
+                transaction,
+            },
+        );
+
+        return response[0][0].user_id;
     };
 
     model.getAdminsFor = async (user) => {

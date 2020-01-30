@@ -12,19 +12,19 @@ module.exports = {
                 },
                 points_eau: {
                     type: Sequelize.INTEGER,
-                    allowNull: false,
+                    allowNull: true,
                 },
                 wc: {
                     type: Sequelize.INTEGER,
-                    allowNull: false,
+                    allowNull: true,
                 },
                 douches: {
                     type: Sequelize.INTEGER,
-                    allowNull: false,
+                    allowNull: true,
                 },
                 electricite: {
                     type: Sequelize.INTEGER,
-                    allowNull: false,
+                    allowNull: true,
                 },
                 frequence_dechets: {
                     type: Sequelize.STRING,

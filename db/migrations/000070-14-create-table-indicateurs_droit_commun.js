@@ -12,15 +12,15 @@ module.exports = {
                 },
                 domiciliation: {
                     type: Sequelize.INTEGER,
-                    allowNull: false,
+                    allowNull: true,
                 },
                 droits_caf: {
                     type: Sequelize.INTEGER,
-                    allowNull: false,
+                    allowNull: true,
                 },
                 emploi_stable: {
                     type: Sequelize.INTEGER,
-                    allowNull: false,
+                    allowNull: true,
                 },
                 created_by: {
                     type: Sequelize.INTEGER,

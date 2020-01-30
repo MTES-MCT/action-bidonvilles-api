@@ -12,43 +12,43 @@ module.exports = {
                 },
                 pole_emploi: {
                     type: Sequelize.INTEGER,
-                    allowNull: false,
+                    allowNull: true,
                 },
                 pole_emploi_femmes: {
                     type: Sequelize.INTEGER,
-                    allowNull: false,
+                    allowNull: true,
                 },
                 mission_locale: {
                     type: Sequelize.INTEGER,
-                    allowNull: false,
+                    allowNull: true,
                 },
                 mission_locale_femmes: {
                     type: Sequelize.INTEGER,
-                    allowNull: false,
+                    allowNull: true,
                 },
                 contrats: {
                     type: Sequelize.INTEGER,
-                    allowNull: false,
+                    allowNull: true,
                 },
                 contrats_femmes: {
                     type: Sequelize.INTEGER,
-                    allowNull: false,
+                    allowNull: true,
                 },
                 autoentrepreneurs: {
                     type: Sequelize.INTEGER,
-                    allowNull: false,
+                    allowNull: true,
                 },
                 autoentrepreneurs_femmes: {
                     type: Sequelize.INTEGER,
-                    allowNull: false,
+                    allowNull: true,
                 },
                 are: {
                     type: Sequelize.INTEGER,
-                    allowNull: false,
+                    allowNull: true,
                 },
                 are_femmes: {
                     type: Sequelize.INTEGER,
-                    allowNull: false,
+                    allowNull: true,
                 },
                 created_by: {
                     type: Sequelize.INTEGER,
