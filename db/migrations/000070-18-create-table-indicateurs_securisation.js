@@ -23,8 +23,8 @@ module.exports = {
                     allowNull: true,
                 },
                 nombre_bennes: {
-                    type: Sequelize.STRING,
-                    allowNull: false,
+                    type: Sequelize.INTEGER,
+                    allowNull: true,
                 },
                 created_by: {
                     type: Sequelize.INTEGER,
