@@ -188,47 +188,51 @@ function sanitizeState(plan, data) {
 
     const topics = plan.topics.map(({ uid }) => uid);
 
+    function getIntOrNull(value) {
+        return value !== '' && value !== undefined ? parseInt(value, 10) : null;
+    }
+
     // indicateurs droit commun
-    sanitizedData.domiciliation = parseInt(data.domiciliation, 10);
-    sanitizedData.droits_caf = parseInt(data.droits_caf, 10);
-    sanitizedData.emploi_stable = parseInt(data.emploi_stable, 10);
+    sanitizedData.domiciliation = getIntOrNull(data.domiciliation);
+    sanitizedData.droits_caf = getIntOrNull(data.droits_caf);
+    sanitizedData.emploi_stable = getIntOrNull(data.emploi_stable);
 
     // indicateurs santé
     if (topics.indexOf('health') !== -1) {
-        sanitizedData.ame_valide = parseInt(data.ame_valide, 10);
-        sanitizedData.puma_valide = parseInt(data.puma_valide, 10);
-        sanitizedData.ame_en_cours = parseInt(data.ame_en_cours, 10);
-        sanitizedData.puma_en_cours = parseInt(data.puma_en_cours, 10);
-        sanitizedData.orientation = parseInt(data.orientation, 10);
-        sanitizedData.accompagnement = parseInt(data.accompagnement, 10);
+        sanitizedData.ame_valide = getIntOrNull(data.ame_valide);
+        sanitizedData.puma_valide = getIntOrNull(data.puma_valide);
+        sanitizedData.ame_en_cours = getIntOrNull(data.ame_en_cours);
+        sanitizedData.puma_en_cours = getIntOrNull(data.puma_en_cours);
+        sanitizedData.orientation = getIntOrNull(data.orientation);
+        sanitizedData.accompagnement = getIntOrNull(data.accompagnement);
     }
 
     // indicateurs logement
     if (topics.indexOf('housing') !== -1) {
-        sanitizedData.siao = parseInt(data.siao, 10);
-        sanitizedData.logement_social = parseInt(data.logement_social, 10);
-        sanitizedData.dalo = parseInt(data.dalo, 10);
-        sanitizedData.accompagnes = parseInt(data.accompagnes, 10);
-        sanitizedData.non_accompagnes = parseInt(data.non_accompagnes, 10);
-        sanitizedData.heberges = parseInt(data.heberges, 10);
+        sanitizedData.siao = getIntOrNull(data.siao);
+        sanitizedData.logement_social = getIntOrNull(data.logement_social);
+        sanitizedData.dalo = getIntOrNull(data.dalo);
+        sanitizedData.accompagnes = getIntOrNull(data.accompagnes);
+        sanitizedData.non_accompagnes = getIntOrNull(data.non_accompagnes);
+        sanitizedData.heberges = getIntOrNull(data.heberges);
     }
 
     // indicateurs sécurisation
     if (topics.indexOf('safety') !== -1) {
-        sanitizedData.points_eau = parseInt(data.points_eau, 10);
-        sanitizedData.wc = parseInt(data.wc, 10);
-        sanitizedData.douches = parseInt(data.douches, 10);
-        sanitizedData.electricite = parseInt(data.electricite, 10);
+        sanitizedData.points_eau = getIntOrNull(data.points_eau);
+        sanitizedData.wc = getIntOrNull(data.wc);
+        sanitizedData.douches = getIntOrNull(data.douches);
+        sanitizedData.electricite = getIntOrNull(data.electricite);
         sanitizedData.frequence_dechets = data.frequence_dechets;
     }
 
     // indicateurs éducation
     if (topics.indexOf('school') !== -1) {
-        sanitizedData.scolarisables = parseInt(data.scolarisables, 10);
-        sanitizedData.maternelles = parseInt(data.maternelles, 10);
-        sanitizedData.elementaires = parseInt(data.elementaires, 10);
-        sanitizedData.colleges = parseInt(data.colleges, 10);
-        sanitizedData.lycees = parseInt(data.lycees, 10);
+        sanitizedData.scolarisables = getIntOrNull(data.scolarisables);
+        sanitizedData.maternelles = getIntOrNull(data.maternelles);
+        sanitizedData.elementaires = getIntOrNull(data.elementaires);
+        sanitizedData.colleges = getIntOrNull(data.colleges);
+        sanitizedData.lycees = getIntOrNull(data.lycees);
         sanitizedData.difficulte_cantine = data.difficultes && data.difficultes.indexOf('cantine') !== -1;
         sanitizedData.difficulte_place_up2a = data.difficultes && data.difficultes.indexOf('place_up2a') !== -1;
         sanitizedData.difficulte_transport = data.difficultes && data.difficultes.indexOf('transport') !== -1;
@@ -236,16 +240,16 @@ function sanitizeState(plan, data) {
 
     // indicateurs formation
     if (topics.indexOf('work') !== -1) {
-        sanitizedData.pole_emploi = parseInt(data.pole_emploi, 10);
-        sanitizedData.pole_emploi_femmes = parseInt(data.pole_emploi_femmes, 10);
-        sanitizedData.mission_locale = parseInt(data.mission_locale, 10);
-        sanitizedData.mission_locale_femmes = parseInt(data.mission_locale_femmes, 10);
-        sanitizedData.contrats = parseInt(data.contrats, 10);
-        sanitizedData.contrats_femmes = parseInt(data.contrats_femmes, 10);
-        sanitizedData.autoentrepreneurs = parseInt(data.autoentrepreneurs, 10);
-        sanitizedData.autoentrepreneurs_femmes = parseInt(data.autoentrepreneurs_femmes, 10);
-        sanitizedData.are = parseInt(data.are, 10);
-        sanitizedData.are_femmes = parseInt(data.are_femmes, 10);
+        sanitizedData.pole_emploi = getIntOrNull(data.pole_emploi);
+        sanitizedData.pole_emploi_femmes = getIntOrNull(data.pole_emploi_femmes);
+        sanitizedData.mission_locale = getIntOrNull(data.mission_locale);
+        sanitizedData.mission_locale_femmes = getIntOrNull(data.mission_locale_femmes);
+        sanitizedData.contrats = getIntOrNull(data.contrats);
+        sanitizedData.contrats_femmes = getIntOrNull(data.contrats_femmes);
+        sanitizedData.autoentrepreneurs = getIntOrNull(data.autoentrepreneurs);
+        sanitizedData.autoentrepreneurs_femmes = getIntOrNull(data.autoentrepreneurs_femmes);
+        sanitizedData.are = getIntOrNull(data.are);
+        sanitizedData.are_femmes = getIntOrNull(data.are_femmes);
     }
 
     return sanitizedData;
@@ -993,125 +997,125 @@ module.exports = models => ({
 
         // indicateurs droit commun
         const topics = plan.topics.map(({ uid }) => uid);
-        if (Number.isNaN(stateData.domiciliation) || stateData.domiciliation < 0) {
+        if (stateData.domiciliation !== null && (Number.isNaN(stateData.domiciliation) || stateData.domiciliation < 0)) {
             addError('domiciliation', 'Ce champ est obligatoire et sa valeur ne peut pas être négative');
         }
-        if (Number.isNaN(stateData.droits_caf) || stateData.droits_caf < 0) {
+        if (stateData.droits_caf !== null && (Number.isNaN(stateData.droits_caf) || stateData.droits_caf < 0)) {
             addError('droits_caf', 'Ce champ est obligatoire et sa valeur ne peut pas être négative');
         }
-        if (Number.isNaN(stateData.emploi_stable) || stateData.emploi_stable < 0) {
+        if (stateData.emploi_stable !== null && (Number.isNaN(stateData.emploi_stable) || stateData.emploi_stable < 0)) {
             addError('emploi_stable', 'Ce champ est obligatoire et sa valeur ne peut pas être négative');
         }
 
         // indicateurs santé
         if (topics.indexOf('health') !== -1) {
-            if (Number.isNaN(stateData.ame_valide) || stateData.ame_valide < 0) {
+            if (stateData.ame_valide !== null && (Number.isNaN(stateData.ame_valide) || stateData.ame_valide < 0)) {
                 addError('ame_valide', 'Ce champ est obligatoire et sa valeur ne peut pas être négative');
             }
-            if (Number.isNaN(stateData.puma_valide) || stateData.puma_valide < 0) {
+            if (stateData.puma_valide !== null && (Number.isNaN(stateData.puma_valide) || stateData.puma_valide < 0)) {
                 addError('puma_valide', 'Ce champ est obligatoire et sa valeur ne peut pas être négative');
             }
-            if (Number.isNaN(stateData.ame_en_cours) || stateData.ame_en_cours < 0) {
+            if (stateData.ame_en_cours !== null && (Number.isNaN(stateData.ame_en_cours) || stateData.ame_en_cours < 0)) {
                 addError('ame_en_cours', 'Ce champ est obligatoire et sa valeur ne peut pas être négative');
             }
-            if (Number.isNaN(stateData.puma_en_cours) || stateData.puma_en_cours < 0) {
+            if (stateData.puma_en_cours !== null && (Number.isNaN(stateData.puma_en_cours) || stateData.puma_en_cours < 0)) {
                 addError('puma_en_cours', 'Ce champ est obligatoire et sa valeur ne peut pas être négative');
             }
-            if (Number.isNaN(stateData.orientation) || stateData.orientation < 0) {
+            if (stateData.orientation !== null && (Number.isNaN(stateData.orientation) || stateData.orientation < 0)) {
                 addError('orientation', 'Ce champ est obligatoire et sa valeur ne peut pas être négative');
             }
-            if (Number.isNaN(stateData.accompagnement) || stateData.accompagnement < 0) {
+            if (stateData.accompagnement !== null && (Number.isNaN(stateData.accompagnement) || stateData.accompagnement < 0)) {
                 addError('accompagnement', 'Ce champ est obligatoire et sa valeur ne peut pas être négative');
             }
         }
 
         // indicateurs logement
         if (topics.indexOf('housing') !== -1) {
-            if (Number.isNaN(stateData.siao) || stateData.siao < 0) {
+            if (stateData.siao !== null && (Number.isNaN(stateData.siao) || stateData.siao < 0)) {
                 addError('siao', 'Ce champ est obligatoire et sa valeur ne peut pas être négative');
             }
-            if (Number.isNaN(stateData.logement_social) || stateData.logement_social < 0) {
+            if (stateData.logement_social !== null && (Number.isNaN(stateData.logement_social) || stateData.logement_social < 0)) {
                 addError('logement_social', 'Ce champ est obligatoire et sa valeur ne peut pas être négative');
             }
-            if (Number.isNaN(stateData.dalo) || stateData.dalo < 0) {
+            if (stateData.dalo !== null && (Number.isNaN(stateData.dalo) || stateData.dalo < 0)) {
                 addError('dalo', 'Ce champ est obligatoire et sa valeur ne peut pas être négative');
             }
-            if (Number.isNaN(stateData.accompagnes) || stateData.accompagnes < 0) {
+            if (stateData.accompagnes !== null && (Number.isNaN(stateData.accompagnes) || stateData.accompagnes < 0)) {
                 addError('accompagnes', 'Ce champ est obligatoire et sa valeur ne peut pas être négative');
             }
-            if (Number.isNaN(stateData.non_accompagnes) || stateData.non_accompagnes < 0) {
+            if (stateData.non_accompagnes !== null && (Number.isNaN(stateData.non_accompagnes) || stateData.non_accompagnes < 0)) {
                 addError('non_accompagnes', 'Ce champ est obligatoire et sa valeur ne peut pas être négative');
             }
-            if (Number.isNaN(stateData.heberges) || stateData.heberges < 0) {
+            if (stateData.heberges !== null && (Number.isNaN(stateData.heberges) || stateData.heberges < 0)) {
                 addError('heberges', 'Ce champ est obligatoire et sa valeur ne peut pas être négative');
             }
         }
 
         // indicateurs sécurisation
         if (topics.indexOf('safety') !== -1) {
-            if (Number.isNaN(stateData.points_eau) || stateData.points_eau < 0) {
+            if (stateData.points_eau !== null && (Number.isNaN(stateData.points_eau) || stateData.points_eau < 0)) {
                 addError('points_eau', 'Ce champ est obligatoire et sa valeur ne peut pas être négative');
             }
-            if (Number.isNaN(stateData.wc) || stateData.wc < 0) {
+            if (stateData.wc !== null && (Number.isNaN(stateData.wc) || stateData.wc < 0)) {
                 addError('wc', 'Ce champ est obligatoire et sa valeur ne peut pas être négative');
             }
-            if (Number.isNaN(stateData.douches) || stateData.douches < 0) {
+            if (stateData.douches !== null && (Number.isNaN(stateData.douches) || stateData.douches < 0)) {
                 addError('douches', 'Ce champ est obligatoire et sa valeur ne peut pas être négative');
             }
-            if (Number.isNaN(stateData.electricite) || stateData.electricite < 0) {
+            if (stateData.electricite !== null && (Number.isNaN(stateData.electricite) || stateData.electricite < 0)) {
                 addError('electricite', 'Ce champ est obligatoire et sa valeur ne peut pas être négative');
             }
         }
 
         // indicateurs éducation
         if (topics.indexOf('school') !== -1) {
-            if (Number.isNaN(stateData.scolarisables) || stateData.scolarisables < 0) {
+            if (stateData.scolarisables !== null && (Number.isNaN(stateData.scolarisables) || stateData.scolarisables < 0)) {
                 addError('scolarisables', 'Ce champ est obligatoire et sa valeur ne peut pas être négative');
             }
-            if (Number.isNaN(stateData.maternelles) || stateData.maternelles < 0) {
+            if (stateData.maternelles !== null && (Number.isNaN(stateData.maternelles) || stateData.maternelles < 0)) {
                 addError('maternelles', 'Ce champ est obligatoire et sa valeur ne peut pas être négative');
             }
-            if (Number.isNaN(stateData.elementaires) || stateData.elementaires < 0) {
+            if (stateData.elementaires !== null && (Number.isNaN(stateData.elementaires) || stateData.elementaires < 0)) {
                 addError('elementaires', 'Ce champ est obligatoire et sa valeur ne peut pas être négative');
             }
-            if (Number.isNaN(stateData.colleges) || stateData.colleges < 0) {
+            if (stateData.colleges !== null && (Number.isNaN(stateData.colleges) || stateData.colleges < 0)) {
                 addError('colleges', 'Ce champ est obligatoire et sa valeur ne peut pas être négative');
             }
-            if (Number.isNaN(stateData.lycees) || stateData.lycees < 0) {
+            if (stateData.lycees !== null && (Number.isNaN(stateData.lycees) || stateData.lycees < 0)) {
                 addError('lycees', 'Ce champ est obligatoire et sa valeur ne peut pas être négative');
             }
         }
 
         // indicateurs formation
         if (topics.indexOf('work') !== -1) {
-            if (Number.isNaN(stateData.pole_emploi) || stateData.pole_emploi < 0) {
+            if (stateData.pole_emploi !== null && (Number.isNaN(stateData.pole_emploi) || stateData.pole_emploi < 0)) {
                 addError('pole_emploi', 'Ce champ est obligatoire et sa valeur ne peut pas être négative');
             }
-            if (Number.isNaN(stateData.pole_emploi_femmes) || stateData.pole_emploi_femmes < 0) {
+            if (stateData.pole_emploi_femmes !== null && (Number.isNaN(stateData.pole_emploi_femmes) || stateData.pole_emploi_femmes < 0)) {
                 addError('pole_emploi_femmes', 'Ce champ est obligatoire et sa valeur ne peut pas être négative');
             }
-            if (Number.isNaN(stateData.mission_locale) || stateData.mission_locale < 0) {
+            if (stateData.mission_locale !== null && (Number.isNaN(stateData.mission_locale) || stateData.mission_locale < 0)) {
                 addError('mission_locale', 'Ce champ est obligatoire et sa valeur ne peut pas être négative');
             }
-            if (Number.isNaN(stateData.mission_locale_femmes) || stateData.mission_locale_femmes < 0) {
+            if (stateData.mission_locale_femmes !== null && (Number.isNaN(stateData.mission_locale_femmes) || stateData.mission_locale_femmes < 0)) {
                 addError('mission_locale_femmes', 'Ce champ est obligatoire et sa valeur ne peut pas être négative');
             }
-            if (Number.isNaN(stateData.contrats) || stateData.contrats < 0) {
+            if (stateData.contrats !== null && (Number.isNaN(stateData.contrats) || stateData.contrats < 0)) {
                 addError('contrats', 'Ce champ est obligatoire et sa valeur ne peut pas être négative');
             }
-            if (Number.isNaN(stateData.contrats_femmes) || stateData.contrats_femmes < 0) {
+            if (stateData.contrats_femmes !== null && (Number.isNaN(stateData.contrats_femmes) || stateData.contrats_femmes < 0)) {
                 addError('contrats_femmes', 'Ce champ est obligatoire et sa valeur ne peut pas être négative');
             }
-            if (Number.isNaN(stateData.autoentrepreneurs) || stateData.autoentrepreneurs < 0) {
+            if (stateData.autoentrepreneurs !== null && (Number.isNaN(stateData.autoentrepreneurs) || stateData.autoentrepreneurs < 0)) {
                 addError('autoentrepreneurs', 'Ce champ est obligatoire et sa valeur ne peut pas être négative');
             }
-            if (Number.isNaN(stateData.autoentrepreneurs_femmes) || stateData.autoentrepreneurs_femmes < 0) {
+            if (stateData.autoentrepreneurs_femmes !== null && (Number.isNaN(stateData.autoentrepreneurs_femmes) || stateData.autoentrepreneurs_femmes < 0)) {
                 addError('autoentrepreneurs_femmes', 'Ce champ est obligatoire et sa valeur ne peut pas être négative');
             }
-            if (Number.isNaN(stateData.are) || stateData.are < 0) {
+            if (stateData.are !== null && (Number.isNaN(stateData.are) || stateData.are < 0)) {
                 addError('are', 'Ce champ est obligatoire et sa valeur ne peut pas être négative');
             }
-            if (Number.isNaN(stateData.are_femmes) || stateData.are_femmes < 0) {
+            if (stateData.are_femmes !== null && (Number.isNaN(stateData.are_femmes) || stateData.are_femmes < 0)) {
                 addError('are_femmes', 'Ce champ est obligatoire et sa valeur ne peut pas être négative');
             }
         }
@@ -1187,7 +1191,7 @@ module.exports = models => ({
                             replacements: {
                                 total: stateData.audience.out_excluded.total,
                                 families: stateData.audience.out_excluded.families,
-                                women: stateData.audience.out_excludedout_excluded.women,
+                                women: stateData.audience.out_excluded.women,
                                 minors: stateData.audience.out_excluded.minors,
                             },
                             transaction: t,
@@ -1398,21 +1402,6 @@ module.exports = models => ({
             return res.status(500).send({
                 error: {
                     user_message: 'Une erreur est survenue lors de l\'écriture des données en base',
-                },
-            });
-        }
-
-        return res.status(200).send({});
-    },
-
-    async updateDetails(req, res) {
-        try {
-            await models.plan.updateDetails(req.params.id, req.body);
-        } catch (error) {
-            return res.status(500).send({
-                error: {
-                    user_message: 'Une erreur est survenue lors de l\'écriture des données en base',
-                    developer_message: error,
                 },
             });
         }

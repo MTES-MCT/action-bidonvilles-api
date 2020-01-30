@@ -12,35 +12,35 @@ module.exports = {
                 },
                 scolarisables: {
                     type: Sequelize.INTEGER,
-                    allowNull: false,
+                    allowNull: true,
                 },
                 maternelles: {
                     type: Sequelize.INTEGER,
-                    allowNull: false,
+                    allowNull: true,
                 },
                 elementaires: {
                     type: Sequelize.INTEGER,
-                    allowNull: false,
+                    allowNull: true,
                 },
                 colleges: {
                     type: Sequelize.INTEGER,
-                    allowNull: false,
+                    allowNull: true,
                 },
                 lycees: {
                     type: Sequelize.INTEGER,
-                    allowNull: false,
+                    allowNull: true,
                 },
                 difficulte_cantine: {
                     type: Sequelize.BOOLEAN,
-                    allowNull: false,
+                    allowNull: true,
                 },
                 difficculte_place_up2a: {
                     type: Sequelize.BOOLEAN,
-                    allowNull: false,
+                    allowNull: true,
                 },
                 difficulte_transport: {
                     type: Sequelize.BOOLEAN,
-                    allowNull: false,
+                    allowNull: true,
                 },
                 created_by: {
                     type: Sequelize.INTEGER,
