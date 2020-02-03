@@ -245,6 +245,8 @@ function sanitizeState(plan, data) {
         sanitizedData.mission_locale_femmes = getIntOrNull(data.mission_locale_femmes);
         sanitizedData.contrats = getIntOrNull(data.contrats);
         sanitizedData.contrats_femmes = getIntOrNull(data.contrats_femmes);
+        sanitizedData.formations = getIntOrNull(data.formations);
+        sanitizedData.formations_femmes = getIntOrNull(data.formations_femmes);
         sanitizedData.autoentrepreneurs = getIntOrNull(data.autoentrepreneurs);
         sanitizedData.autoentrepreneurs_femmes = getIntOrNull(data.autoentrepreneurs_femmes);
         sanitizedData.are = getIntOrNull(data.are);
@@ -1252,6 +1254,12 @@ module.exports = models => ({
             if (stateData.contrats_femmes !== null && (Number.isNaN(stateData.contrats_femmes) || stateData.contrats_femmes < 0)) {
                 addError('contrats_femmes', 'Ce champ est obligatoire et sa valeur ne peut pas être négative');
             }
+            if (stateData.formations !== null && (Number.isNaN(stateData.formations) || stateData.formations < 0)) {
+                addError('formations', 'Ce champ est obligatoire et sa valeur ne peut pas être négative');
+            }
+            if (stateData.formations_femmes !== null && (Number.isNaN(stateData.formations_femmes) || stateData.formations_femmes < 0)) {
+                addError('formations_femmes', 'Ce champ est obligatoire et sa valeur ne peut pas être négative');
+            }
             if (stateData.autoentrepreneurs !== null && (Number.isNaN(stateData.autoentrepreneurs) || stateData.autoentrepreneurs < 0)) {
                 addError('autoentrepreneurs', 'Ce champ est obligatoire et sa valeur ne peut pas être négative');
             }
@@ -1441,8 +1449,8 @@ module.exports = models => ({
                 if (topics.indexOf('work') !== -1) {
                     indicateurPromises.push(
                         sequelize.query(
-                            `INSERT INTO indicateurs_formation(pole_emploi, pole_emploi_femmes, mission_locale, mission_locale_femmes, contrats, contrats_femmes, autoentrepreneurs, autoentrepreneurs_femmes, are, are_femmes, created_by)
-                            VALUES(:pole_emploi, :pole_emploi_femmes, :mission_locale, :mission_locale_femmes, :contrats, :contrats_femmes, :autoentrepreneurs, :autoentrepreneurs_femmes, :are, :are_femmes, :createdBy)
+                            `INSERT INTO indicateurs_formation(pole_emploi, pole_emploi_femmes, mission_locale, mission_locale_femmes, contrats, contrats_femmes, formations, formations_femmes, autoentrepreneurs, autoentrepreneurs_femmes, are, are_femmes, created_by)
+                            VALUES(:pole_emploi, :pole_emploi_femmes, :mission_locale, :mission_locale_femmes, :contrats, :contrats_femmes, :formations, :formations_femmes, :autoentrepreneurs, :autoentrepreneurs_femmes, :are, :are_femmes, :createdBy)
                             RETURNING indicateurs_formation_id AS id`,
                             {
                                 replacements: stateData,

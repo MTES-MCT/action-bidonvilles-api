@@ -34,6 +34,14 @@ module.exports = {
                     type: Sequelize.INTEGER,
                     allowNull: true,
                 },
+                formations: {
+                    type: Sequelize.INTEGER,
+                    allowNull: true,
+                },
+                formations_femmes: {
+                    type: Sequelize.INTEGER,
+                    allowNull: true,
+                },
                 autoentrepreneurs: {
                     type: Sequelize.INTEGER,
                     allowNull: true,
