@@ -15,7 +15,7 @@ function serializeChangelog(changelog) {
 
             newAcc = {
                 app_version: item.app_version,
-                date: toFormat(new Date(year, month, date), 'M Y'),
+                date: toFormat(new Date(year, parseInt(month, 10) - 1, date), 'M Y'),
                 items: [],
             };
         }
