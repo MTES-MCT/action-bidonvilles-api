@@ -167,13 +167,6 @@ module.exports = (middlewares, controllers) => {
         middlewares.appVersion.sync,
         controllers.plan.find,
     );
-    app.delete(
-        '/plans/:id',
-        middlewares.auth.authenticate,
-        (...args) => middlewares.auth.checkPermissions(['plan.delete'], ...args),
-        middlewares.appVersion.sync,
-        controllers.plan.delete,
-    );
     app.post(
         '/plans',
         [
@@ -184,20 +177,22 @@ module.exports = (middlewares, controllers) => {
         controllers.plan.create,
     );
     app.post(
-        '/plans/:id/towns',
-        middlewares.auth.authenticate,
-        (...args) => middlewares.auth.checkPermissions(['shantytown.create'], ...args),
-        middlewares.appVersion.sync,
-        controllers.plan.link,
-    );
-    app.post(
-        '/plan-details/:id',
+        '/plans/:id',
         [
             middlewares.auth.authenticate,
             (...args) => middlewares.auth.checkPermissions(['plan.update'], ...args),
             middlewares.appVersion.sync,
         ],
-        controllers.plan.updateDetails,
+        controllers.plan.update,
+    );
+    app.post(
+        '/plans/:id/states',
+        [
+            middlewares.auth.authenticate,
+            (...args) => middlewares.auth.checkPermissions(['plan.update'], ...args),
+            middlewares.appVersion.sync,
+        ],
+        controllers.plan.addState,
     );
 
     // towns
@@ -310,6 +305,11 @@ module.exports = (middlewares, controllers) => {
     );
 
     app.get(
+        '/organization-categories/:categoryId/users',
+        controllers.organization.getMembersByCategory,
+    );
+
+    app.get(
         '/organization-categories/:categoryId/organizations',
         controllers.organization.getByCategory,
     );
@@ -317,6 +317,11 @@ module.exports = (middlewares, controllers) => {
     app.get(
         '/organization-types/:typeId/organizations',
         controllers.organization.getByType,
+    );
+
+    app.get(
+        '/organizations/:organizationId/users',
+        controllers.organization.getMembers,
     );
 
     // geo

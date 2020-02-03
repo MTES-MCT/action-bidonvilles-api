@@ -46,6 +46,37 @@ module.exports = models => ({
         });
     },
 
+    async getMembersByCategory(req, res) {
+        let geographicFilter;
+        if (req.query.departementId !== undefined) {
+            geographicFilter = {
+                type: 'departement',
+                value: req.query.departementId,
+            };
+        } else if (req.query.regionId !== undefined) {
+            geographicFilter = {
+                type: 'region',
+                value: req.query.regionId,
+            };
+        }
+
+        return res.status(200).send({
+            success: true,
+            response: {
+                users: await models.user.findByOrganizationCategory(req.params.categoryId, geographicFilter),
+            },
+        });
+    },
+
+    async getMembers(req, res) {
+        return res.status(200).send({
+            success: true,
+            response: {
+                users: await models.user.findByOrganization(req.params.organizationId),
+            },
+        });
+    },
+
     async search(req, res) {
         // parse query
         const query = trim(req.query.query).replace(/\s+/g, ' ');
