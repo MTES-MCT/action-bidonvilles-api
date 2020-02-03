@@ -1,18 +1,13 @@
 const { frontUrl, backUrl } = require('../../server/config');
 
 const changelog = {
-    app_version: '0.1.1',
-    date: new Date(2019, 12, 12),
+    app_version: '0.2.0',
+    date: new Date(2020, 1, 3),
     items: [
         {
-            title: 'De nombreuses demandes d\'accès sont en attente sur la plateforme',
-            description: `<p><strong>Pour les administrateurs locaux, il convient d'accepter ou de refuser les accès des partenaires dans des délais rapides.</strong></p><p>vous pouvez suivre les demandes en cours depuis l'onglet ADMINISTRATION de la plateforme.</p><p><a href="${frontUrl}/typologie-des-acces" target="_blank">Guide des accès et de l'administrateur</a></p><p><a href="${frontUrl}/charte-d-engagement" target="_blank">Charte d'engagement des utilisateurs</a></p>`,
-            image: `${backUrl}/assets/changelog/0.1.1/item_1.png`,
-        },
-        {
-            title: 'Des mises à jour par les responsables du suivi des sites sont attendues',
-            description: '<p><strong>Pour les personnes en charge du suivi des sites, il convient de mettre à jour la plateforme.</strong></p><p>Deux fois par an, la Dihal réalise un état des lieux national des bidonvilles, campements et squats. La Dihal va réaliser un nouvel état des lieux à la date de référence 31/12/2019 à partir des données de la plateforme.</p><p><strong>Nous vous demandons donc de réaliser les mises à jour nécessaires, et ce jusqu\'au mercredi 15/01/2020 soir.</strong></p>',
-            image: `${backUrl}/assets/changelog/0.1.1/item_2.png`,
+            title: 'Vous pouvez renseigner les dispositifs existants en 2019 et leurs résultats jusqu\'au 21/02/2020',
+            description: '<p><ul><li>Le <strong>service de l’Etat</strong> en charge du pilotage d’un ou plusieurs dispositifs en déclare l’existence.</li><li>L’<strong>opérateur associatif</strong> qui intervient renseigne les indicateurs de suivi présents sur la plateforme.</li></ul></p><p>Nous vous invitons désormais à mettre à jour au fil de l’eau ces informations.</p>',
+            image: `${backUrl}/assets/changelog/0.2.0/item_1.png`,
         },
     ],
 };
