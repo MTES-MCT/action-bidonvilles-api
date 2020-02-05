@@ -5,6 +5,36 @@ const locationTypes = {
     other: 'dans plusieurs lieux',
 };
 
+function canUpdate(user, plan, updateType) {
+    if (!user.permissions.plan[updateType].allowed) {
+        return false;
+    }
+
+    switch (user.permissions.plan[updateType].geographic_level) {
+        case 'nation':
+            return true;
+
+        case 'local': {
+            const userLevel = user.organization.location.type;
+            if (userLevel === 'nation') {
+                return true;
+            }
+
+            if (user.organization.location[userLevel] === null) {
+                return false;
+            }
+
+            return plan.managers[0].organization.location[userLevel] && plan.managers[0].organization.location[userLevel].code === user.organization.location[userLevel].code;
+        }
+
+        case 'own':
+            return plan[updateType === 'updateMarks' ? 'operators' : 'managers'].some(({ id }) => id === user.id);
+
+        default:
+            return false;
+    }
+}
+
 /**
  * Serializes a single plan row
  *
@@ -12,7 +42,7 @@ const locationTypes = {
  *
  * @returns {Object}
  */
-function serializePlan(plan) {
+function serializePlan(user, permission, plan) {
     const base = {
         id: plan.id,
         name: plan.name,
@@ -26,15 +56,17 @@ function serializePlan(plan) {
         },
         location_details: plan.locationDetails,
         government_contacts: plan.managers,
-        departement: plan.managers[0].organization.location.departement.code,
+        departement: plan.managers[0].organization.location.departement ? plan.managers[0].organization.location.departement.code : '',
         operator_contacts: plan.operators,
         states: plan.states || [],
         topics: plan.topics,
         createdBy: plan.createdBy,
         updatedBy: plan.updatedBy,
+        canUpdate: canUpdate(user, plan, 'update'),
+        canUpdateMarks: canUpdate(user, plan, 'updateMarks'),
     };
 
-    if (!plan.finances) {
+    if (!plan.finances || permission.data_finances !== true) {
         base.finances = [];
     } else {
         const minYear = plan.finances.slice(-1)[0].year;
@@ -550,7 +582,9 @@ module.exports = (database) => {
             });
         });
 
-        return rows.filter(({ managers }) => managers !== undefined && managers.length > 0).map(serializePlan);
+        return rows
+            .filter(({ managers }) => managers !== undefined && managers.length > 0)
+            .map(serializePlan.bind(this, user, user.permissions.plan[feature]));
     }
 
     return {
