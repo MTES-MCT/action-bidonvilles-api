@@ -6,7 +6,7 @@ const locationTypes = {
 };
 
 function canUpdate(user, plan, updateType) {
-    if (!user.permissions.plan[updateType].allowed) {
+    if (!user.permissions.plan[updateType] || !user.permissions.plan[updateType].allowed) {
         return false;
     }
 
