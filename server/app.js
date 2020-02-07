@@ -189,7 +189,7 @@ module.exports = (middlewares, controllers) => {
         '/plans/:id/states',
         [
             middlewares.auth.authenticate,
-            (...args) => middlewares.auth.checkPermissions(['plan.update'], ...args),
+            (...args) => middlewares.auth.checkPermissions(['plan.updateMarks'], ...args),
             middlewares.appVersion.sync,
         ],
         controllers.plan.addState,
