@@ -1,3 +1,4 @@
+const validator = require('validator');
 const {
     sequelize,
     City: Cities,
@@ -8,26 +9,25 @@ const {
 } = require('#db/models');
 const { fromTsToFormat: tsToString, toFormat: dateToString } = require('#server/utils/date');
 const { createExport } = require('#server/utils/excel');
-const validator = require('validator');
 const { send: sendMail } = require('#server/utils/mail');
 const COMMENT_DELETION_MAIL = require('#server/mails/comment_deletion.js');
 
 function fromGeoLevelToTableName(geoLevel) {
     switch (geoLevel) {
-    case 'region':
-        return 'regions';
+        case 'region':
+            return 'regions';
 
-    case 'departement':
-        return 'departements';
+        case 'departement':
+            return 'departements';
 
-    case 'epci':
-        return 'epci';
+        case 'epci':
+            return 'epci';
 
-    case 'city':
-        return 'cities';
+        case 'city':
+            return 'cities';
 
-    default:
-        return null;
+        default:
+            return null;
     }
 }
 
@@ -482,6 +482,7 @@ module.exports = (models) => {
     return {
         async list(req, res) {
             try {
+                // filters
                 const filters = [];
                 if (req.query.status) {
                     filters.push({
@@ -489,8 +490,26 @@ module.exports = (models) => {
                     });
                 }
 
+                // order
+                let order;
+                const orderableColumns = {
+                    address: 'shantytowns.address',
+                    city: 'cities.name',
+                    departement: 'departements.code',
+                    population: 'shantytowns.population_total',
+                };
+                if (req.query.order) {
+                    order = [];
+                    req.query.order.split(',').forEach((q) => {
+                        const [column, direction] = q.split('.');
+                        if (orderableColumns[column] !== undefined && (direction === 'asc' || direction === 'desc')) {
+                            order.push(`${orderableColumns[column]} ${direction.toUpperCase()}${direction === 'desc' ? ' NULLS LAST' : ''}`);
+                        }
+                    });
+                }
+
                 return res.status(200).send(
-                    await models.shantytown.findAll(req.user, filters),
+                    await models.shantytown.findAll(req.user, filters, 'list', order),
                 );
             } catch (error) {
                 return res.status(500).send(error.message);
@@ -1483,11 +1502,11 @@ module.exports = (models) => {
                     title: 'Statut du diagnostic social',
                     data: ({ censusStatus }) => {
                         switch (censusStatus) {
-                        case null: return 'Inconnu';
-                        case 'none': return 'Non prévu';
-                        case 'scheduled': return 'Prévu';
-                        case 'done': return 'Réalisé';
-                        default: return null;
+                            case null: return 'Inconnu';
+                            case 'none': return 'Non prévu';
+                            case 'scheduled': return 'Prévu';
+                            case 'done': return 'Réalisé';
+                            default: return null;
                         }
                     },
                     width: COLUMN_WIDTHS.SMALL,
@@ -1576,11 +1595,11 @@ module.exports = (models) => {
                     title: 'Concours de la force publique',
                     data: ({ policeStatus }) => {
                         switch (policeStatus) {
-                        case null: return 'Inconnu';
-                        case 'none': return 'Non demandé';
-                        case 'requested': return 'Demandé';
-                        case 'granted': return 'Obtenu';
-                        default: return null;
+                            case null: return 'Inconnu';
+                            case 'none': return 'Non demandé';
+                            case 'requested': return 'Demandé';
+                            case 'granted': return 'Obtenu';
+                            default: return null;
                         }
                     },
                     width: COLUMN_WIDTHS.SMALL,

@@ -380,7 +380,7 @@ function getBaseSql(table, whereClause = null, order = null) {
  *
  * @returns {Array.<Object>}
  */
-async function query(database, where = [], user, feature, includeChangelog = false) {
+async function query(database, where = [], order = ['departements.code ASC', 'cities.name ASC'], user, feature, includeChangelog = false) {
     const replacements = {};
 
     const featureLevel = user.permissions.shantytown[feature].geographic_level;
@@ -412,7 +412,7 @@ async function query(database, where = [], user, feature, includeChangelog = fal
         getBaseSql(
             'shantytowns',
             where.length > 0 ? whereClause : null,
-            ['departements.code ASC', 'cities.name ASC'].join(', '),
+            order.join(', '),
         ),
         {
             type: database.QueryTypes.SELECT,
@@ -601,12 +601,13 @@ async function query(database, where = [], user, feature, includeChangelog = fal
 }
 
 module.exports = database => ({
-    findAll: (user, filters = [], feature = 'list') => query(database, filters, user, feature),
+    findAll: (user, filters = [], feature = 'list', order = undefined) => query(database, filters, order, user, feature),
 
     findOne: async (user, shantytownId) => {
         const towns = await query(
             database,
             [{ shantytown_id: shantytownId }],
+            undefined,
             user,
             'read',
             true, // include changelog
