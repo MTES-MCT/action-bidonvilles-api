@@ -374,7 +374,7 @@ module.exports = models => ({
                     try {
                         const ids = await models.shantytown.findAll(req.user, [
                             {
-                                shantytown_id: planData.locationShantytowns.map(({ id }) => id),
+                                shantytown_id: planData.locationShantytowns,
                             },
                         ]);
 
@@ -548,7 +548,7 @@ module.exports = models => ({
                         `INSERT INTO plan_shantytowns(fk_plan, fk_shantytown, created_by)
                         VALUES ${planData.locationShantytowns.map(() => '(?, ?, ?)').join(', ')}`,
                         {
-                            replacements: planData.locationShantytowns.reduce((acc, { id }) => [
+                            replacements: planData.locationShantytowns.reduce((acc, id) => [
                                 ...acc,
                                 planId,
                                 id,
