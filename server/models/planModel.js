@@ -5,12 +5,12 @@ const locationTypes = {
     other: 'dans plusieurs lieux',
 };
 
-function canUpdate(user, plan, updateType) {
-    if (!user.permissions.plan[updateType] || !user.permissions.plan[updateType].allowed) {
+function hasPermission(user, plan, feature) {
+    if (!user.permissions.plan[feature] || !user.permissions.plan[feature].allowed) {
         return false;
     }
 
-    switch (user.permissions.plan[updateType].geographic_level) {
+    switch (user.permissions.plan[feature].geographic_level) {
         case 'nation':
             return true;
 
@@ -28,7 +28,7 @@ function canUpdate(user, plan, updateType) {
         }
 
         case 'own':
-            return plan[updateType === 'updateMarks' ? 'operators' : 'managers'].some(({ id }) => id === user.id);
+            return plan[feature === 'updateMarks' ? 'operators' : 'managers'].some(({ id }) => id === user.id);
 
         default:
             return false;
@@ -48,6 +48,8 @@ function serializePlan(user, permission, plan) {
         name: plan.name,
         started_at: new Date(plan.startedAt).getTime(),
         expected_to_end_at: plan.expectedToEndAt ? (new Date(plan.expectedToEndAt).getTime()) : null,
+        closed_at: plan.closedAt ? new Date(plan.closedAt).getTime() : null,
+        updated_at: plan.updatedAt ? new Date(plan.updatedAt).getTime() : null,
         in_and_out: plan.inAndOut === true,
         goals: plan.goals,
         location_type: {
@@ -55,6 +57,7 @@ function serializePlan(user, permission, plan) {
             label: locationTypes[plan.locationType],
         },
         location_details: plan.locationDetails,
+        final_comment: plan.finalComment,
         government_contacts: plan.managers,
         departement: plan.managers[0].organization.location.departement ? plan.managers[0].organization.location.departement.code : '',
         operator_contacts: plan.operators,
@@ -62,8 +65,9 @@ function serializePlan(user, permission, plan) {
         topics: plan.topics,
         createdBy: plan.createdBy,
         updatedBy: plan.updatedBy,
-        canUpdate: canUpdate(user, plan, 'update'),
-        canUpdateMarks: canUpdate(user, plan, 'updateMarks'),
+        canUpdate: hasPermission(user, plan, 'update'),
+        canUpdateMarks: hasPermission(user, plan, 'updateMarks'),
+        canClose: plan.states && plan.states.length > 0 && hasPermission(user, plan, 'close'),
     };
 
     if (!plan.finances || permission.data_finances !== true) {
@@ -108,6 +112,17 @@ function serializePlan(user, permission, plan) {
         women: 0,
         minors: 0,
     });
+
+    base.last_update = plan.updatedAt;
+    if (base.states.length > 0) {
+        const lastState = base.states.slice(-1)[0];
+
+        if (base.last_update === null || lastState.date > base.last_update) {
+            base.last_update = lastState.date;
+        }
+    }
+
+    base.last_update = base.last_update !== null ? new Date(base.last_update).getTime() : null;
 
     switch (plan.locationType) {
         case 'location':
@@ -169,10 +184,13 @@ module.exports = (database) => {
                 plans.name AS "name",
                 plans.started_at AS "startedAt",
                 plans.expected_to_end_at AS "expectedToEndAt",
+                plans.closed_at AS "closedAt",
+                plans.updated_at AS "updatedAt",
                 plans.in_and_out AS "inAndOut",
                 plans.goals AS "goals",
                 plans.location_type AS "locationType",
                 plans.location_details AS "locationDetails",
+                plans.final_comment AS "finalComment",
                 locations.address AS "location_address",
                 (SELECT regexp_matches(locations.address, '^(.+) [0-9]+ [^,]+,? [0-9]+,? [^, ]+(,.+)?$'))[1] AS "location_address_simple",
                 locations.latitude AS "location_latitude",

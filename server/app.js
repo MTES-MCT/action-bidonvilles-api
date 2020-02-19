@@ -194,6 +194,40 @@ module.exports = (middlewares, controllers) => {
         ],
         controllers.plan.addState,
     );
+    app.patch(
+        '/plans/:id',
+        middlewares.auth.authenticate,
+        async (req, res, next) => {
+            // parse body to check the requested operation
+            let controller;
+            switch (req.body.operation) {
+                case 'close':
+                    try {
+                        middlewares.auth.checkPermissions(['plan.close'], req, res, next, false);
+                    } catch (error) {
+                        return res.status(500).send({
+                            success: false,
+                        });
+                    }
+
+                    controller = controllers.plan.close;
+                    break;
+
+                default:
+                    return res.status(404).send({});
+            }
+
+            // sync app-version
+            try {
+                await middlewares.appVersion.sync(req, res, next, false);
+            } catch (error) {
+                return res.status(500).send({});
+            }
+
+            // route to proper controller
+            return controller(req, res, next);
+        },
+    );
 
     // towns
     app.get(

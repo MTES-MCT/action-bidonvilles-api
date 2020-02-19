@@ -256,6 +256,194 @@ function sanitizeState(plan, data) {
     return sanitizedData;
 }
 
+function sanitizeClose(data) {
+    const sanitizedData = {};
+
+    // closed at
+    const closedAt = new Date(data.closedAt);
+    if (!Number.isNaN(closedAt.getTime())) {
+        sanitizedData.closedAt = closedAt;
+    }
+
+    // comment
+    if (typeof data.comment === 'string') {
+        sanitizedData.comment = trim(data.comment);
+    }
+
+    // fundings
+    if (Array.isArray(data.finances)) {
+        sanitizedData.finances = data.finances
+            .filter(({ data: d }) => d && d.length > 0)
+            .map(({ year, data: d }) => ({
+                year: parseInt(year, 10),
+                data: d.map(({
+                    type, amount, realAmount, details,
+                }) => ({
+                    type: type !== null ? type : null,
+                    amount: parseFloat(amount),
+                    realAmount: realAmount ? parseFloat(realAmount) : null,
+                    details: trim(details),
+                })),
+            }));
+    }
+
+    return sanitizedData;
+}
+
+async function historize(planId, transaction) {
+    // save current state into history
+    const response = await sequelize.query(
+        `INSERT INTO plans_history(
+            plan_id,
+            name,
+            started_at,
+            closed_at,
+            expected_to_end_at,
+            in_and_out,
+            goals,
+            fk_category,
+            location_type,
+            location_details,
+            fk_location,
+            final_comment,
+            created_by,
+            created_at,
+            updated_by,
+            updated_at
+        ) (SELECT
+            plan_id,
+            name,
+            started_at,
+            closed_at,
+            expected_to_end_at,
+            in_and_out,
+            goals,
+            fk_category,
+            location_type,
+            location_details,
+            fk_location,
+            final_comment,
+            created_by,
+            created_at,
+            updated_by,
+            updated_at
+        FROM plans2
+        WHERE plan_id = :planId)
+        RETURNING hid AS id`,
+        {
+            replacements: {
+                planId,
+            },
+            transaction,
+        },
+    );
+    const hid = response[0][0].id;
+
+    await sequelize.query(
+        `INSERT INTO plan_managers_history(
+            fk_plan,
+            fk_user,
+            created_by,
+            created_at,
+            updated_by,
+            updated_at
+        ) (SELECT
+            :hid,
+            fk_user,
+            created_by,
+            created_at,
+            updated_by,
+            updated_at
+        FROM plan_managers
+        WHERE fk_plan = :planId)`,
+        {
+            replacements: {
+                hid,
+                planId,
+            },
+            transaction,
+        },
+    );
+
+    await sequelize.query(
+        `INSERT INTO finances_history(
+            fk_plan,
+            year,
+            closed,
+            created_by,
+            created_at,
+            updated_by,
+            updated_at
+        ) (SELECT
+            :hid,
+            year,
+            closed,
+            created_by,
+            created_at,
+            updated_by,
+            updated_at
+        FROM finances
+        WHERE fk_plan = :planId)`,
+        {
+            replacements: {
+                hid,
+                planId,
+            },
+            transaction,
+        },
+    );
+    const financeHids = await sequelize.query(
+        `SELECT
+            finances_history.finance_id AS hid,
+            finances.finance_id
+        FROM finances_history
+        LEFT JOIN finances ON (finances.fk_plan = :planId AND finances.year = finances_history.year)
+        WHERE finances_history.fk_plan = :hid`,
+        {
+            type: sequelize.QueryTypes.SELECT,
+            replacements: {
+                hid,
+                planId,
+            },
+            transaction,
+        },
+    );
+
+    await Promise.all(
+        financeHids.map(({ hid: financeHid, finance_id: financeId }) => sequelize.query(
+            `INSERT INTO finance_rows_history(
+                fk_finance,
+                fk_finance_type,
+                amount,
+                comments,
+                created_by,
+                created_at,
+                updated_by,
+                updated_at
+            ) (SELECT
+                :hid,
+                fk_finance_type,
+                amount,
+                comments,
+                created_by,
+                created_at,
+                updated_by,
+                updated_at
+            FROM finance_rows
+            WHERE fk_finance = :financeId)`,
+            {
+                replacements: {
+                    hid: financeHid,
+                    financeId,
+                },
+                transaction,
+            },
+        )),
+    );
+
+    return hid;
+}
+
 module.exports = models => ({
     async list(req, res) {
         try {
@@ -779,150 +967,7 @@ module.exports = models => ({
         try {
             await sequelize.transaction(async (t) => {
                 // save current state into history
-                const response = await sequelize.query(
-                    `INSERT INTO plans_history(
-                        plan_id,
-                        name,
-                        started_at,
-                        expected_to_end_at,
-                        in_and_out,
-                        goals,
-                        fk_category,
-                        location_type,
-                        location_details,
-                        fk_location,
-                        created_by,
-                        created_at,
-                        updated_by,
-                        updated_at
-                    ) (SELECT
-                        plan_id,
-                        name,
-                        started_at,
-                        expected_to_end_at,
-                        in_and_out,
-                        goals,
-                        fk_category,
-                        location_type,
-                        location_details,
-                        fk_location,
-                        created_by,
-                        created_at,
-                        updated_by,
-                        updated_at
-                    FROM plans2
-                    WHERE plan_id = :planId)
-                    RETURNING hid AS id`,
-                    {
-                        replacements: {
-                            planId: plan.id,
-                        },
-                        transaction: t,
-                    },
-                );
-                const hid = response[0][0].id;
-
-                await sequelize.query(
-                    `INSERT INTO plan_managers_history(
-                        fk_plan,
-                        fk_user,
-                        created_by,
-                        created_at,
-                        updated_by,
-                        updated_at
-                    ) (SELECT
-                        :hid,
-                        fk_user,
-                        created_by,
-                        created_at,
-                        updated_by,
-                        updated_at
-                    FROM plan_managers
-                    WHERE fk_plan = :planId)`,
-                    {
-                        replacements: {
-                            hid,
-                            planId: plan.id,
-                        },
-                        transaction: t,
-                    },
-                );
-
-                await sequelize.query(
-                    `INSERT INTO finances_history(
-                        fk_plan,
-                        year,
-                        closed,
-                        created_by,
-                        created_at,
-                        updated_by,
-                        updated_at
-                    ) (SELECT
-                        :hid,
-                        year,
-                        closed,
-                        created_by,
-                        created_at,
-                        updated_by,
-                        updated_at
-                    FROM finances
-                    WHERE fk_plan = :planId)`,
-                    {
-                        replacements: {
-                            hid,
-                            planId: plan.id,
-                        },
-                        transaction: t,
-                    },
-                );
-                const financeHids = await sequelize.query(
-                    `SELECT
-                        finances_history.finance_id AS hid,
-                        finances.finance_id
-                    FROM finances_history
-                    LEFT JOIN finances ON (finances.fk_plan = :planId AND finances.year = finances_history.year)
-                    WHERE finances_history.fk_plan = :hid`,
-                    {
-                        type: sequelize.QueryTypes.SELECT,
-                        replacements: {
-                            hid,
-                            planId: plan.id,
-                        },
-                        transaction: t,
-                    },
-                );
-
-                await Promise.all(
-                    financeHids.map(({ hid: financeHid, finance_id: financeId }) => sequelize.query(
-                        `INSERT INTO finance_rows_history(
-                            fk_finance,
-                            fk_finance_type,
-                            amount,
-                            comments,
-                            created_by,
-                            created_at,
-                            updated_by,
-                            updated_at
-                        ) (SELECT
-                            :hid,
-                            fk_finance_type,
-                            amount,
-                            comments,
-                            created_by,
-                            created_at,
-                            updated_by,
-                            updated_at
-                        FROM finance_rows
-                        WHERE fk_finance = :financeId)`,
-                        {
-                            replacements: {
-                                hid: financeHid,
-                                financeId,
-                            },
-                            transaction: t,
-                        },
-                    )),
-                );
+                await historize(plan.id, t);
 
                 // update
                 await sequelize.query(
@@ -1571,6 +1616,195 @@ module.exports = models => ({
                 error: {
                     user_message: 'Une erreur est survenue lors de l\'écriture des données en base',
                     developer_message: error,
+                },
+            });
+        }
+
+        return res.status(200).send({});
+    },
+
+    async close(req, res) {
+        // check existence of the plan (otherwise, 404)
+        let plan;
+        try {
+            plan = await models.plan.findOne(req.user, req.params.id);
+        } catch (error) {
+            return res.status(500).send({
+                error: {
+                    user_message: 'Une erreur est survenue lors de la récupération des données en base',
+                    developer_message: `Could not fetch plan #${req.params.id}`,
+                },
+            });
+        }
+
+        if (plan === null) {
+            return res.status(404).send({
+                error: {
+                    user_message: 'Le dispositif à mettre à jour n\'a pas été trouvé en base de données',
+                    developer_message: `Could not find plan #${req.params.id}`,
+                },
+            });
+        }
+
+        // check the geographic level of the 'close' permission (we assume here that the user has that permission)
+        if (plan.canClose !== true) {
+            return res.status(400).send({
+                error: {
+                    user_message: 'Vous n\'avez pas les droits nécessaires pour fermer ce dispositif',
+                },
+            });
+        }
+
+        // ensure the plan is not already closed (otherwise, 400)
+        if (plan.closed_at !== null) {
+            return res.status(400).send({
+                error: {
+                    user_message: 'Ce dispositif est déjà fermé',
+                },
+            });
+        }
+
+        // check the input
+        const planData = Object.assign({}, sanitizeClose(req.body.data), {
+            updatedBy: req.user.id,
+        });
+
+        const errors = {};
+        function addError(field, error) {
+            if (errors[field] === undefined) {
+                errors[field] = [];
+            }
+
+            errors[field].push(error);
+        }
+
+        // find all missing realAmount entries and ensure they were sent and are valid (ie., they are floats > 0 && <= to amount)
+        function extractRealAmount(year, type, amount) {
+            const finance = planData.finances.find(({ year: y }) => y === year);
+            if (!finance) {
+                return null;
+            }
+
+            const index = finance.data.findIndex(({ amount: a, type: t }) => a === amount && t === type);
+            const [{ realAmount }] = finance.data.splice(index, 1);
+
+            return realAmount;
+        }
+
+        const cleanFinances = plan.finances.map(finance => Object.assign({}, finance, {
+            data: finance.data.map((row) => {
+                const realAmount = extractRealAmount(finance.year, row.type.uid, row.amount);
+                if (row.realAmount !== null) {
+                    return Object.assign({}, row, {
+                        type: row.type.uid,
+                    });
+                }
+
+                if (realAmount < 0) {
+                    addError('finances', `Financements ${finance.year} : les dépenses exécutées ne peuvent pas être négatives`);
+                } else if (realAmount > row.amount) {
+                    addError('finances', `Financements ${finance.year} : les dépenses exécutées ne peuvent pas être supérieures au montant du financement`);
+                }
+
+                return Object.assign({}, row, {
+                    type: row.type.uid,
+                    realAmount,
+                });
+            }),
+        }));
+
+        if (planData.finances.some(({ data }) => data.length > 0)) {
+            addError('finances', 'Le tableau de financement ne peut pas être modifié, à l\'exception des dépenses exécutées');
+        } else {
+            planData.finances = cleanFinances;
+        }
+
+        // ensure the closed date is provided and is > startedAt and <= today
+        if (planData.closedAt === undefined) {
+            addError('closedAt', 'La date de fermeture est obligatoire');
+        } else if (planData.closedAt >= new Date()) {
+            addError('closedAt', 'La date de fermeture ne peut pas être future');
+        } else if (planData.closedAt <= new Date(plan.started_at)) {
+            addError('closedAt', 'La date de fermeture ne peut pas être antérieure à la date de début du dispositif');
+        }
+
+        // ensure the comment is not empty
+        if (planData.comment === undefined || planData.comment === '') {
+            addError('comment', 'Le commentaire est obligatoire');
+        }
+
+        // in case of error => 400 + details
+        if (Object.keys(errors).length > 0) {
+            return res.status(400).send({
+                error: {
+                    user_message: 'Certaines données sont invalides',
+                    fields: errors,
+                },
+            });
+        }
+
+        // start a transaction
+        try {
+            await sequelize.transaction(async (t) => {
+                // save current state into history
+                await historize(plan.id, t);
+
+                // update
+                await sequelize.query(
+                    'UPDATE plans2 SET closed_at = :closedAt, final_comment = :comment, updated_by = :updatedBy WHERE plan_id = :planId',
+                    {
+                        replacements: Object.assign({}, planData, { planId: plan.id }),
+                        transaction: t,
+                    },
+                );
+
+                // reset finances
+                await sequelize.query('DELETE FROM finances WHERE fk_plan = :planId', { replacements: { planId: plan.id }, transaction: t });
+
+                // insert into finances
+                const financeIds = await Promise.all(
+                    planData.finances.map(({ year }) => sequelize.query(
+                        'INSERT INTO finances(fk_plan, year, created_by) VALUES (:planId, :year, :createdBy) RETURNING finance_id AS id',
+                        {
+                            replacements: {
+                                planId: plan.id,
+                                year,
+                                createdBy: req.user.id,
+                            },
+                            transaction: t,
+                        },
+                    )),
+                );
+
+                // insert into finance_rows
+                return Promise.all(
+                    planData.finances.reduce((acc, { data }, index) => [
+                        ...acc,
+                        ...data.map(({
+                            amount, realAmount, type, details,
+                        }) => sequelize.query(
+                            `INSERT INTO finance_rows(fk_finance, fk_finance_type, amount, real_amount, comments, created_by)
+                            VALUES (:financeId, :type, :amount, :realAmount, :comments, :createdBy)`,
+                            {
+                                replacements: {
+                                    financeId: financeIds[index][0][0].id,
+                                    type,
+                                    amount,
+                                    realAmount,
+                                    comments: details,
+                                    createdBy: req.user.id,
+                                },
+                                transaction: t,
+                            },
+                        )),
+                    ], []),
+                );
+            });
+        } catch (error) {
+            return res.status(500).send({
+                error: {
+                    user_message: 'Une erreur est survenue lors de l\'écriture en base de données',
+                    developer_message: error.message,
                 },
             });
         }
