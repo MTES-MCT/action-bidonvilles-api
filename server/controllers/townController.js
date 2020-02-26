@@ -644,44 +644,9 @@ module.exports = (models) => {
                     }
                 });
 
-                const departements = await sequelize.query(
-                    `SELECT
-                        departements.code
-                    FROM
-                        shantytowns
-                    LEFT JOIN cities ON cities.code = shantytowns.fk_city
-                    LEFT JOIN departements ON departements.code = cities.fk_departement
-                    WHERE shantytowns.shantytown_id = :id`,
-                    {
-                        type: sequelize.QueryTypes.SELECT,
-                        replacements: {
-                            id: town.id,
-                        },
-                    },
-                );
-
-                const plans = await sequelize.query(
-                    `SELECT
-                        plans.plan_id AS id,
-                        plans.name,
-                        plan_types.label AS type,
-                        departements.name AS departement
-                    FROM
-                        plans
-                    LEFT JOIN plan_types ON plan_types.plan_type_id = plans.fk_type
-                    LEFT JOIN departements ON departements.code = plans.fk_departement
-                    WHERE plans.fk_departement = :departement AND plans.ended_at IS NULL AND plans.targeted_on_towns = TRUE`,
-                    {
-                        type: sequelize.QueryTypes.SELECT,
-                        replacements: {
-                            departement: departements[0].code,
-                        },
-                    },
-                );
-
                 return res.status(200).send({
                     town,
-                    plans,
+                    plans: [],
                 });
             } catch (e) {
                 return res.status(500).send({
