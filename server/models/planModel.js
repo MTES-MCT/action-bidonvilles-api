@@ -113,16 +113,11 @@ function serializePlan(user, permission, plan) {
         minors: 0,
     });
 
-    base.last_update = plan.updatedAt;
+    base.last_update = null;
     if (base.states.length > 0) {
         const lastState = base.states.slice(-1)[0];
-
-        if (base.last_update === null || lastState.date > base.last_update) {
-            base.last_update = lastState.date;
-        }
+        base.last_update = new Date(lastState.date).getTime();
     }
-
-    base.last_update = base.last_update !== null ? new Date(base.last_update).getTime() : null;
 
     switch (plan.locationType) {
         case 'location':
