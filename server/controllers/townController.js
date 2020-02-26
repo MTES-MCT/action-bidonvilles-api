@@ -1412,17 +1412,17 @@ module.exports = (models) => {
                 },
                 builtAt: {
                     title: 'Date d\'installation',
-                    data: ({ builtAt }) => tsToString(builtAt, 'd/m/Y'),
+                    data: ({ builtAt }) => (builtAt ? new Date(builtAt * 1000) : ''),
                     width: COLUMN_WIDTHS.SMALL,
                 },
                 declaredAt: {
                     title: 'Date de signalement',
-                    data: ({ declaredAt }) => tsToString(declaredAt, 'd/m/Y'),
+                    data: ({ declaredAt }) => (declaredAt ? new Date(declaredAt * 1000) : ''),
                     width: COLUMN_WIDTHS.SMALL,
                 },
                 closedAt: {
                     title: 'Date de fermeture',
-                    data: ({ closedAt }) => tsToString(closedAt, 'd/m/Y'),
+                    data: ({ closedAt }) => (closedAt ? new Date(closedAt * 1000) : ''),
                     width: COLUMN_WIDTHS.SMALL,
                 },
                 status: {
@@ -1568,7 +1568,7 @@ module.exports = (models) => {
                 },
                 justiceRenderedAt: {
                     title: 'Date de la décision',
-                    data: ({ justiceRenderedAt }) => tsToString(justiceRenderedAt, 'd/m/Y'),
+                    data: ({ justiceRenderedAt }) => (justiceRenderedAt ? new Date(justiceRenderedAt * 1000) : ''),
                     width: COLUMN_WIDTHS.SMALL,
                 },
                 justiceRenderedBy: {
@@ -1606,12 +1606,12 @@ module.exports = (models) => {
                 },
                 policeRequestedAt: {
                     title: 'Date de la demande du CFP',
-                    data: ({ policeRequestedAt }) => tsToString(policeRequestedAt, 'd/m/Y'),
+                    data: ({ policeRequestedAt }) => (policeRequestedAt ? new Date(policeRequestedAt * 1000) : ''),
                     width: COLUMN_WIDTHS.SMALL,
                 },
                 policeGrantedAt: {
                     title: 'Date d\'octroi du CFP',
-                    data: ({ policeGrantedAt }) => tsToString(policeGrantedAt, 'd/m/Y'),
+                    data: ({ policeGrantedAt }) => (policeGrantedAt ? new Date(policeGrantedAt * 1000) : ''),
                     width: COLUMN_WIDTHS.SMALL,
                 },
                 bailiff: {
@@ -1621,7 +1621,7 @@ module.exports = (models) => {
                 },
                 updatedAt: {
                     title: 'Site mis à jour le',
-                    data: ({ updatedAt }) => tsToString(updatedAt, 'd/m/Y'),
+                    data: ({ updatedAt }) => (updatedAt ? new Date(updatedAt * 1000) : ''),
                     width: COLUMN_WIDTHS.SMALL,
                 },
             };
