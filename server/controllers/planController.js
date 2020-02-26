@@ -1105,6 +1105,9 @@ module.exports = models => ({
         if (!stateData.etp || stateData.etp.length === 0) {
             addError('etp', 'Vous devez préciser l\'équipe d\'intervention');
         } else {
+            const duplicateEtps = [];
+            const usedEtps = [];
+
             stateData.etp.forEach(({ total, type }, index) => {
                 const etpType = etpTypes[type];
                 let etpName;
@@ -1117,6 +1120,13 @@ module.exports = models => ({
 
                 if (total <= 0) {
                     addError('etp', `Le nombre d'ETP pour ${etpName} ne peut pas être négatif ou nul`);
+                }
+
+                if (usedEtps.indexOf(type) === -1) {
+                    usedEtps.push(type);
+                } else if (duplicateEtps.indexOf(type) === -1) {
+                    duplicateEtps.push(type);
+                    addError('etp', `Merci de ne conserver qu'une seule ligne '${etpName}'`);
                 }
             });
         }
