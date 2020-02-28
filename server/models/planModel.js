@@ -42,7 +42,7 @@ function hasPermission(user, plan, feature) {
  *
  * @returns {Object}
  */
-function serializePlan(user, permission, plan) {
+function serializePlan(user, permissions, plan) {
     const base = {
         id: plan.id,
         name: plan.name,
@@ -70,7 +70,7 @@ function serializePlan(user, permission, plan) {
         canClose: plan.states && plan.states.length > 0 && hasPermission(user, plan, 'close'),
     };
 
-    if (!plan.finances || permission.data_finances !== true) {
+    if (!plan.finances || permissions.finances === null || permissions.finances.allowed !== true) {
         base.finances = [];
     } else {
         const minYear = plan.finances.slice(-1)[0].year;
@@ -597,7 +597,10 @@ module.exports = (database) => {
 
         return rows
             .filter(({ managers }) => managers !== undefined && managers.length > 0)
-            .map(serializePlan.bind(this, user, user.permissions.plan[feature]));
+            .map(serializePlan.bind(this, user, {
+                plan: user.permissions.plan[feature],
+                finances: (user.permissions.plan_finances && user.permissions.plan_finances.access) || null,
+            }));
     }
 
     return {
