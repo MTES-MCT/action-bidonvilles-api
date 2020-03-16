@@ -9,6 +9,11 @@ function sanitize(data) {
         sanitizedData.name = trim(data.name);
     }
 
+    // territories
+    if (Array.isArray(data.territory)) {
+        sanitizedData.territory = data.territory;
+    }
+
     // started at
     const startedAt = new Date(data.startedAt);
     if (!Number.isNaN(startedAt.getTime())) {
@@ -748,6 +753,19 @@ module.exports = models => ({
                         },
                     );
                 }
+
+                await sequelize.query(
+                    `INSERT INTO plan_territories(fk_plan, fk_departement)
+                    VALUES ${planData.territory.map(() => '(?, ?)').join(', ')}`,
+                    {
+                        replacements: planData.territory.reduce((acc, code) => [
+                            ...acc,
+                            planId,
+                            code,
+                        ], []),
+                        transaction: t,
+                    },
+                );
 
                 // insert into finances
                 const financeIds = await Promise.all(
