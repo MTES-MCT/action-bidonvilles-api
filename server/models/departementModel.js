@@ -2,7 +2,8 @@ module.exports = database => ({
     findAll: () => database.query(
         `SELECT
             departements.code AS code,
-            departements.name AS name
+            departements.name AS name,
+            departements.fk_region AS region_code
         FROM departements
         ORDER BY code ASC`,
         {
@@ -14,7 +15,8 @@ module.exports = database => ({
         const departement = await database.query(
             `SELECT
                 departements.code AS code,
-                departements.name AS name
+                departements.name AS name,
+                departements.fk_region AS region_code
             FROM departements
             WHERE code = :code`,
             {

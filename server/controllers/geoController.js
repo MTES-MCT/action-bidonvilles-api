@@ -140,7 +140,7 @@ module.exports = models => ({
             success: true,
             response: {
                 departements: await sequelize.query(
-                    'SELECT code, name FROM departements ORDER BY code ASC',
+                    'SELECT code, name, fk_region FROM departements ORDER BY code ASC',
                     {
                         type: sequelize.QueryTypes.SELECT,
                     },
