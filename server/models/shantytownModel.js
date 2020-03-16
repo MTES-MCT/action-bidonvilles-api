@@ -1,4 +1,4 @@
-const { fromTsToFormat } = require('#server/utils/date');
+const { fromTsToFormat, toFormat } = require('#server/utils/date');
 
 /**
  * Converts a date column to a timestamp
@@ -375,12 +375,55 @@ function getBaseSql(table, whereClause = null, order = null) {
     ${order !== null ? `ORDER BY ${order}` : ''}`;
 }
 
+function getSnapshotSql(date, argWhereClause = null, argOrder = null) {
+    let whereClause = argWhereClause;
+    if (whereClause === null) {
+        whereClause = `d < '${toFormat(date, 'Y-m-d')} 23:59:59'`;
+    } else {
+        whereClause += ` AND d < '${toFormat(date, 'Y-m-d')} 23:59:59'`;
+    }
+
+    let order = argOrder;
+    if (order === null) {
+        order = 'id ASC, d DESC';
+    } else {
+        order = `d DESC, ${order}`;
+    }
+
+    Object.keys(SQL.selection).forEach((original) => {
+        whereClause = whereClause.replace(original, `"${SQL.selection[original]}"`);
+        order = order.replace(original, `"${SQL.selection[original]}"`);
+    });
+
+    return `SELECT
+        ${Object.keys(SQL.selection).map(key => `"${SQL.selection[key]}"`).join(',')}
+    FROM (
+        (
+            SELECT
+                ${Object.keys(SQL.selection).map(key => `${key} AS "${SQL.selection[key]}"`).join(',')},
+                COALESCE(shantytowns.updated_at, shantytowns.created_at) AS "d"
+            FROM shantytowns
+            ${SQL.joins.map(({ table: t, on }) => `LEFT JOIN ${t} ON ${on}`).join('\n')}
+        )
+        UNION
+        (
+            SELECT
+                ${Object.keys(SQL.selection).map(key => `${key} AS "${SQL.selection[key]}"`).join(',')},
+                COALESCE(shantytowns.updated_at, shantytowns.created_at) AS "d"
+            FROM "ShantytownHistories" AS shantytowns
+            ${SQL.joins.map(({ table: t, on }) => `LEFT JOIN ${t} ON ${on}`).join('\n')}
+        )
+    ) AS u
+    ${whereClause !== null ? `WHERE ${whereClause}` : ''}
+    ${order !== null ? `ORDER BY ${order}` : ''}`;
+}
+
 /**
  * Fetches a list of shantytowns from the database
  *
  * @returns {Array.<Object>}
  */
-async function query(database, where = [], order = ['departements.code ASC', 'cities.name ASC'], user, feature, includeChangelog = false) {
+async function query(database, where = [], order = ['departements.code ASC', 'cities.name ASC'], user, feature, includeChangelog = false, date = null) {
     const replacements = {};
 
     const featureLevel = user.permissions.shantytown[feature].geographic_level;
@@ -408,17 +451,42 @@ async function query(database, where = [], order = ['departements.code ASC', 'ci
         return `(${clauseGroup})`;
     }).join(' AND ');
 
-    const towns = await database.query(
-        getBaseSql(
-            'shantytowns',
-            where.length > 0 ? whereClause : null,
-            order.join(', '),
-        ),
-        {
-            type: database.QueryTypes.SELECT,
-            replacements,
-        },
-    );
+    let towns;
+    if (date !== null) {
+        const mixedTowns = await database.query(
+            getSnapshotSql(
+                date,
+                where.length > 0 ? whereClause : null,
+                order.join(', '),
+            ),
+            {
+                type: database.QueryTypes.SELECT,
+                replacements,
+            },
+        );
+
+        const usedIds = [];
+        towns = mixedTowns.filter((town) => {
+            if (usedIds.indexOf(town.id) !== -1) {
+                return false;
+            }
+
+            usedIds.push(town.id);
+            return true;
+        });
+    } else {
+        towns = await database.query(
+            getBaseSql(
+                'shantytowns',
+                where.length > 0 ? whereClause : null,
+                order.join(', '),
+            ),
+            {
+                type: database.QueryTypes.SELECT,
+                replacements,
+            },
+        );
+    }
 
     if (towns.length === 0) {
         return [];
@@ -601,7 +669,7 @@ async function query(database, where = [], order = ['departements.code ASC', 'ci
 }
 
 module.exports = database => ({
-    findAll: (user, filters = [], feature = 'list', order = undefined) => query(database, filters, order, user, feature),
+    findAll: (user, filters = [], feature = 'list', order = undefined, date = null) => query(database, filters, order, user, feature, false, date),
 
     findOne: async (user, shantytownId) => {
         const towns = await query(
