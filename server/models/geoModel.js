@@ -180,6 +180,43 @@ module.exports = (database) => {
 
     return {
         getLocation: (type, code) => methods[type](code),
+        getDepartementsForEpci: code => database.query(
+            `SELECT
+                DISTINCT(cities.fk_departement) AS code
+            FROM cities
+            WHERE cities.fk_epci = :code`,
+            {
+                type: database.QueryTypes.SELECT,
+                replacements: {
+                    code,
+                },
+            },
+        ),
+        getEpcisForDepartements: async (departements) => {
+            const rows = await database.query(
+                `SELECT
+                    cities.fk_departement AS departement,
+                    cities.fk_epci AS epci
+                FROM cities
+                WHERE cities.fk_departement IN (:departements)
+                GROUP BY cities.fk_departement, cities.fk_epci`,
+                {
+                    type: database.QueryTypes.SELECT,
+                    replacements: {
+                        departements,
+                    },
+                },
+            );
+
+            return rows.reduce((acc, { departement, epci }) => {
+                if (acc[departement] === undefined) {
+                    acc[departement] = [];
+                }
+
+                acc[departement].push(epci);
+                return acc;
+            }, {});
+        },
         search: query => database.query(
             `(${generateSearch('cities')}) UNION (${generateSearch('epci')}) UNION (${generateSearch('departements')}) UNION (${generateSearch('regions')}) ORDER BY "type" DESC`,
             {

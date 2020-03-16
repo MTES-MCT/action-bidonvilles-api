@@ -59,7 +59,7 @@ function serializePlan(user, permissions, plan) {
         location_details: plan.locationDetails,
         final_comment: plan.finalComment,
         government_contacts: plan.managers,
-        departement: plan.managers[0].organization.location.departement ? plan.managers[0].organization.location.departement.code : '',
+        territories: plan.territories,
         operator_contacts: plan.operators,
         states: plan.states || [],
         topics: plan.topics,
@@ -144,6 +144,9 @@ module.exports = (database) => {
     const userModel = require('./userModel')(database);
     // eslint-disable-next-line global-require
     const shantytownModel = require('./shantytownModel')(database);
+    // eslint-disable-next-line global-require
+    const geoModel = require('./geoModel')(database);
+
     async function query(user, feature, filters = {}) {
         const where = [];
         const replacements = Object.assign({}, filters);
@@ -152,15 +155,34 @@ module.exports = (database) => {
         const featureLevel = user.permissions.plan[feature].geographic_level;
         const userLevel = user.organization.location.type;
 
-        const locationWhere = [];
-        if (featureLevel !== 'nation' && (featureLevel !== 'local' || userLevel !== 'nation')) {
-            const level = featureLevel === 'local' ? userLevel : featureLevel;
-            if (user.organization.location[level] === null) {
+        let locationWhere = null;
+        if (featureLevel === 'local' && userLevel !== 'nation') {
+            if (user.organization.location[userLevel] === null) {
                 return [];
             }
 
-            locationWhere.push(`${level}_code = :locationCode`);
-            replacements.locationCode = user.organization.location[level].code;
+            switch (userLevel) {
+                case 'region':
+                case 'departement':
+                    locationWhere = `fk_${userLevel} = :locationCode`;
+                    replacements.locationCode = user.organization.location[userLevel].code;
+                    break;
+
+                case 'epci':
+                    locationWhere = 'fk_departement IN (:locationCode)';
+                    replacements.locationCode = await geoModel.getDepartementsForEpci(
+                        user.organization.location.epci.code,
+                    );
+                    break;
+
+                case 'city':
+                    locationWhere = 'fk_departement = :locationCode';
+                    replacements.locationCode = user.organization.location.departement.code;
+                    break;
+
+                default:
+                    return [];
+            }
         }
 
         // integrate custom filters
@@ -172,6 +194,43 @@ module.exports = (database) => {
         if (filterParts.length > 0) {
             where.push(filterParts.join(' OR '));
         }
+
+        // get territories
+        const planTerritories = await database.query(
+            `SELECT
+                fk_plan AS plan_id,
+                fk_departement AS departement_code,
+                departements.fk_region AS region_code
+            FROM plan_territories
+            LEFT JOIN departements ON plan_territories.fk_departement = departements.code
+            ${locationWhere !== null ? `WHERE ${locationWhere}` : ''}`,
+            {
+                type: database.QueryTypes.SELECT,
+                replacements: {
+                    locationCode: replacements.locationCode,
+                },
+            },
+        );
+
+        if (planTerritories.length === 0) {
+            return [];
+        }
+
+        const epcis = await geoModel.getEpcisForDepartements(
+            planTerritories.map(({ departement_code }) => departement_code),
+        );
+
+        const firstPassPlanIds = planTerritories.reduce(
+            (acc, { plan_id }) => {
+                if (acc.indexOf(plan_id) !== -1) {
+                    return acc;
+                }
+
+                return [...acc, plan_id];
+            },
+            [],
+        );
+        where.push('plans.plan_id IN (:planIds)');
 
         const rows = await database.query(
             `SELECT
@@ -197,11 +256,13 @@ module.exports = (database) => {
             FROM plans2 AS plans
             LEFT JOIN plan_categories ON plans.fk_category = plan_categories.uid
             LEFT JOIN locations ON plans.fk_location = locations.location_id
-            ${where.length > 0 ? `WHERE (${where.join(') AND (')})` : ''}
-            ORDER BY plans.plan_id ASC`,
+            WHERE (${where.join(') AND (')})
+            ORDER BY plans.plan_id DESC`,
             {
                 type: database.QueryTypes.SELECT,
-                replacements,
+                replacements: Object.assign({}, replacements, {
+                    planIds: firstPassPlanIds,
+                }),
             },
         );
 
@@ -209,28 +270,19 @@ module.exports = (database) => {
             return [];
         }
 
+        const planIds = rows.map(({ id }) => id);
         const hashedPlans = rows.reduce((acc, plan) => Object.assign(acc, {
             [plan.id]: plan,
         }), {});
 
-        const planIds = rows.map(({ id }) => id);
         const [planManagers, planOperators, planTopics, planStates, planShantytowns, planFinances] = await Promise.all([
             database.query(
                 `SELECT
                     fk_plan,
-                    fk_user,
-                    organizations.region_code,
-                    organizations.region_name,
-                    organizations.departement_code,
-                    organizations.departement_name,
-                    organizations.epci_code,
-                    organizations.epci_name,
-                    organizations.city_code,
-                    organizations.city_name
+                    fk_user
                 FROM plan_managers
                 LEFT JOIN users ON plan_managers.fk_user = users.user_id
-                LEFT JOIN localized_organizations organizations ON users.fk_organization = organizations.organization_id
-                WHERE (${['fk_plan IN (:planIds)', ...locationWhere].join(') AND (')})
+                WHERE fk_plan IN (:planIds)
                 ORDER BY fk_plan ASC`,
                 {
                     type: database.QueryTypes.SELECT,
@@ -378,6 +430,27 @@ module.exports = (database) => {
             ),
         ]);
 
+        // territories
+        planTerritories.forEach((territory) => {
+            if (hashedPlans[territory.plan_id] === undefined) {
+                return;
+            }
+
+            if (hashedPlans[territory.plan_id].territories === undefined) {
+                hashedPlans[territory.plan_id].territories = {
+                    region: territory.region_code,
+                    departements: [],
+                    epcis: [],
+                };
+            }
+
+            hashedPlans[territory.plan_id].territories.departements.push(territory.departement_code);
+            hashedPlans[territory.plan_id].territories.epcis = [
+                ...hashedPlans[territory.plan_id].territories.epcis,
+                ...epcis[territory.departement_code],
+            ];
+        });
+
         // users
         const serializedUsers = await userModel.findByIds(
             null,
@@ -390,7 +463,6 @@ module.exports = (database) => {
         planManagers.forEach(({ fk_plan: planId, fk_user: userId }) => {
             if (hashedPlans[planId].managers === undefined) {
                 hashedPlans[planId].managers = [];
-                hashedPlans[planId].location = hashedUsers[userId].organization.location;
             }
 
             hashedPlans[planId].managers.push(hashedUsers[userId]);
