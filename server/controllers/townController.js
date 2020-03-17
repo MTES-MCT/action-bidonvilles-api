@@ -121,7 +121,9 @@ function cleanParams(body, format) {
     let population_couples;
     let population_minors;
     let electricity_type;
+    let electricity_comments;
     let access_to_water;
+    let water_comments;
     let trash_evacuation;
     let owner_complaint;
     let justice_procedure;
@@ -159,7 +161,9 @@ function cleanParams(body, format) {
             populationCouples: population_couples,
             populationMinors: population_minors,
             electricityType: electricity_type,
+            electricityComments: electricity_comments,
             accessToWater: access_to_water,
+            waterComments: water_comments,
             trashEvacuation: trash_evacuation,
             ownerComplaint: owner_complaint,
             justiceProcedure: justice_procedure,
@@ -197,7 +201,9 @@ function cleanParams(body, format) {
             population_couples,
             population_minors,
             electricity_type,
+            electricity_comments,
             access_to_water,
+            water_comments,
             trash_evacuation,
             owner_complaint,
             justice_procedure,
@@ -236,7 +242,9 @@ function cleanParams(body, format) {
         populationCouples: getIntOrNull(population_couples),
         populationMinors: getIntOrNull(population_minors),
         electricityType: getIntOrNull(electricity_type),
+        electricityComments: trim(electricity_comments),
         accessToWater: getIntOrNull(access_to_water),
+        waterComments: trim(water_comments),
         trashEvacuation: getIntOrNull(trash_evacuation),
         ownerComplaint: getIntOrNull(owner_complaint),
         justiceProcedure: getIntOrNull(justice_procedure),
@@ -569,7 +577,9 @@ module.exports = (models) => {
                 populationCouples,
                 populationMinors,
                 electricityType,
+                electricityComments,
                 accessToWater,
+                waterComments,
                 trashEvacuation,
                 fieldType,
                 ownerType,
@@ -605,7 +615,9 @@ module.exports = (models) => {
                         populationCouples,
                         populationMinors,
                         electricityType,
+                        electricityComments,
                         accessToWater: toBool(accessToWater),
+                        waterComments,
                         trashEvacuation: toBool(trashEvacuation),
                         fieldType,
                         ownerType,
@@ -714,7 +726,9 @@ module.exports = (models) => {
                 populationCouples,
                 populationMinors,
                 electricityType,
+                electricityComments,
                 accessToWater,
+                waterComments,
                 trashEvacuation,
                 fieldType,
                 ownerType,
@@ -751,7 +765,9 @@ module.exports = (models) => {
                         populationCouples,
                         populationMinors,
                         electricityType,
+                        electricityComments,
                         accessToWater: toBool(accessToWater),
+                        waterComments,
                         trashEvacuation: toBool(trashEvacuation),
                         fieldType,
                         ownerType,
@@ -1433,6 +1449,11 @@ module.exports = (models) => {
                     data: ({ electricityType }) => electricityType.label,
                     width: COLUMN_WIDTHS.SMALL,
                 },
+                electricityComments: {
+                    title: 'Modalités d\'accès à l\'électricité',
+                    data: ({ electricityComments }) => electricityComments,
+                    width: COLUMN_WIDTHS.LARGE,
+                },
                 accessToWater: {
                     title: 'Accès à l\'eau',
                     data: ({ accessToWater }) => {
@@ -1447,6 +1468,11 @@ module.exports = (models) => {
                         return null;
                     },
                     width: COLUMN_WIDTHS.SMALL,
+                },
+                waterComments: {
+                    title: 'Modalités d\'accès à l\'eau',
+                    data: ({ waterComments }) => waterComments,
+                    width: COLUMN_WIDTHS.LARGE,
                 },
                 trashEvacuation: {
                     title: 'Évacuation des déchets',
@@ -1687,7 +1713,9 @@ module.exports = (models) => {
                     title: 'Conditions de vie',
                     properties: [
                         properties.electricityType,
+                        properties.electricityComments,
                         properties.accessToWater,
+                        properties.waterComments,
                         properties.trashEvacuation,
                     ],
                 });

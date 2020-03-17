@@ -120,10 +120,20 @@ module.exports = function (sequelize, DataTypes) {
             },
             field: 'fk_electricity_type',
         },
+        electricityComments: {
+            type: DataTypes.TEXT,
+            allowNull: true,
+            field: 'electricity_comments',
+        },
         accessToWater: {
             type: DataTypes.BOOLEAN,
             allowNull: true,
             field: 'access_to_water',
+        },
+        waterComments: {
+            type: DataTypes.TEXT,
+            allowNull: true,
+            field: 'water_comments',
         },
         trashEvacuation: {
             type: DataTypes.BOOLEAN,
