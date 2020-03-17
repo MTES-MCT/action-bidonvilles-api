@@ -1449,6 +1449,11 @@ module.exports = (models) => {
                     data: ({ electricityType }) => electricityType.label,
                     width: COLUMN_WIDTHS.SMALL,
                 },
+                electricityComments: {
+                    title: 'Modalités d\'accès à l\'électricité',
+                    data: ({ electricityComments }) => electricityComments,
+                    width: COLUMN_WIDTHS.LARGE,
+                },
                 accessToWater: {
                     title: 'Accès à l\'eau',
                     data: ({ accessToWater }) => {
@@ -1463,6 +1468,11 @@ module.exports = (models) => {
                         return null;
                     },
                     width: COLUMN_WIDTHS.SMALL,
+                },
+                waterComments: {
+                    title: 'Modalités d\'accès à l\'eau',
+                    data: ({ waterComments }) => waterComments,
+                    width: COLUMN_WIDTHS.LARGE,
                 },
                 trashEvacuation: {
                     title: 'Évacuation des déchets',
@@ -1703,7 +1713,9 @@ module.exports = (models) => {
                     title: 'Conditions de vie',
                     properties: [
                         properties.electricityType,
+                        properties.electricityComments,
                         properties.accessToWater,
+                        properties.waterComments,
                         properties.trashEvacuation,
                     ],
                 });
