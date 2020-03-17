@@ -1211,14 +1211,6 @@ module.exports = (models) => {
             });
         },
 
-        async getAllComments(req, res) {
-            const comments = await models.shantytown.findComments();
-
-            return res.status(200).send({
-                comments: comments.map(serializeComment),
-            });
-        },
-
         async export(req, res) {
             function isLocationAllowed(user, location) {
                 if (user.permissions.shantytown.export.geographic_level === 'nation') {

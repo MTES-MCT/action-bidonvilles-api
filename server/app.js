@@ -311,15 +311,6 @@ module.exports = (middlewares, controllers) => {
         ],
         controllers.town.deleteComment,
     );
-    app.get(
-        '/comments',
-        [
-            middlewares.auth.authenticate,
-            (...args) => middlewares.auth.checkPermissions(['shantytown_comment.moderate'], ...args),
-            middlewares.appVersion.sync,
-        ],
-        controllers.town.getAllComments,
-    );
 
     // organizations
     app.get(
