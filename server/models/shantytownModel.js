@@ -559,7 +559,7 @@ async function query(database, where = [], order = ['departements.code ASC', 'ci
         promises.push(Promise.resolve(undefined));
     }
 
-    promises.push(getComments(false));
+    promises.push(getComments(true));
 
     promises.push(
         database.query(
