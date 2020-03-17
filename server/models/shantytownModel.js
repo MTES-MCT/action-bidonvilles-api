@@ -43,9 +43,10 @@ function getDiff(oldVersion, newVersion) {
         'priority', 'builtAt', 'declaredAt', 'addressSimple', /* 'latitude', 'longitude', */
         'addressDetails', 'fieldType', 'ownerType', 'owner', 'censusStatus', 'censusConductedAt',
         'censusConductedBy', 'populationTotal', 'populationCouples', 'populationMinors',
-        'socialOrigins', 'electricityType', 'accessToWater', 'trashEvacuation', 'ownerComplaint',
-        'justiceProcedure', 'justiceRendered', 'justiceRenderedAt', 'justiceRenderedBy',
-        'justiceChallenged', 'policeStatus', 'policeRequestedAt', 'policeGrantedAt', 'bailiff',
+        'socialOrigins', 'electricityType', 'electricityComments', 'accessToWater', 'waterComments',
+        'trashEvacuation', 'ownerComplaint', 'justiceProcedure', 'justiceRendered', 'justiceRenderedAt',
+        'justiceRenderedBy', 'justiceChallenged', 'policeStatus', 'policeRequestedAt', 'policeGrantedAt',
+        'bailiff',
     ];
 
     const labels = {
@@ -67,7 +68,9 @@ function getDiff(oldVersion, newVersion) {
         populationMinors: 'Nombre de mineurs',
         socialOrigins: 'Origines',
         electricityType: 'Accès à l\'électricité',
+        electricityComments: 'Modalités d\'accès à l\'électricité',
         accessToWater: 'Accès à l\'eau',
+        waterComments: 'Modalités d\'accès à l\'eau',
         trashEvacuation: 'Évacuation des déchets',
         ownerComplaint: 'Dépôt de plainte par le propriétaire',
         justiceProcedure: 'Existence d\'une procédure judiciaire',
