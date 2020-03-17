@@ -273,20 +273,34 @@ function cleanParams(body, format) {
 }
 
 function serializeComment(comment) {
-    return {
-        id: comment.commentId,
-        description: comment.commentDescription,
-        createdAt: comment.commentCreatedAt !== null ? (comment.commentCreatedAt.getTime() / 1000) : null,
-        createdBy: {
-            id: comment.commentCreatedBy,
-            firstName: comment.userFirstName,
-            lastName: comment.userLastName,
-            position: comment.userPosition,
-            organization: comment.organizationAbbreviation || comment.organizationName,
-            organizationId: comment.organizationId,
+    return Object.assign(
+        {
+            id: comment.commentId,
+            description: comment.commentDescription,
+            createdAt: comment.commentCreatedAt !== null ? (comment.commentCreatedAt.getTime() / 1000) : null,
+            createdBy: {
+                id: comment.commentCreatedBy,
+                firstName: comment.userFirstName,
+                lastName: comment.userLastName,
+                position: comment.userPosition,
+                organization: comment.organizationAbbreviation || comment.organizationName,
+                organizationId: comment.organizationId,
+            },
+            shantytown: comment.shantytownId,
         },
-        shantytown: comment.shantytownId,
-    };
+        comment.covidCommentDate !== null
+            ? {
+                covid: {
+                    date: comment.covidCommentDate,
+                    information: comment.covidCommentInformation,
+                    distribution_de_kits: comment.covidCommentDistribution,
+                    cas_contacts: comment.covidCommentCasContacts,
+                    cas_suspects: comment.covidCommentCasSuspects,
+                    cas_averes: comment.covidCommentCasAveres,
+                },
+            }
+            : {},
+    );
 }
 
 module.exports = (models) => {
@@ -1141,7 +1155,7 @@ module.exports = (models) => {
                 });
             }
 
-            const comment = town.comments.find(({ id }) => id === parseInt(req.params.commentId, 10));
+            const comment = town.comments.regular.find(({ id }) => id === parseInt(req.params.commentId, 10));
             if (comment === undefined) {
                 return res.status(404).send({
                     error: {
@@ -1207,7 +1221,7 @@ module.exports = (models) => {
             }
 
             return res.status(200).send({
-                comments: town.comments.filter(({ id }) => id !== parseInt(req.params.commentId, 10)),
+                comments: town.comments.regular.filter(({ id }) => id !== parseInt(req.params.commentId, 10)),
             });
         },
 

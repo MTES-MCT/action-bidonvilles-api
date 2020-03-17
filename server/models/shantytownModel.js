@@ -200,6 +200,43 @@ function getDiff(oldVersion, newVersion) {
 }
 
 /**
+ * Serializes a single comment row
+ *
+ * @param {Object} comment
+ *
+ * @returns {Object}
+ */
+function serializeComment(comment) {
+    return Object.assign(
+        {
+            id: comment.commentId,
+            description: comment.commentDescription,
+            createdAt: comment.commentCreatedAt !== null ? (comment.commentCreatedAt.getTime() / 1000) : null,
+            createdBy: {
+                id: comment.commentCreatedBy,
+                firstName: comment.userFirstName,
+                lastName: comment.userLastName,
+                position: comment.userPosition,
+                organization: comment.organizationAbbreviation || comment.organizationName,
+                organizationId: comment.organizationId,
+            },
+        },
+        comment.covidCommentDate !== null
+            ? {
+                covid: {
+                    date: comment.covidCommentDate,
+                    information: comment.covidCommentInformation,
+                    distribution_de_kits: comment.covidCommentDistribution,
+                    cas_contacts: comment.covidCommentCasContacts,
+                    cas_suspects: comment.covidCommentCasSuspects,
+                    cas_averes: comment.covidCommentCasAveres,
+                },
+            }
+            : {},
+    );
+}
+
+/**
  * Serializes a single shantytown row
  *
  * @param {Object} town
@@ -261,7 +298,10 @@ function serializeShantytown(town, permission) {
             label: town.ownerTypeLabel,
         },
         socialOrigins: [],
-        comments: [],
+        comments: {
+            regular: [],
+            covid: [],
+        },
         closingSolutions: [],
         changelog: [],
         updatedAt: town.updatedAt !== null ? (town.updatedAt.getTime() / 1000) : null,
@@ -480,35 +520,46 @@ async function query(database, where = [], order = ['departements.code ASC', 'ci
         ),
     );
 
-    if (user.isAllowedTo('list', 'shantytown_comment')) {
-        promises.push(
-            database.query(
-                `SELECT
-                    shantytown_comments.shantytown_comment_id AS "commentId",
-                    shantytown_comments.fk_shantytown AS "shantytownId",
-                    shantytown_comments.description AS "commentDescription",
-                    shantytown_comments.created_at AS "commentCreatedAt",
-                    shantytown_comments.created_by AS "commentCreatedBy",
-                    users.first_name AS "userFirstName",
-                    users.last_name AS "userLastName",
-                    users.position AS "userPosition",
-                    organizations.organization_id AS "organizationId",
-                    organizations.name AS "organizationName",
-                    organizations.abbreviation AS "organizationAbbreviation"
-                FROM shantytown_comments
-                LEFT JOIN users ON shantytown_comments.created_by = users.user_id
-                LEFT JOIN organizations ON users.fk_organization = organizations.organization_id
-                WHERE shantytown_comments.fk_shantytown IN (:ids)
-                ORDER BY shantytown_comments.created_at DESC`,
-                {
-                    type: database.QueryTypes.SELECT,
-                    replacements: { ids: Object.keys(serializedTowns.hash) },
-                },
-            ),
+    function getComments(covid) {
+        return database.query(
+            `SELECT
+                shantytown_comments.shantytown_comment_id AS "commentId",
+                shantytown_comments.fk_shantytown AS "shantytownId",
+                shantytown_comments.description AS "commentDescription",
+                shantytown_comments.created_at AS "commentCreatedAt",
+                shantytown_comments.created_by AS "commentCreatedBy",
+                shantytown_covid_comments.date AS "covidCommentDate",
+                shantytown_covid_comments.information AS "covidCommentInformation",
+                shantytown_covid_comments.distribution_de_kits AS "covidCommentDistribution",
+                shantytown_covid_comments.cas_contacts AS "covidCommenCasContacts",
+                shantytown_covid_comments.cas_suspects AS "covidCommentCasSuspects",
+                shantytown_covid_comments.cas_averes AS "covidCommentCasAveres",
+                users.first_name AS "userFirstName",
+                users.last_name AS "userLastName",
+                users.position AS "userPosition",
+                organizations.organization_id AS "organizationId",
+                organizations.name AS "organizationName",
+                organizations.abbreviation AS "organizationAbbreviation"
+            FROM shantytown_comments
+            LEFT JOIN users ON shantytown_comments.created_by = users.user_id
+            LEFT JOIN organizations ON users.fk_organization = organizations.organization_id
+            LEFT JOIN shantytown_covid_comments ON shantytown_covid_comments.fk_comment = shantytown_comments.shantytown_comment_id
+            WHERE shantytown_comments.fk_shantytown IN (:ids) AND shantytown_covid_comment_id IS ${covid === true ? 'NOT ' : ''}NULL
+            ORDER BY shantytown_comments.created_at DESC`,
+            {
+                type: database.QueryTypes.SELECT,
+                replacements: { ids: Object.keys(serializedTowns.hash) },
+            },
         );
+    }
+
+    if (user.isAllowedTo('list', 'shantytown_comment')) {
+        promises.push(getComments(false));
     } else {
         promises.push(Promise.resolve(undefined));
     }
+
+    promises.push(getComments(false));
 
     promises.push(
         database.query(
@@ -527,7 +578,7 @@ async function query(database, where = [], order = ['departements.code ASC', 'ci
         ),
     );
 
-    const [history, socialOrigins, comments, closingSolutions] = await Promise.all(promises);
+    const [history, socialOrigins, comments, covidComments, closingSolutions] = await Promise.all(promises);
 
     if (history !== undefined && history.length > 0) {
         const serializedHistory = history.map(h => serializeShantytown(h, user.permissions.shantytown[feature]));
@@ -576,23 +627,17 @@ async function query(database, where = [], order = ['departements.code ASC', 'ci
         });
     }
 
-    if (comments !== undefined) {
-        comments.forEach((comment) => {
-            serializedTowns.hash[comment.shantytownId].comments.push({
-                id: comment.commentId,
-                description: comment.commentDescription,
-                createdAt: comment.commentCreatedAt !== null ? (comment.commentCreatedAt.getTime() / 1000) : null,
-                createdBy: {
-                    id: comment.commentCreatedBy,
-                    firstName: comment.userFirstName,
-                    lastName: comment.userLastName,
-                    position: comment.userPosition,
-                    organization: comment.organizationAbbreviation || comment.organizationName,
-                    organizationId: comment.organizationId,
-                },
-            });
-        });
-    }
+    (comments || []).forEach((comment) => {
+        serializedTowns.hash[comment.shantytownId].comments.regular.push(
+            serializeComment(comment),
+        );
+    });
+
+    covidComments.forEach((comment) => {
+        serializedTowns.hash[comment.shantytownId].comments.covid.push(
+            serializeComment(comment),
+        );
+    });
 
     if (closingSolutions !== undefined) {
         closingSolutions.forEach((closingSolution) => {
