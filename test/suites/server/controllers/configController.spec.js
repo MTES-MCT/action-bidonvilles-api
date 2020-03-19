@@ -47,7 +47,7 @@ const { list } = require('#server/controllers/configController')(mockModels);
 const { expect } = chai;
 chai.use(sinonChai);
 
-describe.only('[server/controllers] configController', () => {
+describe('[server/controllers] configController', () => {
     let httpRes;
     let httpReq;
     let response;

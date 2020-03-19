@@ -35,7 +35,7 @@ const generators = {
         return {};
     },
     function() {
-        return () => {};
+        return () => { };
     },
     number() {
         return Math.round(Math.random() * 1989);

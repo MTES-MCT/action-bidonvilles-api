@@ -303,6 +303,14 @@ module.exports = (middlewares, controllers) => {
         ],
         controllers.town.updateComment,
     );
+    app.post(
+        '/towns/:id/covidComments',
+        [
+            middlewares.auth.authenticate,
+            middlewares.appVersion.sync,
+        ],
+        controllers.town.createCovidComment,
+    );
     app.delete(
         '/towns/:id/comments/:commentId',
         [

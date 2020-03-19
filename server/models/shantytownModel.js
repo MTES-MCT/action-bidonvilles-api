@@ -422,106 +422,17 @@ function getBaseSql(table, whereClause = null, order = null) {
     ${order !== null ? `ORDER BY ${order}` : ''}`;
 }
 
-/**
- * Fetches a list of shantytowns from the database
- *
- * @returns {Array.<Object>}
- */
-async function query(database, where = [], order = ['departements.code ASC', 'cities.name ASC'], user, feature, includeChangelog = false) {
-    const replacements = {};
+module.exports = (database) => {
+    async function getComments(user, shantytownIds, covid = false) {
+        const comments = shantytownIds.reduce((acc, id) => Object.assign({}, acc, {
+            [id]: [],
+        }), {});
 
-    const featureLevel = user.permissions.shantytown[feature].geographic_level;
-    const userLevel = user.organization.location.type;
-    if (featureLevel !== 'nation' && (featureLevel !== 'local' || userLevel !== 'nation')) {
-        const level = featureLevel === 'local' ? userLevel : featureLevel;
-        if (user.organization.location[level] === null) {
-            return [];
+        if (covid === false && !user.isAllowedTo('list', 'shantytown_comment')) {
+            return comments;
         }
 
-        where.push({
-            location: {
-                query: `${fromGeoLevelToTableName(level)}.code`,
-                value: user.organization.location[level].code,
-            },
-        });
-    }
-
-    const whereClause = where.map((clauses, index) => {
-        const clauseGroup = Object.keys(clauses).map((column) => {
-            replacements[`${column}${index}`] = clauses[column].value || clauses[column];
-            return `${clauses[column].query || `shantytowns.${column}`} ${clauses[column].not ? 'NOT ' : ''}IN (:${column}${index})`;
-        }).join(' OR ');
-
-        return `(${clauseGroup})`;
-    }).join(' AND ');
-
-    const towns = await database.query(
-        getBaseSql(
-            'shantytowns',
-            where.length > 0 ? whereClause : null,
-            order.join(', '),
-        ),
-        {
-            type: database.QueryTypes.SELECT,
-            replacements,
-        },
-    );
-
-    if (towns.length === 0) {
-        return [];
-    }
-
-    const serializedTowns = towns.reduce(
-        (object, town) => {
-            /* eslint-disable no-param-reassign */
-            object.hash[town.id] = serializeShantytown(town, user.permissions.shantytown[feature]);
-            object.ordered.push(object.hash[town.id]);
-            /* eslint-enable no-param-reassign */
-            return object;
-        },
-        {
-            hash: {},
-            ordered: [],
-        },
-    );
-
-    const promises = [];
-    if (includeChangelog === true) {
-        promises.push(
-            database.query(
-                getBaseSql(
-                    'ShantytownHistories',
-                    where.length > 0 ? whereClause : null,
-                    ['shantytowns.shantytown_id ASC', 'shantytowns."archivedAt" ASC'].join(', '),
-                ),
-                {
-                    type: database.QueryTypes.SELECT,
-                    replacements,
-                },
-            ),
-        );
-    } else {
-        promises.push(Promise.resolve(undefined));
-    }
-
-    promises.push(
-        database.query(
-            `SELECT
-                shantytown_origins.fk_shantytown AS "shantytownId",
-                social_origins.social_origin_id AS "socialOriginId",
-                social_origins.label AS "socialOriginLabel"
-            FROM shantytown_origins
-            LEFT JOIN social_origins ON shantytown_origins.fk_social_origin = social_origins.social_origin_id
-            WHERE shantytown_origins.fk_shantytown IN (:ids)`,
-            {
-                type: database.QueryTypes.SELECT,
-                replacements: { ids: Object.keys(serializedTowns.hash) },
-            },
-        ),
-    );
-
-    function getComments(covid) {
-        return database.query(
+        const rows = await database.query(
             `SELECT
                 shantytown_comments.shantytown_comment_id AS "commentId",
                 shantytown_comments.fk_shantytown AS "shantytownId",
@@ -548,246 +459,395 @@ async function query(database, where = [], order = ['departements.code ASC', 'ci
             ORDER BY shantytown_comments.created_at DESC`,
             {
                 type: database.QueryTypes.SELECT,
-                replacements: { ids: Object.keys(serializedTowns.hash) },
+                replacements: { ids: shantytownIds },
             },
         );
+
+        rows.forEach((comment) => {
+            comments[comment.shantytownId].push(
+                serializeComment(comment),
+            );
+        }, {});
+
+        return comments;
     }
 
-    if (user.isAllowedTo('list', 'shantytown_comment')) {
-        promises.push(getComments(false));
-    } else {
-        promises.push(Promise.resolve(undefined));
-    }
+    /**
+     * Fetches a list of shantytowns from the database
+     *
+     * @returns {Array.<Object>}
+     */
+    async function query(where = [], order = ['departements.code ASC', 'cities.name ASC'], user, feature, includeChangelog = false) {
+        const replacements = {};
 
-    promises.push(getComments(true));
+        const featureLevel = user.permissions.shantytown[feature].geographic_level;
+        const userLevel = user.organization.location.type;
+        if (featureLevel !== 'nation' && (featureLevel !== 'local' || userLevel !== 'nation')) {
+            const level = featureLevel === 'local' ? userLevel : featureLevel;
+            if (user.organization.location[level] === null) {
+                return [];
+            }
 
-    promises.push(
-        database.query(
-            `SELECT
-                shantytown_closing_solutions.fk_shantytown AS "shantytownId",
-                closing_solutions.closing_solution_id AS "closingSolutionId",
-                shantytown_closing_solutions.number_of_people_affected AS "peopleAffected",
-                shantytown_closing_solutions.number_of_households_affected AS "householdsAffected"
-            FROM shantytown_closing_solutions
-            LEFT JOIN closing_solutions ON shantytown_closing_solutions.fk_closing_solution = closing_solutions.closing_solution_id
-            WHERE shantytown_closing_solutions.fk_shantytown IN (:ids)`,
+            where.push({
+                location: {
+                    query: `${fromGeoLevelToTableName(level)}.code`,
+                    value: user.organization.location[level].code,
+                },
+            });
+        }
+
+        const whereClause = where.map((clauses, index) => {
+            const clauseGroup = Object.keys(clauses).map((column) => {
+                replacements[`${column}${index}`] = clauses[column].value || clauses[column];
+                return `${clauses[column].query || `shantytowns.${column}`} ${clauses[column].not ? 'NOT ' : ''}IN (:${column}${index})`;
+            }).join(' OR ');
+
+            return `(${clauseGroup})`;
+        }).join(' AND ');
+
+        const towns = await database.query(
+            getBaseSql(
+                'shantytowns',
+                where.length > 0 ? whereClause : null,
+                order.join(', '),
+            ),
             {
                 type: database.QueryTypes.SELECT,
-                replacements: { ids: Object.keys(serializedTowns.hash) },
+                replacements,
             },
-        ),
-    );
+        );
 
-    const [history, socialOrigins, comments, covidComments, closingSolutions] = await Promise.all(promises);
+        if (towns.length === 0) {
+            return [];
+        }
 
-    if (history !== undefined && history.length > 0) {
-        const serializedHistory = history.map(h => serializeShantytown(h, user.permissions.shantytown[feature]));
-        for (let i = 1, { id } = serializedHistory[0]; i <= serializedHistory.length; i += 1) {
-            if (!serializedHistory[i] || id !== serializedHistory[i].id) {
-                if (!serializedTowns.hash[id]) {
+        const serializedTowns = towns.reduce(
+            (object, town) => {
+                /* eslint-disable no-param-reassign */
+                object.hash[town.id] = serializeShantytown(town, user.permissions.shantytown[feature]);
+                object.ordered.push(object.hash[town.id]);
+                /* eslint-enable no-param-reassign */
+                return object;
+            },
+            {
+                hash: {},
+                ordered: [],
+            },
+        );
+
+        const promises = [];
+        if (includeChangelog === true) {
+            promises.push(
+                database.query(
+                    getBaseSql(
+                        'ShantytownHistories',
+                        where.length > 0 ? whereClause : null,
+                        ['shantytowns.shantytown_id ASC', 'shantytowns."archivedAt" ASC'].join(', '),
+                    ),
+                    {
+                        type: database.QueryTypes.SELECT,
+                        replacements,
+                    },
+                ),
+            );
+        } else {
+            promises.push(Promise.resolve(undefined));
+        }
+
+        promises.push(
+            database.query(
+                `SELECT
+                    shantytown_origins.fk_shantytown AS "shantytownId",
+                    social_origins.social_origin_id AS "socialOriginId",
+                    social_origins.label AS "socialOriginLabel"
+                FROM shantytown_origins
+                LEFT JOIN social_origins ON shantytown_origins.fk_social_origin = social_origins.social_origin_id
+                WHERE shantytown_origins.fk_shantytown IN (:ids)`,
+                {
+                    type: database.QueryTypes.SELECT,
+                    replacements: { ids: Object.keys(serializedTowns.hash) },
+                },
+            ),
+        );
+
+        promises.push(getComments(user, Object.keys(serializedTowns.hash), false));
+        promises.push(getComments(user, Object.keys(serializedTowns.hash), true));
+
+        promises.push(
+            database.query(
+                `SELECT
+                    shantytown_closing_solutions.fk_shantytown AS "shantytownId",
+                    closing_solutions.closing_solution_id AS "closingSolutionId",
+                    shantytown_closing_solutions.number_of_people_affected AS "peopleAffected",
+                    shantytown_closing_solutions.number_of_households_affected AS "householdsAffected"
+                FROM shantytown_closing_solutions
+                LEFT JOIN closing_solutions ON shantytown_closing_solutions.fk_closing_solution = closing_solutions.closing_solution_id
+                WHERE shantytown_closing_solutions.fk_shantytown IN (:ids)`,
+                {
+                    type: database.QueryTypes.SELECT,
+                    replacements: { ids: Object.keys(serializedTowns.hash) },
+                },
+            ),
+        );
+
+        const [history, socialOrigins, comments, covidComments, closingSolutions] = await Promise.all(promises);
+
+        if (history !== undefined && history.length > 0) {
+            const serializedHistory = history.map(h => serializeShantytown(h, user.permissions.shantytown[feature]));
+            for (let i = 1, { id } = serializedHistory[0]; i <= serializedHistory.length; i += 1) {
+                if (!serializedHistory[i] || id !== serializedHistory[i].id) {
+                    if (!serializedTowns.hash[id]) {
+                        // eslint-disable-next-line no-continue
+                        continue;
+                    }
+
+                    const diff = getDiff(serializedHistory[i - 1], serializedTowns.hash[id]);
+                    if (diff.length > 0) {
+                        serializedTowns.hash[id].changelog.unshift({
+                            author: serializedTowns.hash[id].updatedBy,
+                            date: serializedTowns.hash[id].updatedAt,
+                            diff,
+                        });
+                    }
+
+                    if (serializedHistory[i]) {
+                        ({ id } = serializedHistory[i]);
+                    }
+
                     // eslint-disable-next-line no-continue
                     continue;
                 }
 
-                const diff = getDiff(serializedHistory[i - 1], serializedTowns.hash[id]);
+                const diff = getDiff(serializedHistory[i - 1], serializedHistory[i]);
                 if (diff.length > 0) {
                     serializedTowns.hash[id].changelog.unshift({
-                        author: serializedTowns.hash[id].updatedBy,
-                        date: serializedTowns.hash[id].updatedAt,
+                        author: serializedHistory[i].updatedBy,
+                        date: serializedHistory[i].updatedAt,
                         diff,
                     });
                 }
-
-                if (serializedHistory[i]) {
-                    ({ id } = serializedHistory[i]);
-                }
-
-                // eslint-disable-next-line no-continue
-                continue;
-            }
-
-            const diff = getDiff(serializedHistory[i - 1], serializedHistory[i]);
-            if (diff.length > 0) {
-                serializedTowns.hash[id].changelog.unshift({
-                    author: serializedHistory[i].updatedBy,
-                    date: serializedHistory[i].updatedAt,
-                    diff,
-                });
             }
         }
-    }
 
-    // @todo: move the serialization of these entities to their own model component
-    if (socialOrigins !== undefined) {
-        socialOrigins.forEach((socialOrigin) => {
-            serializedTowns.hash[socialOrigin.shantytownId].socialOrigins.push({
-                id: socialOrigin.socialOriginId,
-                label: socialOrigin.socialOriginLabel,
+        // @todo: move the serialization of these entities to their own model component
+        if (socialOrigins !== undefined) {
+            socialOrigins.forEach((socialOrigin) => {
+                serializedTowns.hash[socialOrigin.shantytownId].socialOrigins.push({
+                    id: socialOrigin.socialOriginId,
+                    label: socialOrigin.socialOriginLabel,
+                });
             });
+        }
+
+        Object.keys(serializedTowns.hash).forEach((shantytownId) => {
+            serializedTowns.hash[shantytownId].comments.regular = comments[shantytownId];
+            serializedTowns.hash[shantytownId].comments.covid = covidComments[shantytownId];
         });
-    }
 
-    (comments || []).forEach((comment) => {
-        serializedTowns.hash[comment.shantytownId].comments.regular.push(
-            serializeComment(comment),
-        );
-    });
-
-    covidComments.forEach((comment) => {
-        serializedTowns.hash[comment.shantytownId].comments.covid.push(
-            serializeComment(comment),
-        );
-    });
-
-    if (closingSolutions !== undefined) {
-        closingSolutions.forEach((closingSolution) => {
-            serializedTowns.hash[closingSolution.shantytownId].closingSolutions.push({
-                id: closingSolution.closingSolutionId,
-                peopleAffected: closingSolution.peopleAffected,
-                householdsAffected: closingSolution.householdsAffected,
+        if (closingSolutions !== undefined) {
+            closingSolutions.forEach((closingSolution) => {
+                serializedTowns.hash[closingSolution.shantytownId].closingSolutions.push({
+                    id: closingSolution.closingSolutionId,
+                    peopleAffected: closingSolution.peopleAffected,
+                    householdsAffected: closingSolution.householdsAffected,
+                });
             });
-        });
+        }
+
+        return serializedTowns.ordered;
     }
 
-    return serializedTowns.ordered;
-}
+    return {
+        findAll: (user, filters = [], feature = 'list', order = undefined) => query(filters, order, user, feature),
 
-module.exports = database => ({
-    findAll: (user, filters = [], feature = 'list', order = undefined) => query(database, filters, order, user, feature),
+        findOne: async (user, shantytownId) => {
+            const towns = await query(
+                [{ shantytown_id: shantytownId }],
+                undefined,
+                user,
+                'read',
+                true, // include changelog
+            );
+            return towns.length === 1 ? towns[0] : null;
+        },
 
-    findOne: async (user, shantytownId) => {
-        const towns = await query(
-            database,
-            [{ shantytown_id: shantytownId }],
-            undefined,
-            user,
-            'read',
-            true, // include changelog
-        );
-        return towns.length === 1 ? towns[0] : null;
-    },
-
-    getHistory: async (user) => {
-        const activities = await database.query(
-            `
-            SELECT
-                activities.*,
-                author.first_name AS author_first_name,
-                author.last_name AS author_last_name,
-                author.fk_organization AS author_organization
-            FROM
-                ((
-                    SELECT
-                        CASE WHEN shantytowns.updated_at = shantytowns.created_at THEN shantytowns.created_at
-                             ELSE shantytowns.updated_at
-                             END
-                        AS "date",
-                        shantytowns.created_at AS created_at,
-                        COALESCE(shantytowns.updated_by, shantytowns.created_by) AS author_id,
-                        0 AS comment_id,
-                        NULL AS content,
-                        'shantytown' AS entity,
-                        ${Object.keys(SQL.selection).map(key => `${key} AS "${SQL.selection[key]}"`).join(',')}
-                    FROM "ShantytownHistories" shantytowns
-                    LEFT JOIN shantytowns AS s ON shantytowns.shantytown_id = s.shantytown_id
-                    ${SQL.joins.map(({ table, on }) => `LEFT JOIN ${table} ON ${on}`).join('\n')}
-                    WHERE s.shantytown_id IS NOT NULL /* filter out history of deleted shantytowns */
-                )
-                UNION
-                (
-                    SELECT
-                        shantytowns.updated_at AS "date",
-                        shantytowns.created_at AS created_at,
-                        COALESCE(shantytowns.updated_by, shantytowns.created_by) AS author_id,
-                        0 AS comment_id,
-                        NULL AS content,
-                        'shantytown' AS entity,
-                        ${Object.keys(SQL.selection).map(key => `${key} AS "${SQL.selection[key]}"`).join(', ')}
-                    FROM shantytowns
-                    ${SQL.joins.map(({ table, on }) => `LEFT JOIN ${table} ON ${on}`).join('\n')}
-                )
-                UNION
-                (
-                    SELECT
-                        comments.created_at AS "date",
-                        NULL AS created_at,
-                        comments.created_by AS author_id,
-                        comments.shantytown_comment_id AS comment_id,
-                        comments.description AS content,
-                        'comment' AS entity,
-                        ${Object.keys(SQL.selection).map(key => `${key} AS "${SQL.selection[key]}"`).join(',')}
-                    FROM shantytown_comments comments
-                    LEFT JOIN shantytowns ON comments.fk_shantytown = shantytowns.shantytown_id
-                    ${SQL.joins.map(({ table, on }) => `LEFT JOIN ${table} ON ${on}`).join('\n')}
-                    WHERE shantytowns.shantytown_id IS NOT NULL /* filter out history of deleted shantytowns */
-                )) activities
-            LEFT JOIN users author ON activities.author_id = author.user_id
-            ORDER BY activities.date ASC
-            `,
-            {
-                type: database.QueryTypes.SELECT,
-            },
-        );
-
-        const previousVersions = {};
-
-        return activities
-            .map((activity) => {
-                const o = {
-                    date: activity.date.getTime() / 1000,
-                    author: {
-                        name: `${activity.author_first_name} ${activity.author_last_name.toUpperCase()}`,
-                        organization: activity.author_organization,
+        createCovidComment: async (user, shantytownId, data) => database.transaction(async (transaction) => {
+            const [[{ id }]] = await database.query(
+                `INSERT INTO
+                        shantytown_comments(
+                            description,
+                            fk_shantytown,
+                            created_by
+                        )
+                    VALUES (:description, :shantytownId, :createdBy)
+                    RETURNING shantytown_comment_id AS id`,
+                {
+                    replacements: {
+                        shantytownId,
+                        description: data.description,
+                        createdBy: user.id,
                     },
-                    shantytown: {
-                        id: activity.id,
-                        name: activity.addressSimple,
-                        city: activity.cityName,
-                    },
-                    entity: activity.entity,
-                };
+                    transaction,
+                },
+            );
 
-                // ====== COMMENTS
-                if (activity.entity === 'comment') {
-                    return Object.assign(o, {
-                        action: 'creation',
-                        comment_id: activity.comment_id,
-                        content: activity.content,
-                    });
-                }
+            return database.query(
+                `INSERT INTO
+                        shantytown_covid_comments(
+                            fk_comment,
+                            date,
+                            information,
+                            distribution_de_kits,
+                            cas_contacts,
+                            cas_suspects,
+                            cas_averes,
+                            created_by  
+                        )
+                    VALUES
+                        (
+                            :id,
+                            :date,
+                            :information,
+                            :distribution_de_kits,
+                            :cas_contacts,
+                            :cas_suspects,
+                            :cas_averes,
+                            :created_by
+                        )`,
+                {
+                    replacements: Object.assign({
+                        id,
+                        created_by: user.id,
+                    }, data),
+                    transaction,
+                },
+            );
+        }),
 
-                // ====== SHANTYTOWNS
-                const previousVersion = previousVersions[activity.id] || null;
-                const serializedShantytown = serializeShantytown(activity, user.permissions.shantytown.list);
-                previousVersions[activity.id] = serializedShantytown;
+        getComments,
 
-                let action;
-                if (previousVersion === null) {
-                    action = 'creation';
-                } else {
-                    o.shantytown.name = previousVersion.addressSimple;
+        getHistory: async (user) => {
+            const activities = await database.query(
+                `
+                SELECT
+                    activities.*,
+                    author.first_name AS author_first_name,
+                    author.last_name AS author_last_name,
+                    author.fk_organization AS author_organization
+                FROM
+                    ((
+                        SELECT
+                            CASE WHEN shantytowns.updated_at = shantytowns.created_at THEN shantytowns.created_at
+                                ELSE shantytowns.updated_at
+                                END
+                            AS "date",
+                            shantytowns.created_at AS created_at,
+                            COALESCE(shantytowns.updated_by, shantytowns.created_by) AS author_id,
+                            0 AS comment_id,
+                            NULL AS content,
+                            'shantytown' AS entity,
+                            ${Object.keys(SQL.selection).map(key => `${key} AS "${SQL.selection[key]}"`).join(',')}
+                        FROM "ShantytownHistories" shantytowns
+                        LEFT JOIN shantytowns AS s ON shantytowns.shantytown_id = s.shantytown_id
+                        ${SQL.joins.map(({ table, on }) => `LEFT JOIN ${table} ON ${on}`).join('\n')}
+                        WHERE s.shantytown_id IS NOT NULL /* filter out history of deleted shantytowns */
+                    )
+                    UNION
+                    (
+                        SELECT
+                            shantytowns.updated_at AS "date",
+                            shantytowns.created_at AS created_at,
+                            COALESCE(shantytowns.updated_by, shantytowns.created_by) AS author_id,
+                            0 AS comment_id,
+                            NULL AS content,
+                            'shantytown' AS entity,
+                            ${Object.keys(SQL.selection).map(key => `${key} AS "${SQL.selection[key]}"`).join(', ')}
+                        FROM shantytowns
+                        ${SQL.joins.map(({ table, on }) => `LEFT JOIN ${table} ON ${on}`).join('\n')}
+                    )
+                    UNION
+                    (
+                        SELECT
+                            comments.created_at AS "date",
+                            NULL AS created_at,
+                            comments.created_by AS author_id,
+                            comments.shantytown_comment_id AS comment_id,
+                            comments.description AS content,
+                            'comment' AS entity,
+                            ${Object.keys(SQL.selection).map(key => `${key} AS "${SQL.selection[key]}"`).join(',')}
+                        FROM shantytown_comments comments
+                        LEFT JOIN shantytowns ON comments.fk_shantytown = shantytowns.shantytown_id
+                        ${SQL.joins.map(({ table, on }) => `LEFT JOIN ${table} ON ${on}`).join('\n')}
+                        WHERE shantytowns.shantytown_id IS NOT NULL /* filter out history of deleted shantytowns */
+                    )) activities
+                LEFT JOIN users author ON activities.author_id = author.user_id
+                ORDER BY activities.date ASC
+                `,
+                {
+                    type: database.QueryTypes.SELECT,
+                },
+            );
 
-                    if (previousVersion.closedAt === null && activity.closedAt !== null) {
-                        action = 'closing';
-                    } else {
-                        const diff = getDiff(previousVersion, serializedShantytown);
-                        if (diff.length === 0) {
-                            return null;
-                        }
+            const previousVersions = {};
 
+            return activities
+                .map((activity) => {
+                    const o = {
+                        date: activity.date.getTime() / 1000,
+                        author: {
+                            name: `${activity.author_first_name} ${activity.author_last_name.toUpperCase()}`,
+                            organization: activity.author_organization,
+                        },
+                        shantytown: {
+                            id: activity.id,
+                            name: activity.addressSimple,
+                            city: activity.cityName,
+                        },
+                        entity: activity.entity,
+                    };
+
+                    // ====== COMMENTS
+                    if (activity.entity === 'comment') {
                         return Object.assign(o, {
-                            action: 'update',
-                            diff,
+                            action: 'creation',
+                            comment_id: activity.comment_id,
+                            content: activity.content,
                         });
                     }
-                }
 
-                return Object.assign(o, {
-                    action,
-                });
-            })
-            .filter(activity => activity !== null)
-            .reverse();
-    },
+                    // ====== SHANTYTOWNS
+                    const previousVersion = previousVersions[activity.id] || null;
+                    const serializedShantytown = serializeShantytown(activity, user.permissions.shantytown.list);
+                    previousVersions[activity.id] = serializedShantytown;
 
-});
+                    let action;
+                    if (previousVersion === null) {
+                        action = 'creation';
+                    } else {
+                        o.shantytown.name = previousVersion.addressSimple;
+
+                        if (previousVersion.closedAt === null && activity.closedAt !== null) {
+                            action = 'closing';
+                        } else {
+                            const diff = getDiff(previousVersion, serializedShantytown);
+                            if (diff.length === 0) {
+                                return null;
+                            }
+
+                            return Object.assign(o, {
+                                action: 'update',
+                                diff,
+                            });
+                        }
+                    }
+
+                    return Object.assign(o, {
+                        action,
+                    });
+                })
+                .filter(activity => activity !== null)
+                .reverse();
+        },
+
+    };
+};

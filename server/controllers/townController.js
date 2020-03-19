@@ -1836,5 +1836,113 @@ module.exports = (models) => {
             return res.end(buffer);
         },
 
+        async createCovidComment(req, res) {
+            // ensure town's existence
+            let shantytown;
+            try {
+                shantytown = await models.shantytown.findOne(req.user, req.params.id);
+
+                if (shantytown === null) {
+                    return res.status(404).send({
+                        user_message: `Le site #${req.params.id} n'existe pas`,
+                        developer_message: `Shantytown #${req.params.id} does not exist`,
+                    });
+                }
+            } catch (error) {
+                return res.status(500).send({
+                    user_message: `Une erreur est survenue lors de la vérification de l'existence du site #${req.params.id} en base de données`,
+                    developer_message: `Failed fetching shantytown #${req.params.id}`,
+                    details: {
+                        error_message: error.message,
+                    },
+                });
+            }
+
+            // sanitize input
+            function sanitize(body) {
+                const date = new Date(body.date);
+                const sanitizedBody = {
+                    date: !Number.isNaN(date.getTime()) ? date : null,
+                    description: typeof body.description === 'string' ? validator.trim(body.description) : null,
+                };
+
+                ['information', 'distribution_de_kits', 'cas_contacts', 'cas_suspects', 'cas_averes']
+                    .forEach((name) => {
+                        sanitizedBody[name] = typeof body[name] === 'boolean' ? body[name] : null;
+                    });
+
+                return sanitizedBody;
+            }
+
+            const data = sanitize(req.body);
+
+            // validate input
+            const labels = {
+                date: 'La date',
+                information: 'Le champ "Intervention / information"',
+                distribution_de_kits: 'Le champ "Distribution de kits"',
+                cas_contacts: 'Le champ "Cas contacts"',
+                cas_suspects: 'Le champ "Cas suspects"',
+                cas_averes: 'Le champ "Cas avérés"',
+                description: 'Le commentaire',
+            };
+            const errors = {};
+
+            Object.keys(data).forEach((name) => {
+                if (data[name] === null) {
+                    addError(errors, name, `${labels[name]} est obligatoire`);
+                }
+            });
+
+            if (data.date !== null) {
+                // date can't be future
+                const today = new Date();
+                if (data.date > today) {
+                    addError(errors, 'date', 'La date ne peut être future');
+                }
+
+                // date can't be older than the town's declaration date
+                if (data.date < new Date(shantytown.builtAt * 1000)) {
+                    addError(errors, 'date', 'La date ne peut être antérieure à la date d\'installation du site');
+                }
+            }
+
+            if (data.description === '') {
+                addError(errors, 'description', 'Le commentaire est obligatoire');
+            }
+
+            if (Object.keys(errors).length > 0) {
+                return res.status(400).send({
+                    user_message: 'Certains champs du formulaire comportent des erreurs',
+                    developer_message: 'Submitted data contains errors',
+                    fields: errors,
+                });
+            }
+
+            // try creating the new comment
+            try {
+                await models.shantytown.createCovidComment(req.user, req.params.id, data);
+            } catch (error) {
+                return res.status(500).send({
+                    user_message: 'Une erreur est survenue lors de l\'écriture du commentaire en base de données',
+                    developer_message: `Failed writing a covid comment for shantytown #${req.params.id}`,
+                    details: {
+                        error_message: error.message,
+                    },
+                });
+            }
+
+            // fetch refreshed comments
+            let comments;
+            try {
+                const response = await models.shantytown.getComments(req.user, [req.params.id], true);
+                comments = response[req.params.id];
+            } catch (error) {
+                comments = [];
+            }
+
+            return res.status(200).send(comments);
+        },
+
     };
 };
