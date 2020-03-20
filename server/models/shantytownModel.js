@@ -224,7 +224,7 @@ function serializeComment(comment) {
         comment.covidCommentDate !== null
             ? {
                 covid: {
-                    date: comment.covidCommentDate,
+                    date: comment.covidCommentDate.getTime() / 1000,
                     equipe_maraude: comment.covidEquipeMaraude,
                     equipe_sanitaire: comment.covidEquipeSanitaire,
                     equipe_accompagnement: comment.covidEquipeAccompagnement,
