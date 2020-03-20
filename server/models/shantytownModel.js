@@ -750,6 +750,7 @@ module.exports = (database) => {
                                 END
                             AS "date",
                             shantytowns.created_at AS created_at,
+                            cities.fk_departement AS departement,
                             COALESCE(shantytowns.updated_by, shantytowns.created_by) AS author_id,
                             0 AS comment_id,
                             NULL AS content,
@@ -774,6 +775,7 @@ module.exports = (database) => {
                         SELECT
                             shantytowns.updated_at AS "date",
                             shantytowns.created_at AS created_at,
+                            cities.fk_departement AS departement,
                             COALESCE(shantytowns.updated_by, shantytowns.created_by) AS author_id,
                             0 AS comment_id,
                             NULL AS content,
@@ -796,6 +798,7 @@ module.exports = (database) => {
                         SELECT
                             comments.created_at AS "date",
                             NULL AS created_at,
+                            cities.fk_departement AS departement,
                             comments.created_by AS author_id,
                             comments.shantytown_comment_id AS comment_id,
                             comments.description AS content,
@@ -841,6 +844,7 @@ module.exports = (database) => {
                             id: activity.id,
                             name: activity.addressSimple,
                             city: activity.cityName,
+                            departement: activity.departement,
                         },
                         entity: activity.entity,
                     };
