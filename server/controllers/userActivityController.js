@@ -1,7 +1,12 @@
 module.exports = models => ({
     async list(req, res) {
         try {
-            const results = await models.shantytown.getHistory(req.user);
+            let results = await models.shantytown.getHistory(req.user);
+
+            if (req.filters.covid === '1') {
+                results = results.filter(({ isCovid }) => isCovid);
+            }
+
             return res.status(200).send({
                 success: true,
                 response: results,

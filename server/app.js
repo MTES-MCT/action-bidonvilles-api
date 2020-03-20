@@ -413,6 +413,35 @@ module.exports = (middlewares, controllers) => {
     app.get(
         '/user-activities',
         middlewares.auth.authenticate,
+        async (req, res, next) => {
+            // parse filters
+            const { filters: rawFilters } = req.query;
+            req.filters = {};
+
+            if (rawFilters !== undefined) {
+                req.filters = rawFilters.split(',').reduce((acc, filter) => {
+                    const [key, value] = filter.split(':');
+                    return Object.assign({}, acc, {
+                        [key]: decodeURIComponent(value),
+                    });
+                }, {});
+            }
+
+            // check if filter covid is requested (in which case, no permission is needed)
+            if (req.filters.covid === '1') {
+                return next();
+            }
+
+            try {
+                middlewares.auth.checkPermissions(['shantytown_comment.moderate'], req, res, next, false);
+            } catch (error) {
+                return res.status(500).send({
+                    success: false,
+                });
+            }
+
+            return next();
+        },
         middlewares.appVersion.sync,
         controllers.userActivity.list,
     );
