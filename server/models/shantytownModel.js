@@ -755,7 +755,15 @@ module.exports = (database) => {
                             NULL AS content,
                             'shantytown' AS entity,
                             ${Object.keys(SQL.selection).map(key => `${key} AS "${SQL.selection[key]}"`).join(',')},
-                            FALSE AS "isCovid"
+                            FALSE AS "isCovid",
+                            DATE(NULL) AS "covid_date",
+                            FALSE AS equipe_maraude,
+                            FALSE AS equipe_sanitaire,
+                            FALSE AS equipe_accompagnement,
+                            FALSE AS distribution_alimentaire,
+                            FALSE AS personnes_orientees,
+                            FALSE AS personnes_avec_symptomes,
+                            FALSE AS besoin_action
                         FROM "ShantytownHistories" shantytowns
                         LEFT JOIN shantytowns AS s ON shantytowns.shantytown_id = s.shantytown_id
                         ${SQL.joins.map(({ table, on }) => `LEFT JOIN ${table} ON ${on}`).join('\n')}
@@ -771,7 +779,15 @@ module.exports = (database) => {
                             NULL AS content,
                             'shantytown' AS entity,
                             ${Object.keys(SQL.selection).map(key => `${key} AS "${SQL.selection[key]}"`).join(', ')},
-                            FALSE AS "isCovid"
+                            FALSE AS "isCovid",
+                            DATE(NULL) AS "covid_date",
+                            FALSE AS equipe_maraude,
+                            FALSE AS equipe_sanitaire,
+                            FALSE AS equipe_accompagnement,
+                            FALSE AS distribution_alimentaire,
+                            FALSE AS personnes_orientees,
+                            FALSE AS personnes_avec_symptomes,
+                            FALSE AS besoin_action
                         FROM shantytowns
                         ${SQL.joins.map(({ table, on }) => `LEFT JOIN ${table} ON ${on}`).join('\n')}
                     )
@@ -788,7 +804,15 @@ module.exports = (database) => {
                             CASE WHEN covid_comments.date IS NOT NULL THEN TRUE
                                  ELSE FALSE
                                  END
-                            AS "isCovid"
+                            AS "isCovid",
+                            covid_comments.date AS "covid_date",
+                            covid_comments.equipe_maraude,
+                            covid_comments.equipe_sanitaire,
+                            covid_comments.equipe_accompagnement,
+                            covid_comments.distribution_alimentaire,
+                            covid_comments.personnes_orientees,
+                            covid_comments.personnes_avec_symptomes,
+                            covid_comments.besoin_action
                         FROM shantytown_comments comments
                         LEFT JOIN shantytowns ON comments.fk_shantytown = shantytowns.shantytown_id
                         LEFT JOIN shantytown_covid_comments covid_comments ON covid_comments.fk_comment = comments.shantytown_comment_id
@@ -827,7 +851,16 @@ module.exports = (database) => {
                             action: 'creation',
                             comment_id: activity.comment_id,
                             content: activity.content,
-                            isCovid: activity.isCovid,
+                            covid: activity.isCovid ? {
+                                date: activity.covid_date.getTime() / 1000,
+                                equipe_maraude: activity.equipe_maraude,
+                                equipe_sanitaire: activity.equipe_sanitaire,
+                                equipe_accompagnement: activity.equipe_accompagnement,
+                                distribution_alimentaire: activity.distribution_alimentaire,
+                                personnes_orientees: activity.personnes_orientees,
+                                personnes_avec_symptomes: activity.personnes_avec_symptomes,
+                                besoin_action: activity.besoin_action,
+                            } : null,
                         });
                     }
 
