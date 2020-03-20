@@ -31,7 +31,7 @@ describe.only('townController.createCovidComment()', () => {
     const metadata = {
         date: {
             label: 'La date',
-            badFormat: global.generate().not('date'),
+            badFormat: global.generate().not('stringdate'),
         },
         equipe_maraude: {
             label: 'Le champ "Équipe de maraude"',
@@ -336,7 +336,7 @@ describe.only('townController.createCovidComment()', () => {
         beforeEach(async () => {
             // setup
             const today = new Date();
-            reqArg.body.date = new Date(today.getFullYear() + 1, today.getMonth(), today.getDate());
+            reqArg.body.date = (new Date(today.getFullYear() + 1, today.getMonth(), today.getDate())).toString();
             req = mockReq(reqArg);
             res = mockRes();
 
@@ -365,7 +365,7 @@ describe.only('townController.createCovidComment()', () => {
         let res;
         beforeEach(async () => {
             // setup
-            reqArg.body.date = new Date(1900, 0, 1);
+            reqArg.body.date = (new Date(1900, 0, 1)).toString();
             req = mockReq(reqArg);
             res = mockRes();
 

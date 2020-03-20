@@ -1862,7 +1862,7 @@ module.exports = (models) => {
             function sanitize(body) {
                 const date = new Date(body.date);
                 const sanitizedBody = {
-                    date: !Number.isNaN(date.getTime()) ? date : null,
+                    date: typeof body.date === 'string' && !Number.isNaN(date.getTime()) ? date : null,
                     description: typeof body.description === 'string' ? validator.trim(body.description) : null,
                 };
 
