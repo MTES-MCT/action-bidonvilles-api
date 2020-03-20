@@ -18,23 +18,31 @@ module.exports = {
                     type: Sequelize.DATE,
                     allowNull: false,
                 },
-                information: {
+                equipe_maraude: {
                     type: Sequelize.BOOLEAN,
                     allowNull: false,
                 },
-                distribution_de_kits: {
+                equipe_sanitaire: {
                     type: Sequelize.BOOLEAN,
                     allowNull: false,
                 },
-                cas_contacts: {
+                equipe_accompagnement: {
                     type: Sequelize.BOOLEAN,
                     allowNull: false,
                 },
-                cas_suspects: {
+                distribution_alimentaire: {
                     type: Sequelize.BOOLEAN,
                     allowNull: false,
                 },
-                cas_averes: {
+                personnes_orientees: {
+                    type: Sequelize.BOOLEAN,
+                    allowNull: false,
+                },
+                personnes_avec_symptomes: {
+                    type: Sequelize.BOOLEAN,
+                    allowNull: false,
+                },
+                besoin_action: {
                     type: Sequelize.BOOLEAN,
                     allowNull: false,
                 },

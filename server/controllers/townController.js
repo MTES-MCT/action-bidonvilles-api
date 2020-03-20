@@ -1866,7 +1866,9 @@ module.exports = (models) => {
                     description: typeof body.description === 'string' ? validator.trim(body.description) : null,
                 };
 
-                ['information', 'distribution_de_kits', 'cas_contacts', 'cas_suspects', 'cas_averes']
+                ['equipe_maraude', 'equipe_sanitaire', 'equipe_accompagnement',
+                    'distribution_alimentaire', 'personnes_orientees', 'personnes_avec_symptomes',
+                    'besoin_action']
                     .forEach((name) => {
                         sanitizedBody[name] = typeof body[name] === 'boolean' ? body[name] : null;
                     });
@@ -1879,11 +1881,13 @@ module.exports = (models) => {
             // validate input
             const labels = {
                 date: 'La date',
-                information: 'Le champ "Intervention / information"',
-                distribution_de_kits: 'Le champ "Distribution de kits"',
-                cas_contacts: 'Le champ "Cas contacts"',
-                cas_suspects: 'Le champ "Cas suspects"',
-                cas_averes: 'Le champ "Cas avérés"',
+                equipe_maraude: 'Le champ "Équipe de maraude"',
+                equipe_sanitaire: 'Le champ "Équipe sanitaire"',
+                equipe_accompagnement: 'Le champ "Équipe d\'accompagnement"',
+                distribution_alimentaire: 'Le champ "Distribution d\'aide alimentaire"',
+                personnes_orientees: 'Le champ "Personne(s) orientée(s) vers un centre d\'hébergement spécialisé (desserrement)"',
+                personnes_avec_symptomes: 'Le champ "Personnes avec des symptômes Covid-19"',
+                besoin_action: 'Le champ "Besoin d\'une action prioritaire"',
                 description: 'Le commentaire',
             };
             const errors = {};

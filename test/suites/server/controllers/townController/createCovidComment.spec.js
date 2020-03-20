@@ -33,24 +33,32 @@ describe.only('townController.createCovidComment()', () => {
             label: 'La date',
             badFormat: global.generate().not('date'),
         },
-        information: {
-            label: 'Le champ "Intervention / information"',
+        equipe_maraude: {
+            label: 'Le champ "Équipe de maraude"',
             badFormat: global.generate().not('boolean'),
         },
-        distribution_de_kits: {
-            label: 'Le champ "Distribution de kits"',
+        equipe_sanitaire: {
+            label: 'Le champ "Équipe sanitaire"',
             badFormat: global.generate().not('boolean'),
         },
-        cas_contacts: {
-            label: 'Le champ "Cas contacts"',
+        equipe_accompagnement: {
+            label: 'Le champ "Équipe d\'accompagnement"',
             badFormat: global.generate().not('boolean'),
         },
-        cas_suspects: {
-            label: 'Le champ "Cas suspects"',
+        distribution_alimentaire: {
+            label: 'Le champ "Distribution d\'aide alimentaire"',
             badFormat: global.generate().not('boolean'),
         },
-        cas_averes: {
-            label: 'Le champ "Cas avérés"',
+        personnes_orientees: {
+            label: 'Le champ "Personne(s) orientée(s) vers un centre d\'hébergement spécialisé (desserrement)"',
+            badFormat: global.generate().not('boolean'),
+        },
+        personnes_avec_symptomes: {
+            label: 'Le champ "Personnes avec des symptômes Covid-19"',
+            badFormat: global.generate().not('boolean'),
+        },
+        besoin_action: {
+            label: 'Le champ "Besoin d\'une action prioritaire"',
             badFormat: global.generate().not('boolean'),
         },
         description: {
@@ -70,11 +78,13 @@ describe.only('townController.createCovidComment()', () => {
             },
             body: {
                 date: (new Date(2000, 0, 1)).toString(),
-                information: true,
-                distribution_de_kits: true,
-                cas_contacts: true,
-                cas_suspects: true,
-                cas_averes: true,
+                equipe_maraude: true,
+                equipe_sanitaire: true,
+                equipe_accompagnement: true,
+                distribution_alimentaire: true,
+                personnes_orientees: true,
+                personnes_avec_symptomes: true,
+                besoin_action: true,
                 description: 'lorem ipsum',
             },
         };
