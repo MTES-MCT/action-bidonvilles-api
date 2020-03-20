@@ -754,7 +754,8 @@ module.exports = (database) => {
                             0 AS comment_id,
                             NULL AS content,
                             'shantytown' AS entity,
-                            ${Object.keys(SQL.selection).map(key => `${key} AS "${SQL.selection[key]}"`).join(',')}
+                            ${Object.keys(SQL.selection).map(key => `${key} AS "${SQL.selection[key]}"`).join(',')},
+                            FALSE AS "isCovid"
                         FROM "ShantytownHistories" shantytowns
                         LEFT JOIN shantytowns AS s ON shantytowns.shantytown_id = s.shantytown_id
                         ${SQL.joins.map(({ table, on }) => `LEFT JOIN ${table} ON ${on}`).join('\n')}
@@ -769,7 +770,8 @@ module.exports = (database) => {
                             0 AS comment_id,
                             NULL AS content,
                             'shantytown' AS entity,
-                            ${Object.keys(SQL.selection).map(key => `${key} AS "${SQL.selection[key]}"`).join(', ')}
+                            ${Object.keys(SQL.selection).map(key => `${key} AS "${SQL.selection[key]}"`).join(', ')},
+                            FALSE AS "isCovid"
                         FROM shantytowns
                         ${SQL.joins.map(({ table, on }) => `LEFT JOIN ${table} ON ${on}`).join('\n')}
                     )
@@ -782,9 +784,14 @@ module.exports = (database) => {
                             comments.shantytown_comment_id AS comment_id,
                             comments.description AS content,
                             'comment' AS entity,
-                            ${Object.keys(SQL.selection).map(key => `${key} AS "${SQL.selection[key]}"`).join(',')}
+                            ${Object.keys(SQL.selection).map(key => `${key} AS "${SQL.selection[key]}"`).join(',')},
+                            CASE WHEN covid_comments.date IS NOT NULL THEN TRUE
+                                 ELSE FALSE
+                                 END
+                            AS "isCovid"
                         FROM shantytown_comments comments
                         LEFT JOIN shantytowns ON comments.fk_shantytown = shantytowns.shantytown_id
+                        LEFT JOIN shantytown_covid_comments covid_comments ON covid_comments.fk_comment = comments.shantytown_comment_id
                         ${SQL.joins.map(({ table, on }) => `LEFT JOIN ${table} ON ${on}`).join('\n')}
                         WHERE shantytowns.shantytown_id IS NOT NULL /* filter out history of deleted shantytowns */
                     )) activities
@@ -820,6 +827,7 @@ module.exports = (database) => {
                             action: 'creation',
                             comment_id: activity.comment_id,
                             content: activity.content,
+                            isCovid: activity.isCovid,
                         });
                     }
 
