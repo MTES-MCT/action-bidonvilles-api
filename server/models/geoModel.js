@@ -196,5 +196,27 @@ module.exports = (database) => {
                 type: database.QueryTypes.SELECT,
             },
         ),
+
+        /**
+         *
+         * @param {'region','epci'} locationType
+         * @param {*}               locationCode
+         */
+        async getDepartementsFor(locationType, locationCode) {
+            return database.query(
+                `SELECT
+                    departements.code,
+                    departements.name
+                FROM cities
+                LEFT JOIN departements ON cities.fk_departement = departements.code
+                WHERE fk_${locationType} = :locationCode
+                GROUP BY departements.code, departements.name`,
+                {
+                    replacements: {
+                        locationCode,
+                    },
+                },
+            );
+        },
     };
 };

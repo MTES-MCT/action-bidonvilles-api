@@ -63,7 +63,7 @@ describe.only('townController.createCovidComment()', () => {
         },
         description: {
             label: 'Le commentaire',
-            badFormat: global.generate().not('string'),
+            badFormat: global.generate().not(['string', 'stringdate']),
         },
     };
 
