@@ -303,6 +303,14 @@ module.exports = (middlewares, controllers) => {
         ],
         controllers.town.updateComment,
     );
+    app.post(
+        '/towns/:id/covidComments',
+        [
+            middlewares.auth.authenticate,
+            middlewares.appVersion.sync,
+        ],
+        controllers.town.createCovidComment,
+    );
     app.delete(
         '/towns/:id/comments/:commentId',
         [
@@ -310,15 +318,6 @@ module.exports = (middlewares, controllers) => {
             middlewares.appVersion.sync,
         ],
         controllers.town.deleteComment,
-    );
-    app.get(
-        '/comments',
-        [
-            middlewares.auth.authenticate,
-            (...args) => middlewares.auth.checkPermissions(['shantytown_comment.moderate'], ...args),
-            middlewares.appVersion.sync,
-        ],
-        controllers.town.getAllComments,
     );
 
     // organizations

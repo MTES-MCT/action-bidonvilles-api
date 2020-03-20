@@ -273,20 +273,34 @@ function cleanParams(body, format) {
 }
 
 function serializeComment(comment) {
-    return {
-        id: comment.commentId,
-        description: comment.commentDescription,
-        createdAt: comment.commentCreatedAt !== null ? (comment.commentCreatedAt.getTime() / 1000) : null,
-        createdBy: {
-            id: comment.commentCreatedBy,
-            firstName: comment.userFirstName,
-            lastName: comment.userLastName,
-            position: comment.userPosition,
-            organization: comment.organizationAbbreviation || comment.organizationName,
-            organizationId: comment.organizationId,
+    return Object.assign(
+        {
+            id: comment.commentId,
+            description: comment.commentDescription,
+            createdAt: comment.commentCreatedAt !== null ? (comment.commentCreatedAt.getTime() / 1000) : null,
+            createdBy: {
+                id: comment.commentCreatedBy,
+                firstName: comment.userFirstName,
+                lastName: comment.userLastName,
+                position: comment.userPosition,
+                organization: comment.organizationAbbreviation || comment.organizationName,
+                organizationId: comment.organizationId,
+            },
+            shantytown: comment.shantytownId,
         },
-        shantytown: comment.shantytownId,
-    };
+        comment.covidCommentDate !== null
+            ? {
+                covid: {
+                    date: comment.covidCommentDate,
+                    information: comment.covidCommentInformation,
+                    distribution_de_kits: comment.covidCommentDistribution,
+                    cas_contacts: comment.covidCommentCasContacts,
+                    cas_suspects: comment.covidCommentCasSuspects,
+                    cas_averes: comment.covidCommentCasAveres,
+                },
+            }
+            : {},
+    );
 }
 
 module.exports = (models) => {
@@ -1141,7 +1155,7 @@ module.exports = (models) => {
                 });
             }
 
-            const comment = town.comments.find(({ id }) => id === parseInt(req.params.commentId, 10));
+            const comment = town.comments.regular.find(({ id }) => id === parseInt(req.params.commentId, 10));
             if (comment === undefined) {
                 return res.status(404).send({
                     error: {
@@ -1207,15 +1221,7 @@ module.exports = (models) => {
             }
 
             return res.status(200).send({
-                comments: town.comments.filter(({ id }) => id !== parseInt(req.params.commentId, 10)),
-            });
-        },
-
-        async getAllComments(req, res) {
-            const comments = await models.shantytown.findComments();
-
-            return res.status(200).send({
-                comments: comments.map(serializeComment),
+                comments: town.comments.regular.filter(({ id }) => id !== parseInt(req.params.commentId, 10)),
             });
         },
 
@@ -1828,6 +1834,118 @@ module.exports = (models) => {
             }
 
             return res.end(buffer);
+        },
+
+        async createCovidComment(req, res) {
+            // ensure town's existence
+            let shantytown;
+            try {
+                shantytown = await models.shantytown.findOne(req.user, req.params.id);
+
+                if (shantytown === null) {
+                    return res.status(404).send({
+                        user_message: `Le site #${req.params.id} n'existe pas`,
+                        developer_message: `Shantytown #${req.params.id} does not exist`,
+                    });
+                }
+            } catch (error) {
+                return res.status(500).send({
+                    user_message: `Une erreur est survenue lors de la vérification de l'existence du site #${req.params.id} en base de données`,
+                    developer_message: `Failed fetching shantytown #${req.params.id}`,
+                    details: {
+                        error_message: error.message,
+                    },
+                });
+            }
+
+            // sanitize input
+            function sanitize(body) {
+                const date = new Date(body.date);
+                const sanitizedBody = {
+                    date: !Number.isNaN(date.getTime()) ? date : null,
+                    description: typeof body.description === 'string' ? validator.trim(body.description) : null,
+                };
+
+                ['equipe_maraude', 'equipe_sanitaire', 'equipe_accompagnement',
+                    'distribution_alimentaire', 'personnes_orientees', 'personnes_avec_symptomes',
+                    'besoin_action']
+                    .forEach((name) => {
+                        sanitizedBody[name] = typeof body[name] === 'boolean' ? body[name] : null;
+                    });
+
+                return sanitizedBody;
+            }
+
+            const data = sanitize(req.body);
+
+            // validate input
+            const labels = {
+                date: 'La date',
+                equipe_maraude: 'Le champ "Équipe de maraude"',
+                equipe_sanitaire: 'Le champ "Équipe sanitaire"',
+                equipe_accompagnement: 'Le champ "Équipe d\'accompagnement"',
+                distribution_alimentaire: 'Le champ "Distribution d\'aide alimentaire"',
+                personnes_orientees: 'Le champ "Personne(s) orientée(s) vers un centre d\'hébergement spécialisé (desserrement)"',
+                personnes_avec_symptomes: 'Le champ "Personnes avec des symptômes Covid-19"',
+                besoin_action: 'Le champ "Besoin d\'une action prioritaire"',
+                description: 'Le commentaire',
+            };
+            const errors = {};
+
+            Object.keys(data).forEach((name) => {
+                if (data[name] === null) {
+                    addError(errors, name, `${labels[name]} est obligatoire`);
+                }
+            });
+
+            if (data.date !== null) {
+                // date can't be future
+                const today = new Date();
+                if (data.date > today) {
+                    addError(errors, 'date', 'La date ne peut être future');
+                }
+
+                // date can't be older than the town's declaration date
+                if (data.date < new Date(shantytown.builtAt * 1000)) {
+                    addError(errors, 'date', 'La date ne peut être antérieure à la date d\'installation du site');
+                }
+            }
+
+            if (data.description === '') {
+                addError(errors, 'description', 'Le commentaire est obligatoire');
+            }
+
+            if (Object.keys(errors).length > 0) {
+                return res.status(400).send({
+                    user_message: 'Certains champs du formulaire comportent des erreurs',
+                    developer_message: 'Submitted data contains errors',
+                    fields: errors,
+                });
+            }
+
+            // try creating the new comment
+            try {
+                await models.shantytown.createCovidComment(req.user, req.params.id, data);
+            } catch (error) {
+                return res.status(500).send({
+                    user_message: 'Une erreur est survenue lors de l\'écriture du commentaire en base de données',
+                    developer_message: `Failed writing a covid comment for shantytown #${req.params.id}`,
+                    details: {
+                        error_message: error.message,
+                    },
+                });
+            }
+
+            // fetch refreshed comments
+            let comments;
+            try {
+                const response = await models.shantytown.getComments(req.user, [req.params.id], true);
+                comments = response[req.params.id];
+            } catch (error) {
+                comments = [];
+            }
+
+            return res.status(200).send(comments);
         },
 
     };
