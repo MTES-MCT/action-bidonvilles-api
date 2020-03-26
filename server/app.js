@@ -320,6 +320,16 @@ module.exports = (middlewares, controllers) => {
         controllers.town.deleteComment,
     );
 
+    // high covid comment
+    app.post(
+        '/high-covid-comments',
+        [
+            middlewares.auth.authenticate,
+            middlewares.appVersion.sync,
+        ],
+        controllers.town.createHighCovidComment,
+    );
+
     // organizations
     app.get(
         '/organizations/search',
