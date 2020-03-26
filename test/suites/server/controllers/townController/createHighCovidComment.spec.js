@@ -14,10 +14,11 @@ const { mockReq, mockRes } = require('sinon-express-mock');
  * *********************************************************************************************** */
 
 const models = {
-    geo: sinon.stub(require('#server/models/geoModel')({})),
-    highCovidComment: sinon.stub(require('#server/models/highCovidCommentModel')({})),
+    geo: require('#server/models/geoModel')({}),
+    highCovidComment: require('#server/models/highCovidCommentModel')({}),
 };
-const { createHighCovidComment } = require('#server/controllers/townController')(models);
+const stubs = {};
+const { createHighCovidComment } = require('#server/controllers/townController')(stubs);
 
 
 /* **************************************************************************************************
@@ -127,13 +128,21 @@ describe.only('townController.createHighCovidComment()', () => {
                 description: 'lorem ipsum',
             },
         };
-        models.geo.getDepartementsFor.rejects(
+
+        stubs.geo = sinon.stub(models.geo);
+        stubs.highCovidComment = sinon.stub(models.highCovidComment);
+
+        stubs.geo.getDepartementsFor.rejects(
             new Error('getDepartementsFor() should not have been called'),
         );
     });
 
     afterEach(() => {
-        sinon.reset();
+        Object.keys(stubs).forEach((key) => {
+            Object.keys(stubs[key]).forEach((method) => {
+                stubs[key][method].restore();
+            });
+        });
     });
 
 
@@ -153,7 +162,7 @@ describe.only('townController.createHighCovidComment()', () => {
                     await createHighCovidComment(req, res);
 
                     // assert
-                    expect(models.highCovidComment.create).to.have.been.calledOnceWith(
+                    expect(stubs.highCovidComment.create).to.have.been.calledOnceWith(
                         req.user,
                         {
                             description: 'lorem ipsum',
@@ -173,7 +182,7 @@ describe.only('townController.createHighCovidComment()', () => {
                     await createHighCovidComment(req, res);
 
                     // assert
-                    expect(models.highCovidComment.create).to.have.been.calledOnceWith(
+                    expect(stubs.highCovidComment.create).to.have.been.calledOnceWith(
                         req.user,
                         {
                             description: 'lorem ipsum',
@@ -189,7 +198,7 @@ describe.only('townController.createHighCovidComment()', () => {
                 it('saves the comment, using the departements passed in the request', async () => {
                     // setup
                     reqArg.user.organization.location = Object.assign({}, locations[level]);
-                    models.geo.getDepartementsFor.withArgs(level, locations[level][level].code).resolves(
+                    stubs.geo.getDepartementsFor.withArgs(level, locations[level][level].code).resolves(
                         departements[level],
                     );
                     reqArg.body.departements = ['78'];
@@ -201,7 +210,7 @@ describe.only('townController.createHighCovidComment()', () => {
                     await createHighCovidComment(req, res);
 
                     // assert
-                    expect(models.highCovidComment.create).to.have.been.calledOnceWith(
+                    expect(stubs.highCovidComment.create).to.have.been.calledOnceWith(
                         req.user,
                         {
                             description: 'lorem ipsum',
@@ -224,7 +233,7 @@ describe.only('townController.createHighCovidComment()', () => {
         await createHighCovidComment(req, res);
 
         // assert
-        expect(models.highCovidComment.create).to.have.been.calledOnceWith(
+        expect(stubs.highCovidComment.create).to.have.been.calledOnceWith(
             req.user,
             {
                 description: 'lorem ipsum',
@@ -315,7 +324,7 @@ describe.only('townController.createHighCovidComment()', () => {
             beforeEach(async () => {
                 // setup
                 reqArg.user.organization.location = locations[level];
-                models.geo.getDepartementsFor.withArgs(level, locations[level][level].code).resolves(
+                stubs.geo.getDepartementsFor.withArgs(level, locations[level][level].code).resolves(
                     departements[level],
                 );
                 reqArg.body.departements = ['33', '78', '52'];
@@ -465,7 +474,7 @@ describe.only('townController.createHighCovidComment()', () => {
         beforeEach(async () => {
             // setup
             reqArg.user.organization.location = locations.departement;
-            models.highCovidComment.create.withArgs(
+            stubs.highCovidComment.create.withArgs(
                 reqArg.user,
                 {
                     description: 'lorem ipsum',
