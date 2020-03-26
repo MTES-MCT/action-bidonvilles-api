@@ -501,7 +501,7 @@ module.exports = (models) => {
         return fieldErrors;
     }
 
-    return {
+    const methods = {
         async list(req, res) {
             try {
                 // filters
@@ -1947,90 +1947,12 @@ module.exports = (models) => {
 
             return res.status(200).send(comments);
         },
-
-        async createHighCovidComment(req, res) {
-            // =========== resolve the departements for the new comment
-            const { type: locationType } = req.user.organization.location;
-
-            // national users
-            if (locationType === 'nation') {
-                res.status(401).send({
-                    user_message: 'Vous n\'avez pas les droits nécessaires pour créer un commentaire',
-                    developer_message: 'National user can\'t create high covid comments',
-                });
-                return res;
-            }
-
-            // users at region/epci level
-            let departements;
-            if (['region', 'epci'].indexOf(locationType) !== -1) {
-                if (req.body.departements === undefined) {
-                    return res.status(400).send({
-                        user_message: 'Vous devez désigner les départements concernés par ce commentaire',
-                        developer_message: 'Departements are missing',
-                    });
-                }
-                if (Object.prototype.toString.apply(req.body.departements) !== '[object Array]') {
-                    return res.status(400).send({
-                        user_message: 'Vous devez désigner les départements concernés par ce commentaire',
-                        developer_message: 'Departements are invalid',
-                    });
-                }
-                if (req.body.departements.length === 0) {
-                    return res.status(400).send({
-                        user_message: 'Vous devez désigner les départements concernés par ce commentaire',
-                        developer_message: 'Departements are empty',
-                    });
-                }
-
-                const allowedDepartements = (await models.geo.getDepartementsFor(
-                    locationType,
-                    req.user.organization.location[locationType].code,
-                )).map(({ code }) => code);
-
-                const badDepartements = req.body.departements.filter(code => allowedDepartements.indexOf(code) === -1);
-                if (badDepartements.length > 0) {
-                    return res.status(400).send({
-                        user_message: `Vous ne pouvez pas déposer un commentaire pour le(s) département(s) : ${badDepartements.join(', ')}`,
-                        developer_message: `User tried to create a comment on forbidden departements: ${badDepartements.join(', ')}`,
-                    });
-                }
-
-                ({ departements } = req.body);
-            } else { // other users
-                departements = [req.user.organization.location.departement.code];
-            }
-
-            if (typeof req.body.description !== 'string') {
-                return res.status(400).send({
-                    user_message: 'Le commentaire ne peut être vide',
-                    developer_message: `The comment is not a string (got ${typeof req.body.description})`,
-                });
-            }
-
-            // =========== validate the comment itself
-            const description = validator.trim(req.body.description);
-            if (description === '') {
-                return res.status(400).send({
-                    user_message: 'Le commentaire ne peut être vide',
-                    developer_message: 'The comment is empty',
-                });
-            }
-
-            // =========== save the comment
-            try {
-                await models.highCovidComment.create(req.user, {
-                    description,
-                    departements,
-                });
-            } catch (error) {
-                return res.status(500).send({
-                    user_message: 'Une erreur est survenue lors de l\'écriture en base de données',
-                    developer_message: `Failed saving the comment into database: ${error.message}`,
-                });
-            }
-
-            return res.status(204).send({});
-        },
     };
+
+    // eslint-disable-next-line global-require
+    methods.createHighCovidComment = require('./townController/createHighCovidComment')(
+        models,
+    );
+
+    return methods;
 };
