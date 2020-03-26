@@ -389,6 +389,16 @@ module.exports = (middlewares, controllers) => {
         controllers.geo.listDepartements,
     );
 
+    app.get(
+        '/regions/:id/departements',
+        controllers.geo.getDepartementsForRegion,
+    );
+
+    app.get(
+        '/epci/:id/departements',
+        controllers.geo.getDepartementsForEpci,
+    );
+
     // stats
     app.get(
         '/stats',

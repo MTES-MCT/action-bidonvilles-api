@@ -202,7 +202,7 @@ module.exports = (database) => {
          * @param {'region','epci'} locationType
          * @param {*}               locationCode
          */
-        async getDepartementsFor(locationType, locationCode) {
+        getDepartementsFor(locationType, locationCode) {
             return database.query(
                 `SELECT
                     departements.code,
@@ -212,6 +212,7 @@ module.exports = (database) => {
                 WHERE fk_${locationType} = :locationCode
                 GROUP BY departements.code, departements.name`,
                 {
+                    type: database.QueryTypes.SELECT,
                     replacements: {
                         locationCode,
                     },

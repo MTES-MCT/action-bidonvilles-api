@@ -13,11 +13,11 @@ module.exports = models => ({
 
                     case 'region':
                     case 'epci':
-                        allowedDepartements = models.geo
+                        allowedDepartements = (await models.geo
                             .getDepartementsFor(
                                 req.user.organization.location.type,
                                 req.user.organization.location.region.code,
-                            )
+                            ))
                             .map(({ code }) => code);
                         break;
 
