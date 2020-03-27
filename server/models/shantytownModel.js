@@ -961,5 +961,36 @@ module.exports = (database) => {
                 .reverse();
         },
 
+        covidReport() {
+            return database.query(
+                `SELECT
+                    cities.fk_departement AS "address_departement",
+                    cities.name AS "address_city",
+                    shantytowns.address AS "address",
+                    shantytowns.access_to_water,
+                    comments.created_at,
+                    CONCAT(users.last_name, CONCAT(' ', users.first_name)) AS "author_name",
+                    org.name AS "author_org",
+                    covid.equipe_maraude,
+                    covid.equipe_sanitaire,
+                    covid.equipe_accompagnement,
+                    covid.distribution_alimentaire,
+                    covid.personnes_orientees,
+                    covid.personnes_avec_symptomes,
+                    covid.besoin_action,
+                    comments.description
+                FROM shantytown_covid_comments covid
+                LEFT JOIN shantytown_comments comments ON covid.fk_comment = comments.shantytown_comment_id
+                LEFT JOIN shantytowns ON comments.fk_shantytown = shantytowns.shantytown_id
+                LEFT JOIN cities ON shantytowns.fk_city = cities.code
+                LEFT JOIN users ON comments.created_by = users.user_id
+                LEFT JOIN localized_organizations org ON users.fk_organization = org.organization_id
+                ORDER BY comments.created_at DESC`,
+                {
+                    type: database.QueryTypes.SELECT,
+                },
+            );
+        },
+
     };
 };

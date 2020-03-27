@@ -1947,6 +1947,100 @@ module.exports = (models) => {
 
             return res.status(200).send(comments);
         },
+
+        async covidReport(req, res) {
+            const rows = await models.shantytown.covidReport();
+
+            if (rows.length === 0) {
+                return res.status(500).send({
+                    user_message: 'Aucune donnée à exporter',
+                });
+            }
+
+            const tags = {
+                equipe_maraude: 'Équipe de maraude',
+                equipe_sanitaire: 'Équipe sanitaire',
+                equipe_accompagnement: 'Équipe d\'accompagnement',
+                distribution_alimentaire: 'Distribution d\'aide alimentaire',
+                personnes_orientees: 'Personnes orientées vers un centre d\'hébergement spécialisé',
+                personnes_avec_symptomes: 'Personnes avec des symptômes Covid-19',
+                besoin_action: 'Besoin d\'une action prioritaire',
+            };
+            const processedRows = rows.map((row) => {
+                const newRow = {
+                    address_departement: row.address_departement,
+                    address_city: row.address_city,
+                    address: row.address,
+                    access_to_water: row.access_to_water,
+                    created_at: row.created_at,
+                    author_name: row.author_name,
+                    author_org: row.author_org,
+                    tags: [],
+                    description: row.description,
+                };
+
+                Object.keys(tags).forEach((tag) => {
+                    if (row[tag] === true) {
+                        newRow.tags.push(tags[tag]);
+                    }
+                });
+
+                return newRow;
+            });
+
+            const keys = [
+                { label: 'Département', key: 'address_departement' },
+                { label: 'Commune', key: 'address_city' },
+                { label: 'Adresse du site', key: 'address' },
+                {
+                    label: 'Accès à l\'eau',
+                    key: 'access_to_water',
+                    processor(data) {
+                        if (data === null) {
+                            return 'NC';
+                        }
+
+                        if (data === true) {
+                            return 'Oui';
+                        }
+
+                        return 'Non';
+                    },
+                },
+                {
+                    label: 'Date de publication',
+                    key: 'created_at',
+                    processor(data) {
+                        return dateToString(data, 'Y-M-d');
+                    },
+                },
+                { label: 'Auteur du commentaire', key: 'author_name' },
+                { label: 'Structure de l\'auteur', key: 'author_org' },
+                {
+                    label: 'Tags sélectionnés',
+                    key: 'tags',
+                    processor(data) {
+                        return data.join(',');
+                    },
+                },
+                { label: 'Commentaire', key: 'description' },
+            ];
+
+            const header = `"${keys.map(({ label }) => label).join('";"')}"`;
+            const body = processedRows.map(row => keys.map(({ key, processor }) => {
+                if (processor === undefined) {
+                    return `"${row[key]}"`;
+                }
+
+                return `"${processor(row[key])}"`;
+            }).join(';')).join('\r\n');
+
+            res.setHeader('content-type', 'text/csv');
+            res.attachment(`${dateToString(new Date(), 'Y-m-d')}-export-covid.csv`);
+            return res
+                .status(200)
+                .send(`${header}\r\n${body}`);
+        },
     };
 
     // eslint-disable-next-line global-require
