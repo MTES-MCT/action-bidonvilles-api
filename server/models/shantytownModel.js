@@ -858,7 +858,7 @@ module.exports = (database) => {
                         LEFT JOIN shantytowns ON shantytowns.shantytown_id = -1
                         ${SQL.joins.map(({ table, on }) => `LEFT JOIN ${table} ON ${on}`).join('\n')}
                         LEFT JOIN high_covid_comment_territories territories ON territories.fk_comment = comments.high_covid_comment_id
-                        LEFT JOIN departements d2 ON territories.fk_departement = departements.code
+                        LEFT JOIN departements d2 ON territories.fk_departement = d2.code
                     )) activities
                 LEFT JOIN users author ON activities.author_id = author.user_id
                 ORDER BY activities.date ASC
