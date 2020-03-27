@@ -16,7 +16,7 @@ module.exports = models => ({
                         allowedDepartements = (await models.geo
                             .getDepartementsFor(
                                 req.user.organization.location.type,
-                                req.user.organization.location.region.code,
+                                req.user.organization.location[req.user.organization.location.type].code,
                             ))
                             .map(({ code }) => code);
                         break;
