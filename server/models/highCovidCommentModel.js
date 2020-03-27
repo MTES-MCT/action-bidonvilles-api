@@ -100,24 +100,22 @@ module.exports = (database) => {
         return comments;
     };
 
-    methods.create = async (user, data) => {
-        const transaction = await database.transaction();
-
+    methods.create = async (user, data) => database.transaction(async (transaction) => {
         // comment
         const [[{ id }]] = await database.query(
             `INSERT INTO
-                high_covid_comments(
-                    description,
-                    created_by
-                )
+                    high_covid_comments(
+                        description,
+                        created_by
+                    )
+                    
+                VALUES
+                    (
+                        :description,
+                        :userId
+                    )
                 
-            VALUES
-                (
-                    :description,
-                    :userId
-                )
-            
-            RETURNING high_covid_comment_id AS id`,
+                RETURNING high_covid_comment_id AS id`,
             {
                 replacements: {
                     description: data.description,
@@ -133,20 +131,20 @@ module.exports = (database) => {
 
         return database.query(
             `INSERT INTO
-                high_covid_comment_territories(
-                    fk_comment,
-                    fk_departement,
-                    created_by
-                )
-                
-            VALUES
-                ${query}`,
+                    high_covid_comment_territories(
+                        fk_comment,
+                        fk_departement,
+                        created_by
+                    )
+                    
+                VALUES
+                    ${query}`,
             {
                 replacements: values,
                 transaction,
             },
         );
-    };
+    });
 
     return methods;
 };
