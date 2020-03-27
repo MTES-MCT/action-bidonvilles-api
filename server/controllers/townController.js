@@ -501,7 +501,7 @@ module.exports = (models) => {
         return fieldErrors;
     }
 
-    return {
+    const methods = {
         async list(req, res) {
             try {
                 // filters
@@ -1947,6 +1947,12 @@ module.exports = (models) => {
 
             return res.status(200).send(comments);
         },
-
     };
+
+    // eslint-disable-next-line global-require
+    methods.createHighCovidComment = require('./townController/createHighCovidComment')(
+        models,
+    );
+
+    return methods;
 };

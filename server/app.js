@@ -320,6 +320,16 @@ module.exports = (middlewares, controllers) => {
         controllers.town.deleteComment,
     );
 
+    // high covid comment
+    app.post(
+        '/high-covid-comments',
+        [
+            middlewares.auth.authenticate,
+            middlewares.appVersion.sync,
+        ],
+        controllers.town.createHighCovidComment,
+    );
+
     // organizations
     app.get(
         '/organizations/search',
@@ -377,6 +387,16 @@ module.exports = (middlewares, controllers) => {
     app.get(
         '/departements',
         controllers.geo.listDepartements,
+    );
+
+    app.get(
+        '/regions/:id/departements',
+        controllers.geo.getDepartementsForRegion,
+    );
+
+    app.get(
+        '/epci/:id/departements',
+        controllers.geo.getDepartementsForEpci,
     );
 
     // stats

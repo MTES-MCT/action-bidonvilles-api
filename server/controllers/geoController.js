@@ -10,6 +10,33 @@ function trim(str) {
 }
 
 module.exports = models => ({
+    async getDepartementsForRegion(req, res) {
+        try {
+            const departements = await models.geo.getDepartementsFor('region', req.params.id);
+            return res.status(200).send({
+                departements,
+            });
+        } catch (error) {
+            return res.status(500).send({
+                user_message: 'Une erreur est survenue lors de la lecture en base de données',
+                developer_message: error.message,
+            });
+        }
+    },
+
+    async getDepartementsForEpci(req, res) {
+        try {
+            return res.status(200).send({
+                departements: await models.geo.getDepartementsFor('epci', req.params.id),
+            });
+        } catch (error) {
+            return res.status(500).send({
+                user_message: 'Une erreur est survenue lors de la lecture en base de données',
+                developer_message: error.message,
+            });
+        }
+    },
+
     async searchCities(req, res) {
         const { query: { q } } = url.parse(req.url, true);
 
@@ -24,8 +51,8 @@ module.exports = models => ({
         }
 
         try {
-            const results = await sequelize.query(`
-                SELECT
+            const results = await sequelize.query(
+                `SELECT
                     cities.code,
                     cities.name,
                     departements.code AS departement
@@ -42,13 +69,14 @@ module.exports = models => ({
                     END,
                     cities.name ASC
                 LIMIT 20`,
-            {
-                replacements: [
-                    `%${query}%`,
-                    `${query}%`,
-                ],
-                type: sequelize.QueryTypes.SELECT,
-            });
+                {
+                    replacements: [
+                        `%${query}%`,
+                        `${query}%`,
+                    ],
+                    type: sequelize.QueryTypes.SELECT,
+                },
+            );
 
             return res.status(200).send(results);
         } catch (error) {
@@ -75,8 +103,8 @@ module.exports = models => ({
         }
 
         try {
-            const results = await sequelize.query(`
-                SELECT
+            const results = await sequelize.query(
+                `SELECT
                     epci.code,
                     epci.name
                 FROM
@@ -90,13 +118,14 @@ module.exports = models => ({
                     END,
                     epci.name ASC
                 LIMIT 20`,
-            {
-                replacements: [
-                    `%${query}%`,
-                    `${query}%`,
-                ],
-                type: sequelize.QueryTypes.SELECT,
-            });
+                {
+                    replacements: [
+                        `%${query}%`,
+                        `${query}%`,
+                    ],
+                    type: sequelize.QueryTypes.SELECT,
+                },
+            );
 
             return res.status(200).send(results);
         } catch (error) {

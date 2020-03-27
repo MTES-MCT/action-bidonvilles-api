@@ -764,7 +764,10 @@ module.exports = (database) => {
                             FALSE AS distribution_alimentaire,
                             FALSE AS personnes_orientees,
                             FALSE AS personnes_avec_symptomes,
-                            FALSE AS besoin_action
+                            FALSE AS besoin_action,
+                            0 AS "highCommentId",
+                            NULL AS "highCommentDptName",
+                            NULL AS "highCommentDptCode"
                         FROM "ShantytownHistories" shantytowns
                         LEFT JOIN shantytowns AS s ON shantytowns.shantytown_id = s.shantytown_id
                         ${SQL.joins.map(({ table, on }) => `LEFT JOIN ${table} ON ${on}`).join('\n')}
@@ -789,7 +792,10 @@ module.exports = (database) => {
                             FALSE AS distribution_alimentaire,
                             FALSE AS personnes_orientees,
                             FALSE AS personnes_avec_symptomes,
-                            FALSE AS besoin_action
+                            FALSE AS besoin_action,
+                            0 AS "highCommentId",
+                            NULL AS "highCommentDptName",
+                            NULL AS "highCommentDptCode"
                         FROM shantytowns
                         ${SQL.joins.map(({ table, on }) => `LEFT JOIN ${table} ON ${on}`).join('\n')}
                     )
@@ -815,12 +821,44 @@ module.exports = (database) => {
                             covid_comments.distribution_alimentaire,
                             covid_comments.personnes_orientees,
                             covid_comments.personnes_avec_symptomes,
-                            covid_comments.besoin_action
+                            covid_comments.besoin_action,
+                            0 AS "highCommentId",
+                            NULL AS "highCommentDptName",
+                            NULL AS "highCommentDptCode"
                         FROM shantytown_comments comments
                         LEFT JOIN shantytowns ON comments.fk_shantytown = shantytowns.shantytown_id
                         LEFT JOIN shantytown_covid_comments covid_comments ON covid_comments.fk_comment = comments.shantytown_comment_id
                         ${SQL.joins.map(({ table, on }) => `LEFT JOIN ${table} ON ${on}`).join('\n')}
                         WHERE shantytowns.shantytown_id IS NOT NULL /* filter out history of deleted shantytowns */
+                    )
+                    UNION
+                    (
+                        SELECT
+                            comments.created_at AS "date",
+                            NULL AS created_at,
+                            NULL as departement,
+                            comments.created_by AS author_id,
+                            0 AS comment_id,
+                            comments.description AS content,
+                            'comment' AS entity,
+                            ${Object.keys(SQL.selection).map(key => `${key} AS "${SQL.selection[key]}"`).join(',')},
+                            TRUE AS "isCovid",
+                            DATE(NULL) AS "covid_date",
+                            FALSE AS equipe_maraude,
+                            FALSE AS equipe_sanitaire,
+                            FALSE AS equipe_accompagnement,
+                            FALSE AS distribution_alimentaire,
+                            FALSE AS personnes_orientees,
+                            FALSE AS personnes_avec_symptomes,
+                            FALSE AS besoin_action,
+                            comments.high_covid_comment_id AS "highCommentId",
+                            d2.name AS "highCommentDptName",
+                            d2.code AS "highCommentDptCode"
+                        FROM high_covid_comments comments
+                        LEFT JOIN shantytowns ON shantytowns.shantytown_id = -1
+                        ${SQL.joins.map(({ table, on }) => `LEFT JOIN ${table} ON ${on}`).join('\n')}
+                        LEFT JOIN high_covid_comment_territories territories ON territories.fk_comment = comments.high_covid_comment_id
+                        LEFT JOIN departements d2 ON territories.fk_departement = d2.code
                     )) activities
                 LEFT JOIN users author ON activities.author_id = author.user_id
                 ORDER BY activities.date ASC
@@ -831,6 +869,7 @@ module.exports = (database) => {
             );
 
             const previousVersions = {};
+            const highCovidComments = {};
 
             return activities
                 .map((activity) => {
@@ -851,11 +890,19 @@ module.exports = (database) => {
 
                     // ====== COMMENTS
                     if (activity.entity === 'comment') {
-                        return Object.assign(o, {
+                        if (activity.highCommentId !== 0 && highCovidComments[activity.highCommentId] !== undefined) {
+                            highCovidComments[activity.highCommentId].highCovid.departements.push({
+                                code: activity.highCommentDptCode,
+                                name: activity.highCommentDptName,
+                            });
+                            return null;
+                        }
+
+                        const comment = Object.assign(o, {
                             action: 'creation',
                             comment_id: activity.comment_id,
                             content: activity.content,
-                            covid: activity.isCovid ? {
+                            covid: activity.isCovid && activity.highCommentDptName === null ? {
                                 date: activity.covid_date.getTime() / 1000,
                                 equipe_maraude: activity.equipe_maraude,
                                 equipe_sanitaire: activity.equipe_sanitaire,
@@ -865,7 +912,19 @@ module.exports = (database) => {
                                 personnes_avec_symptomes: activity.personnes_avec_symptomes,
                                 besoin_action: activity.besoin_action,
                             } : null,
+                            highCovid: activity.highCommentId !== 0 ? {
+                                departements: [{
+                                    code: activity.highCommentDptCode,
+                                    name: activity.highCommentDptName,
+                                }],
+                            } : null,
                         });
+
+                        if (activity.highCommentId !== 0) {
+                            highCovidComments[activity.highCommentId] = comment;
+                        }
+
+                        return comment;
                     }
 
                     // ====== SHANTYTOWNS

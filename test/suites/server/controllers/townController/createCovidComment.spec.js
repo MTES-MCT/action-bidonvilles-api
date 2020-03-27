@@ -14,9 +14,10 @@ const { mockReq, mockRes } = require('sinon-express-mock');
  * *********************************************************************************************** */
 
 const models = {
-    shantytown: sinon.stub(require('#server/models/shantytownModel')({})),
+    shantytown: require('#server/models/shantytownModel')({}),
 };
-const { createCovidComment } = require('#server/controllers/townController')(models);
+const stubs = {};
+const { createCovidComment } = require('#server/controllers/townController')(stubs);
 
 
 /* **************************************************************************************************
@@ -89,13 +90,19 @@ describe.only('townController.createCovidComment()', () => {
             },
         };
 
-        models.shantytown.findOne.withArgs(reqArg.user, reqArg.params.id).resolves({
+        stubs.shantytown = sinon.stub(models.shantytown);
+
+        stubs.shantytown.findOne.withArgs(reqArg.user, reqArg.params.id).resolves({
             builtAt: (new Date(1999, 0, 1)).getTime() / 1000,
         });
     });
 
     afterEach(() => {
-        sinon.reset();
+        Object.keys(stubs).forEach((key) => {
+            Object.keys(stubs[key]).forEach((method) => {
+                stubs[key][method].restore();
+            });
+        });
     });
 
 
@@ -111,7 +118,7 @@ describe.only('townController.createCovidComment()', () => {
         await createCovidComment(req, res);
 
         // assert
-        expect(models.shantytown.createCovidComment).to.have.been.calledOnceWith(
+        expect(stubs.shantytown.createCovidComment).to.have.been.calledOnceWith(
             req.user,
             req.params.id,
             Object.assign({}, reqArg.body, { date: new Date(reqArg.body.date) }),
@@ -129,7 +136,7 @@ describe.only('townController.createCovidComment()', () => {
         await createCovidComment(req, res);
 
         // assert
-        expect(models.shantytown.createCovidComment).to.have.been.calledOnceWith(
+        expect(stubs.shantytown.createCovidComment).to.have.been.calledOnceWith(
             req.user,
             req.params.id,
             Object.assign({}, reqArg.body, {
@@ -157,7 +164,7 @@ describe.only('townController.createCovidComment()', () => {
         const res = mockRes();
 
         const comments = [{}, {}, {}];
-        models.shantytown.getComments
+        stubs.shantytown.getComments
             .withArgs(reqArg.user, [reqArg.params.id], true)
             .resolves({
                 [reqArg.params.id]: comments,
@@ -167,8 +174,8 @@ describe.only('townController.createCovidComment()', () => {
         await createCovidComment(req, res);
 
         // assert
-        expect(models.shantytown.getComments).to.have.been.calledAfter(
-            models.shantytown.createCovidComment,
+        expect(stubs.shantytown.getComments).to.have.been.calledAfter(
+            stubs.shantytown.createCovidComment,
         );
         expect(res.send).to.have.been.calledOnceWith(comments);
     });
@@ -198,14 +205,14 @@ describe.only('townController.createCovidComment()', () => {
             // setup
             req = mockReq(reqArg);
             res = mockRes();
-            models.shantytown.findOne.withArgs(reqArg.user, reqArg.params.id).resolves(null);
+            stubs.shantytown.findOne.withArgs(reqArg.user, reqArg.params.id).resolves(null);
 
             // execute
             returnValue = await createCovidComment(req, res);
         });
 
         it('does not try to save the comment in database', () => {
-            expect(models.shantytown.createCovidComment).to.not.have.been.called;
+            expect(stubs.shantytown.createCovidComment).to.not.have.been.called;
         });
 
         it('responds with status 404', () => {
@@ -233,7 +240,7 @@ describe.only('townController.createCovidComment()', () => {
             // setup
             req = mockReq(reqArg);
             res = mockRes();
-            models.shantytown.findOne.withArgs(reqArg.user, reqArg.params.id).rejects(
+            stubs.shantytown.findOne.withArgs(reqArg.user, reqArg.params.id).rejects(
                 new Error('Something went wrong'),
             );
 
@@ -427,7 +434,7 @@ describe.only('townController.createCovidComment()', () => {
             req = mockReq(reqArg);
             res = mockRes();
 
-            models.shantytown.createCovidComment
+            stubs.shantytown.createCovidComment
                 .withArgs(
                     req.user,
                     req.params.id,
@@ -471,7 +478,7 @@ describe.only('townController.createCovidComment()', () => {
             req = mockReq(reqArg);
             res = mockRes();
 
-            models.shantytown.getComments
+            stubs.shantytown.getComments
                 .withArgs(reqArg.user, [reqArg.params.id], true)
                 .rejects(new Error('Something went awfully wrong'));
 
