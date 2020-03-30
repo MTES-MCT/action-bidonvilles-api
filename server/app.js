@@ -330,6 +330,16 @@ module.exports = (middlewares, controllers) => {
         controllers.town.createHighCovidComment,
     );
 
+    app.get(
+        '/covid-report',
+        [
+            middlewares.auth.authenticate,
+            (...args) => middlewares.auth.checkPermissions(['shantytown.export'], ...args),
+            middlewares.appVersion.sync,
+        ],
+        controllers.town.covidReport,
+    );
+
     // organizations
     app.get(
         '/organizations/search',
