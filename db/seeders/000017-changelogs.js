@@ -1,13 +1,33 @@
 const { frontUrl, backUrl } = require('../../server/config');
 
 const changelog = {
-    app_version: '0.3.3',
-    date: new Date(2020, 2, 2),
+    app_version: '0.6.0',
+    date: new Date(2020, 4, 30),
     items: [
         {
-            title: 'Recommandations à destination des services en charge du pilotage de la résorption des bidonvilles et des associations y intervenant',
-            description: `<p>Vous trouverez ci-dessous une fiche présentant les <strong>préconisations officielles du ministère de la santé pour les professionnels, personnes accompagnées et proches.</strong> Elle a été transmise aux fédérations et associations gestionnaires qui accueillent des personnes sans domicile.</p><p>Concernant le public en bidonvilles, nous vous recommandons une attention particulière, notamment :<ul><li>relayer les mesures de sensibilisation, d’information et d’orientation des personnes vulnérables auprès de vos partenaires et des habitants des bidonvilles, en lien avec les services de préfecture et les agences régionales de santé</li><li>assurer une intervention renforcée des équipe d’intervention sociale et de médiation sanitaire sur les sites</li><li>mobiliser lorsque nécessaire, des supports traduits des recommandations destinées au grand public, de même que des services d’interprétariat</li></ul></p><p>En cas de question, merci d’interroger rapidement la <strong>cellule de crise Covid19 de la DGCS</strong> à l’adresse suivante : dgcs-alerte-covid@social.gouv.fr</p><p>Merci de transmettre à la Dihal toute information utile, y compris des documents traduits que vous diffuseriez.</p><p><a href="${backUrl}/assets/informations-nouveau-coronavirus.pdf" target="_blank">Informations, et recommandations sur le nouveau Coronavirus</a></p>`,
-            image: `${backUrl}/assets/changelog/0.3.3/item_1.png`,
+            title: 'Ajout des champs “modalités d’accès à l’eau” et “modalités d’accès à l’électricité”',
+            description: '<p>pour préciser la situation de l’accès à ces fluides de première nécessité.</p>',
+            image: `${backUrl}/assets/changelog/0.6.0/item_1.jpg`,
+        },
+        {
+            title: 'Mise en place d’un filtre « accès à l’eau »',
+            description: '<p>sur la cartographie, pour visualiser plus facilement les sites qui n’ont pas accès à l’eau.</p>',
+            image: `${backUrl}/assets/changelog/0.6.0/item_2.jpg`,
+        },
+        {
+            title: 'Création d’un espace « commentaires Covid-19 »',
+            description: '<p>ouvert et visible par tous les utilisateurs du département, pour connaître, partager et suivre les interventions réalisées sur un site.</p>',
+            image: `${backUrl}/assets/changelog/0.6.0/item_3.jpg`,
+        },
+        {
+            title: 'Développement d’un onglet « Covid-19 »',
+            description: '<p>pour visualiser l’ensemble des commentaires “sites” et ajouter des commentaires plus généraux sur l’organisation du territoire.</p>',
+            image: `${backUrl}/assets/changelog/0.6.0/item_4.jpg`,
+        },
+        {
+            title: '',
+            description: '<p>Ces nouveautés ont été mise en ligne pour faciliter la gestion et le suivi du Covid-19 dans les territoires. Tous les détails des fonctionnalités sur cette <a href="https://www.youtube.com/watch?v=IoOQsFE50ew" target="_blank">vidéo</a>.</p>',
+            image: `${backUrl}/assets/changelog/0.6.0/item_5.jpg`,
         },
     ],
 };
