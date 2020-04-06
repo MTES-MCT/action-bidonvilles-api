@@ -141,7 +141,18 @@ module.exports = models => async (req, res) => {
                             policeGrantedAt,
                             bailiff,
                         }
-                        : {},
+                        : {
+                            ownerComplaint: town.ownerComplaint,
+                            justiceProcedure: town.justiceProcedure,
+                            justiceRendered: town.justiceRendered,
+                            justiceRenderedBy: town.justiceRenderedBy,
+                            justiceRenderedAt: town.justiceRenderedAt,
+                            justiceChallenged: town.justiceChallenged,
+                            policeStatus: town.policeStatus,
+                            policeRequestedAt: town.policeRequestedAt,
+                            policeGrantedAt: town.policeGrantedAt,
+                            bailiff: town.bailiff,
+                        },
                 ),
             );
 
