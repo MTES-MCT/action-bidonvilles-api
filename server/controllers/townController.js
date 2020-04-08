@@ -813,6 +813,16 @@ module.exports = (models) => {
             };
 
             // properties
+            const covidTags = {
+                equipe_maraude: 'Équipe de maraude',
+                equipe_sanitaire: 'Équipe sanitaire',
+                equipe_accompagnement: 'Équipe d\'accompagnement',
+                distribution_alimentaire: 'Distribution d\'aide alimentaire',
+                personnes_orientees: 'Personne(s) orientée(s) vers un centre d\'hébergement spécialisé (desserrement)',
+                personnes_avec_symptomes: 'Personnes avec des symptômes Covid-19',
+                besoin_action: 'Besoin d\'une action prioritaire',
+            };
+
             const properties = {
                 priority: {
                     title: 'Priorité',
@@ -1074,6 +1084,23 @@ module.exports = (models) => {
                     data: ({ updatedAt }) => (updatedAt ? new Date(updatedAt * 1000) : ''),
                     width: COLUMN_WIDTHS.SMALL,
                 },
+                comments: {
+                    title: 'Commentaires',
+                    data: ({ comments }) => comments.regular.slice(0, 5).map(comment => `${tsToString(comment.createdAt, 'd/m/Y à h:i')} - ${comment.createdBy.lastName.toUpperCase()} ${comment.createdBy.firstName}\n${comment.description}`).join('\n----\n'),
+                    width: COLUMN_WIDTHS.LARGE,
+                },
+                covidComments: {
+                    title: 'Commentaires COVID-19',
+                    data: ({ comments }) => comments.covid.slice(0, 5).map((comment) => {
+                        const tags = Object.keys(covidTags)
+                            .filter(tag => comment.covid[tag] === true)
+                            .map(tag => covidTags[tag])
+                            .join('\n');
+
+                        return `${tsToString(comment.createdAt, 'd/m/Y à h:i')} - ${comment.createdBy.lastName.toUpperCase()} ${comment.createdBy.firstName}\nDate de l'intervention : ${tsToString(comment.covid.date, 'd/m/Y')}\n${tags}\n${comment.description}`;
+                    }).join('\n----\n'),
+                    width: COLUMN_WIDTHS.LARGE,
+                },
             };
 
             closingSolutions.forEach(({ id: solutionId }) => {
@@ -1229,6 +1256,22 @@ module.exports = (models) => {
                 sections.push({
                     title: 'Orientation',
                     subsections: subSections,
+                });
+            }
+
+            const commentProps = [];
+            if (options.indexOf('comments') !== -1 && req.user.isAllowedTo('list', 'shantytown_comment')) {
+                commentProps.push(properties.comments);
+            }
+
+            if (options.indexOf('covid_comments') !== -1) {
+                commentProps.push(properties.covidComments);
+            }
+
+            if (commentProps.length > 0) {
+                sections.push({
+                    title: 'Commentaires',
+                    properties: commentProps,
                 });
             }
 
