@@ -447,8 +447,16 @@ module.exports = (middlewares, controllers) => {
                 }, {});
             }
 
-            // check if filter covid is requested (in which case, no permission is needed)
+            // check if filter covid is requested
             if (req.filters.covid === '1') {
+                try {
+                    middlewares.auth.checkPermissions(['covid_comment.list'], req, res, next, false);
+                } catch (error) {
+                    return res.status(500).send({
+                        success: false,
+                    });
+                }
+
                 return next();
             }
 
