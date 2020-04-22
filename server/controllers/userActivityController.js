@@ -7,30 +7,32 @@ module.exports = models => ({
                 results = results.filter(({ covid, highCovid }) => (covid !== null && covid !== undefined) || (highCovid !== null && highCovid !== undefined));
 
                 let allowedDepartements = null;
-                switch (req.user.organization.location.type) {
-                    case 'nation':
-                        break;
+                if (req.user.permissions.covid_comment.list.geographic_level !== 'nation') {
+                    switch (req.user.organization.location.type) {
+                        case 'nation':
+                            break;
 
-                    case 'region':
-                    case 'epci':
-                        allowedDepartements = (await models.geo
-                            .getDepartementsFor(
-                                req.user.organization.location.type,
-                                req.user.organization.location[req.user.organization.location.type].code,
-                            ))
-                            .map(({ code }) => code);
-                        break;
+                        case 'region':
+                        case 'epci':
+                            allowedDepartements = (await models.geo
+                                .getDepartementsFor(
+                                    req.user.organization.location.type,
+                                    req.user.organization.location[req.user.organization.location.type].code,
+                                ))
+                                .map(({ code }) => code);
+                            break;
 
-                    case 'departement':
-                        allowedDepartements = [req.user.organization.location.departement.code];
-                        break;
+                        case 'departement':
+                            allowedDepartements = [req.user.organization.location.departement.code];
+                            break;
 
-                    case 'city':
-                        allowedDepartements = [req.user.organization.location.departement.code];
-                        break;
+                        case 'city':
+                            allowedDepartements = [req.user.organization.location.departement.code];
+                            break;
 
-                    default:
-                        allowedDepartements = [];
+                        default:
+                            allowedDepartements = [];
+                    }
                 }
 
                 if (allowedDepartements !== null) {
