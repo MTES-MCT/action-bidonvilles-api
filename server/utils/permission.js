@@ -10,7 +10,7 @@ function mergePermissions(rolePermissions, orgPermissions) {
     const permissions = Object.assign({}, rolePermissions);
 
     Object.keys(orgPermissions).forEach((entity) => {
-        Object.assign(permissions[entity], orgPermissions[entity]);
+        Object.assign(permissions[entity] || {}, orgPermissions[entity] || {});
     });
 
     return permissions;
