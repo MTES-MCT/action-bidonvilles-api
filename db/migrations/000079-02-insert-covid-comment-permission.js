@@ -13,16 +13,24 @@ module.exports = {
                 },
             ))
             .then(async () => {
-                const roles = ['direct_collaborator', 'collaborator', 'association', 'national_establisment'];
-                const promises = roles.map(role => queryInterface.sequelize.query(
+                const roles = [
+                    { type: 'regular', value: 'direct_collaborator' },
+                    { type: 'regular', value: 'collaborator' },
+                    { type: 'regular', value: 'association' },
+                    { type: 'regular', value: 'national_establisment' },
+                    { type: 'admin', value: 'local_admin' },
+                    { type: 'admin', value: 'national_admin' },
+                ];
+                const promises = roles.map(({ type, value }) => queryInterface.sequelize.query(
                     `INSERT INTO
-                        permissions(fk_role_regular, fk_feature, fk_entity, allowed, fk_geographic_level)
+                        permissions(fk_role_regular, fk_role_admin, fk_feature, fk_entity, allowed, fk_geographic_level)
                     VALUES
-                        (:role, 'list', 'covid_comment', true, 'local')
+                        (:regular, :admin, 'list', 'covid_comment', true, 'local')
                     RETURNING permission_id AS id`,
                     {
                         replacements: {
-                            role,
+                            regular: type === 'regular' ? value : null,
+                            admin: type === 'admin' ? value : null,
                         },
                         transaction,
                     },
