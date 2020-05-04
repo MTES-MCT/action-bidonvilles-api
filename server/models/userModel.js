@@ -19,12 +19,13 @@ const { getPermissionsFor } = require('#server/utils/permission');
  * Serializes a single user row
  *
  * @param {Object}             user
+ * @param {Number|null}        latestCharte
  * @param {UserFilters}        filters
  * @param {PermissionMap|Null} permissionMap Map should be null only if the filter "extended" is not TRUE
  *
  * @returns {Object}
  */
-function serializeUser(user, filters, permissionMap) {
+function serializeUser(user, latestCharte, filters, permissionMap) {
     const serialized = {
         id: user.id,
         first_name: user.first_name,
@@ -84,6 +85,7 @@ function serializeUser(user, filters, permissionMap) {
                 name: user.activator_organization_name,
             },
         },
+        charte_engagement_a_jour: latestCharte === null || user.charte_engagement_signee === latestCharte || user.role !== 'national_admin',
         is_admin: user.is_admin,
         role: user.role_name || user.organization_type_role_name,
         role_id: user.role || user.organization_type_role,
@@ -151,6 +153,8 @@ function serializeUser(user, filters, permissionMap) {
 module.exports = (database) => {
     // eslint-disable-next-line global-require
     const permissionModel = require('./permissionModel')(database);
+    // eslint-disable-next-line global-require
+    const charteEngagementModel = require('./charteEngagementModel')(database);
 
     /**
      * Fetches a list of shantytowns from the database
@@ -196,6 +200,12 @@ module.exports = (database) => {
             return `(${clauseGroup})`;
         }).join(' AND ');
 
+        const charte = await charteEngagementModel.getLatest();
+        let latestCharte = null;
+        if (charte !== null) {
+            latestCharte = charte.version;
+        }
+
         const users = await database.query(
             `SELECT
                 users.user_id AS id,
@@ -214,6 +224,7 @@ module.exports = (database) => {
                 users.created_at,
                 users.last_version,
                 users.last_changelog,
+                users.charte_engagement_signee,
                 CASE WHEN users.fk_role IS NULL THEN FALSE
                     ELSE TRUE
                 END AS is_admin,
@@ -310,7 +321,7 @@ module.exports = (database) => {
             permissionMap = await permissionModel.find(permissionOwners);
         }
 
-        return users.map(row => serializeUser(row, filters, permissionMap));
+        return users.map(row => serializeUser(row, latestCharte, filters, permissionMap));
     }
 
     function getNationalAdmins() {
@@ -500,7 +511,7 @@ module.exports = (database) => {
 
             const allowedProperties = [
                 'first_name', 'last_name', 'position', 'phone', 'password', 'defaultExport', 'fk_status', 'last_activation_link_sent_on',
-                'activated_by', 'activated_on', 'last_version', 'last_changelog',
+                'activated_by', 'activated_on', 'last_version', 'last_changelog', 'charte_engagement_signee',
             ];
             const propertiesToColumns = {
                 first_name: 'first_name',
@@ -515,6 +526,7 @@ module.exports = (database) => {
                 activated_on: 'activated_on',
                 last_version: 'last_version',
                 last_changelog: 'last_changelog',
+                charte_engagement_signee: 'charte_engagement_signee',
             };
             const setClauses = [];
             const replacements = {};

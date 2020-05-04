@@ -43,6 +43,7 @@ module.exports = (middlewares, controllers) => {
         '/directory',
         [
             middlewares.auth.authenticate,
+            middlewares.charte.check,
             middlewares.appVersion.sync,
         ],
         controllers.directory.list,
@@ -54,6 +55,7 @@ module.exports = (middlewares, controllers) => {
         [
             middlewares.auth.authenticate,
             (...args) => middlewares.auth.checkPermissions(['user.list'], ...args),
+            middlewares.charte.check,
             middlewares.appVersion.sync,
         ],
         controllers.user.list,
@@ -66,27 +68,37 @@ module.exports = (middlewares, controllers) => {
         ],
         controllers.user.me,
     );
+    app.post(
+        '/me',
+        [
+            middlewares.auth.authenticate,
+            middlewares.charte.check,
+            middlewares.appVersion.sync,
+        ],
+        controllers.user.edit,
+    );
     app.get(
         '/users/:id',
         [
             middlewares.auth.authenticate,
             (...args) => middlewares.auth.checkPermissions(['user.read'], ...args),
+            middlewares.charte.check,
             middlewares.appVersion.sync,
         ],
         controllers.user.get,
     );
-    app.post(
-        '/me',
+    app.put(
+        '/users/:id/charte_engagement',
         [
             middlewares.auth.authenticate,
-            middlewares.appVersion.sync,
         ],
-        controllers.user.edit,
+        controllers.user.acceptCharte,
     );
     app.post(
         '/me/default-export',
         [
             middlewares.auth.authenticate,
+            middlewares.charte.check,
             middlewares.appVersion.sync,
         ],
         controllers.user.setDefaultExport,
@@ -94,10 +106,23 @@ module.exports = (middlewares, controllers) => {
     app.post(
         '/users',
         async (...args) => {
+            const [, res] = args;
+
             try {
                 await middlewares.auth.authenticate(...args, false);
             } catch (error) {
                 return controllers.user.signup(...args);
+            }
+
+            try {
+                await middlewares.auth.checkPermissions(['user.create'], ...args, false);
+                await middlewares.charte.check(...args, false);
+            } catch (error) {
+                // @todo: return a detailed error
+                return res.status(500).send({
+                    success: false,
+                    user_message: 'Vous n\'avez pas accés à cette fonctionnalité',
+                });
             }
 
             await middlewares.appVersion.sync(...args, false);
@@ -108,6 +133,7 @@ module.exports = (middlewares, controllers) => {
         '/users/:id/sendActivationLink',
         middlewares.auth.authenticate,
         (...args) => middlewares.auth.checkPermissions(['user.activate'], ...args),
+        middlewares.charte.check,
         middlewares.appVersion.sync,
         controllers.user.sendActivationLink,
     );
@@ -115,6 +141,7 @@ module.exports = (middlewares, controllers) => {
         '/users/:id/denyAccess',
         middlewares.auth.authenticate,
         (...args) => middlewares.auth.checkPermissions(['user.activate'], ...args),
+        middlewares.charte.check,
         middlewares.appVersion.sync,
         controllers.user.denyAccess,
     );
@@ -136,6 +163,7 @@ module.exports = (middlewares, controllers) => {
         '/users/:id',
         middlewares.auth.authenticate,
         (...args) => middlewares.auth.checkPermissions(['user.deactivate'], ...args),
+        middlewares.charte.check,
         middlewares.appVersion.sync,
         controllers.user.remove,
     );
@@ -157,6 +185,7 @@ module.exports = (middlewares, controllers) => {
         '/plans',
         middlewares.auth.authenticate,
         (...args) => middlewares.auth.checkPermissions(['plan.list'], ...args),
+        middlewares.charte.check,
         middlewares.appVersion.sync,
         controllers.plan.list,
     );
@@ -164,6 +193,7 @@ module.exports = (middlewares, controllers) => {
         '/plans/:id',
         middlewares.auth.authenticate,
         (...args) => middlewares.auth.checkPermissions(['plan.read'], ...args),
+        middlewares.charte.check,
         middlewares.appVersion.sync,
         controllers.plan.find,
     );
@@ -172,6 +202,7 @@ module.exports = (middlewares, controllers) => {
         [
             middlewares.auth.authenticate,
             (...args) => middlewares.auth.checkPermissions(['plan.create'], ...args),
+            middlewares.charte.check,
             middlewares.appVersion.sync,
         ],
         controllers.plan.create,
@@ -181,6 +212,7 @@ module.exports = (middlewares, controllers) => {
         [
             middlewares.auth.authenticate,
             (...args) => middlewares.auth.checkPermissions(['plan.update'], ...args),
+            middlewares.charte.check,
             middlewares.appVersion.sync,
         ],
         controllers.plan.update,
@@ -190,6 +222,7 @@ module.exports = (middlewares, controllers) => {
         [
             middlewares.auth.authenticate,
             (...args) => middlewares.auth.checkPermissions(['plan.updateMarks'], ...args),
+            middlewares.charte.check,
             middlewares.appVersion.sync,
         ],
         controllers.plan.addState,
@@ -217,6 +250,15 @@ module.exports = (middlewares, controllers) => {
                     return res.status(404).send({});
             }
 
+            // check charte
+            try {
+                await middlewares.charte.check.sync(req, res, next, false);
+            } catch (error) {
+                return res.status(400).send({
+                    user_message: error.message,
+                });
+            }
+
             // sync app-version
             try {
                 await middlewares.appVersion.sync(req, res, next, false);
@@ -234,12 +276,14 @@ module.exports = (middlewares, controllers) => {
         '/towns/export',
         middlewares.auth.authenticate,
         (...args) => middlewares.auth.checkPermissions(['shantytown.export'], ...args),
+        middlewares.charte.check,
         controllers.town.export,
     );
     app.get(
         '/towns',
         middlewares.auth.authenticate,
         (...args) => middlewares.auth.checkPermissions(['shantytown.list'], ...args),
+        middlewares.charte.check,
         middlewares.appVersion.sync,
         controllers.town.list,
     );
@@ -247,6 +291,7 @@ module.exports = (middlewares, controllers) => {
         '/towns/:id',
         middlewares.auth.authenticate,
         (...args) => middlewares.auth.checkPermissions(['shantytown.read'], ...args),
+        middlewares.charte.check,
         middlewares.appVersion.sync,
         controllers.town.find,
     );
@@ -255,6 +300,7 @@ module.exports = (middlewares, controllers) => {
         [
             middlewares.auth.authenticate,
             (...args) => middlewares.auth.checkPermissions(['shantytown.create'], ...args),
+            middlewares.charte.check,
             middlewares.appVersion.sync,
         ],
         controllers.town.add,
@@ -264,6 +310,7 @@ module.exports = (middlewares, controllers) => {
         [
             middlewares.auth.authenticate,
             (...args) => middlewares.auth.checkPermissions(['shantytown.update'], ...args),
+            middlewares.charte.check,
             middlewares.appVersion.sync,
         ],
         controllers.town.edit,
@@ -273,6 +320,7 @@ module.exports = (middlewares, controllers) => {
         [
             middlewares.auth.authenticate,
             (...args) => middlewares.auth.checkPermissions(['shantytown.close'], ...args),
+            middlewares.charte.check,
             middlewares.appVersion.sync,
         ],
         controllers.town.close,
@@ -282,6 +330,7 @@ module.exports = (middlewares, controllers) => {
         [
             middlewares.auth.authenticate,
             (...args) => middlewares.auth.checkPermissions(['shantytown.delete'], ...args),
+            middlewares.charte.check,
             middlewares.appVersion.sync,
         ],
         controllers.town.delete,
@@ -291,6 +340,7 @@ module.exports = (middlewares, controllers) => {
         [
             middlewares.auth.authenticate,
             (...args) => middlewares.auth.checkPermissions(['shantytown_comment.create'], ...args),
+            middlewares.charte.check,
             middlewares.appVersion.sync,
         ],
         controllers.town.addComment,
@@ -299,6 +349,7 @@ module.exports = (middlewares, controllers) => {
         '/towns/:id/comments/:commentId',
         [
             middlewares.auth.authenticate,
+            middlewares.charte.check,
             middlewares.appVersion.sync,
         ],
         controllers.town.updateComment,
@@ -307,6 +358,7 @@ module.exports = (middlewares, controllers) => {
         '/towns/:id/covidComments',
         [
             middlewares.auth.authenticate,
+            middlewares.charte.check,
             middlewares.appVersion.sync,
         ],
         controllers.town.createCovidComment,
@@ -315,6 +367,7 @@ module.exports = (middlewares, controllers) => {
         '/towns/:id/comments/:commentId',
         [
             middlewares.auth.authenticate,
+            middlewares.charte.check,
             middlewares.appVersion.sync,
         ],
         controllers.town.deleteComment,
@@ -325,6 +378,7 @@ module.exports = (middlewares, controllers) => {
         '/high-covid-comments',
         [
             middlewares.auth.authenticate,
+            middlewares.charte.check,
             middlewares.appVersion.sync,
         ],
         controllers.town.createHighCovidComment,
@@ -334,36 +388,43 @@ module.exports = (middlewares, controllers) => {
     app.get(
         '/organizations/search',
         middlewares.auth.authenticate,
+        middlewares.charte.check,
         middlewares.appVersion.sync,
         controllers.organization.search,
     );
     app.get(
         '/organization-categories',
+        middlewares.charte.check,
         controllers.organization.categories,
     );
 
     app.get(
         '/organization-categories/:categoryId/organization-types',
+        middlewares.charte.check,
         controllers.organization.types,
     );
 
     app.get(
         '/organization-categories/:categoryId/users',
+        middlewares.charte.check,
         controllers.organization.getMembersByCategory,
     );
 
     app.get(
         '/organization-categories/:categoryId/organizations',
+        middlewares.charte.check,
         controllers.organization.getByCategory,
     );
 
     app.get(
         '/organization-types/:typeId/organizations',
+        middlewares.charte.check,
         controllers.organization.getByType,
     );
 
     app.get(
         '/organizations/:organizationId/users',
+        middlewares.charte.check,
         controllers.organization.getMembers,
     );
 
@@ -425,6 +486,7 @@ module.exports = (middlewares, controllers) => {
     app.post(
         '/statistics/directory-views',
         middlewares.auth.authenticate,
+        middlewares.charte.check,
         middlewares.appVersion.sync,
         controllers.stats.directoryView,
     );
@@ -456,15 +518,22 @@ module.exports = (middlewares, controllers) => {
                         success: false,
                     });
                 }
-
-                return next();
+            } else {
+                try {
+                    middlewares.auth.checkPermissions(['shantytown_comment.moderate'], req, res, next, false);
+                } catch (error) {
+                    return res.status(500).send({
+                        success: false,
+                    });
+                }
             }
 
+            // check charte
             try {
-                middlewares.auth.checkPermissions(['shantytown_comment.moderate'], req, res, next, false);
+                await middlewares.charte.check.sync(req, res, next, false);
             } catch (error) {
-                return res.status(500).send({
-                    success: false,
+                return res.status(400).send({
+                    user_message: error.message,
                 });
             }
 
