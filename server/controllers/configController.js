@@ -18,7 +18,7 @@ module.exports = models => ({
             permissions_description: permissionsDescription,
             user: models.user.findOne(req.user.id, { extended: true }),
             changelog: models.changelog.getLastChangelogFor(req.user),
-
+            version_charte_engagement: models.charteEngagement.getLatest(),
         };
 
         const promises = Object.values(queries);
