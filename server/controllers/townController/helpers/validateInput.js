@@ -1,7 +1,4 @@
 const cleanParams = require('./cleanParams');
-const {
-    City: Cities,
-} = require('#db/models');
 
 function ucfirst(str) {
     return str[0].toUpperCase() + str.slice(1);
@@ -44,7 +41,7 @@ function addError(errors, field, error) {
     errors[field].push(error);
 }
 
-module.exports = async function validateInput(models, body, permission, format = 'underscore') {
+module.exports = async function validateInput(models, body, user, permission, format = 'underscore') {
     const {
         priority,
         builtAt,
@@ -115,11 +112,7 @@ module.exports = async function validateInput(models, body, permission, format =
         error('address', 'Le code communal associé à l\'adresse est invalide');
     } else {
         try {
-            dbCity = await Cities.findOne({
-                where: {
-                    code: citycode,
-                },
-            });
+            dbCity = await models.geo.getLocation('city', citycode);
         } catch (e) {
             throw new Error({
                 developer_message: e.message,
@@ -129,6 +122,27 @@ module.exports = async function validateInput(models, body, permission, format =
 
         if (dbCity === null) {
             error('address', `La commune ${citycode} n'existe pas en base de données`);
+        }
+    }
+
+    if (permission.geographic_level !== 'nation') {
+        switch (user.organization.location.type) {
+            case 'nation':
+                // OK
+                break;
+
+            case 'region':
+            case 'departement':
+            case 'epci':
+            case 'city':
+                if (user.organization.location[user.organization.location.type].code !== dbCity[user.organization.location.type].code) {
+                    error('address', 'Vous n\'avez pas les droits d\'accès à ce territoire');
+                }
+                break;
+
+            default:
+                error('address', 'Votre niveau géographique est inconnu');
+                break;
         }
     }
 

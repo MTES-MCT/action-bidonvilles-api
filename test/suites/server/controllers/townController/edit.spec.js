@@ -20,10 +20,10 @@ const models = {
     Shantytown: rewiremock.proxy('#db/models/shantytowns', {
         'sequelize-temporal': model => model,
     })(sequelize, dataTypes),
-    City: require('#db/models/cities')(sequelize, dataTypes),
 };
 const otherModels = {
     ownerType: require('#server/models/ownerTypeModel')({}),
+    geo: require('#server/models/geoModel')({}),
 };
 const rewiredStubs = {
     '#db/models': {
@@ -31,9 +31,6 @@ const rewiredStubs = {
             transaction: (cb => cb()),
         }),
         Shantytown: {
-            findOne: sinon.stub(),
-        },
-        City: {
             findOne: sinon.stub(),
         },
     },
@@ -112,6 +109,27 @@ describe.only('townController.edit()', () => {
             id: 1,
             label: 'Inconnu',
         });
+
+        diStubs.geo = sinon.stub(otherModels.geo);
+        diStubs.geo.getLocation.withArgs('city', '60159').resolves({
+            type: 'city',
+            region: {
+                code: '32',
+                name: 'Hauts-de-France',
+            },
+            departement: {
+                code: '60',
+                name: 'Oise',
+            },
+            epci: {
+                code: '200067965',
+                name: 'CA de la Région de Compiègne et de la Basse Automne',
+            },
+            city: {
+                code: '60159',
+                name: 'Compiègne',
+            },
+        });
     });
 
     afterEach(() => {
@@ -145,12 +163,6 @@ describe.only('townController.edit()', () => {
             Object.keys(values).forEach((key) => {
                 mock[key] = values[key];
             });
-            const mock2 = new models.City();
-            rewiredStubs['#db/models'].City.findOne.withArgs({
-                where: {
-                    code: '60159',
-                },
-            }).resolves(mock2);
             rewiredStubs['#db/models'].Shantytown.findOne.withArgs({
                 where: {
                     shantytown_id: reqArg.params.id,

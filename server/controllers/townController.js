@@ -159,7 +159,7 @@ module.exports = (models) => {
             // check errors
             let fieldErrors = {};
             try {
-                fieldErrors = await validateInput(models, req.body, permission, 'camel');
+                fieldErrors = await validateInput(models, req.body, req.user, permission, 'camel');
             } catch (error) {
                 return res.status(500).send({ error });
             }

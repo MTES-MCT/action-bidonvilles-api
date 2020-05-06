@@ -24,7 +24,7 @@ module.exports = models => async (req, res) => {
     // check errors
     let fieldErrors = {};
     try {
-        fieldErrors = await validateInput(models, req.body, permission);
+        fieldErrors = await validateInput(models, req.body, req.user, permission);
     } catch (error) {
         return res.status(500).send({ error });
     }
