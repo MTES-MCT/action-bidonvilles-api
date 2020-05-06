@@ -1,33 +1,19 @@
-const { frontUrl, backUrl } = require('../../server/config');
+const { backUrl } = require('../../server/config');
 
 const changelog = {
-    app_version: '0.6.0',
-    date: new Date(2020, 4, 30),
+    app_version: '0.6.3',
+    date: new Date(2020, 3, 30),
     items: [
         {
-            title: 'Ajout des champs “modalités d’accès à l’eau” et “modalités d’accès à l’électricité”',
-            description: '<p>pour préciser la situation de l’accès à ces fluides de première nécessité.</p>',
-            image: `${backUrl}/assets/changelog/0.6.0/item_1.jpg`,
-        },
-        {
-            title: 'Mise en place d’un filtre « accès à l’eau »',
-            description: '<p>sur la cartographie, pour visualiser plus facilement les sites qui n’ont pas accès à l’eau.</p>',
-            image: `${backUrl}/assets/changelog/0.6.0/item_2.jpg`,
-        },
-        {
-            title: 'Création d’un espace « commentaires Covid-19 »',
-            description: '<p>ouvert et visible par tous les utilisateurs du département, pour connaître, partager et suivre les interventions réalisées sur un site.</p>',
-            image: `${backUrl}/assets/changelog/0.6.0/item_3.jpg`,
-        },
-        {
-            title: 'Développement d’un onglet « Covid-19 »',
-            description: '<p>pour visualiser l’ensemble des commentaires “sites” et ajouter des commentaires plus généraux sur l’organisation du territoire.</p>',
-            image: `${backUrl}/assets/changelog/0.6.0/item_4.jpg`,
-        },
-        {
-            title: '',
-            description: '<p>Ces nouveautés ont été mise en ligne pour faciliter la gestion et le suivi du Covid-19 dans les territoires. Tous les détails des fonctionnalités sur cette <a href="https://www.youtube.com/watch?v=IoOQsFE50ew" target="_blank">vidéo</a>.</p>',
-            image: `${backUrl}/assets/changelog/0.6.0/item_5.jpg`,
+            title: 'Export en Excel des informations sur les sites de votre territoire dont les commentaires « Covid » et « classiques ».',
+            description: `<p>Dans le cadre du Covid, cet export permet aux DDCS, préfectures, associations et collectivités territoriales utilisatrices de pouvoir :
+                <ul>
+                    <li>identifier les interventions sur chaque site</li>
+                    <li>analyser les problématiques de chaque site</li>
+                    <li>repérer les sites sans intervention.</li>
+                </um>
+            </p>`,
+            image: `${backUrl}/assets/changelog/0.6.3/item_1.jpg`,
         },
     ],
 };
