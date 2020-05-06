@@ -735,6 +735,16 @@ module.exports = (database) => {
         getComments,
 
         getHistory: async (user) => {
+            // apply geographic level permission
+            const where = [];
+            const replacements = {};
+            if (user.permissions.shantytown_comment.moderate.geographic_level !== 'nation'
+                && user.organization.location.type !== 'nation') {
+                where.push(`${fromGeoLevelToTableName(user.organization.location.type)}.code = :locationCode`);
+                replacements.locationCode = user.organization.location[user.organization.location.type].code;
+            }
+
+            // perform query
             const activities = await database.query(
                 `
                 SELECT
@@ -772,6 +782,7 @@ module.exports = (database) => {
                         LEFT JOIN shantytowns AS s ON shantytowns.shantytown_id = s.shantytown_id
                         ${SQL.joins.map(({ table, on }) => `LEFT JOIN ${table} ON ${on}`).join('\n')}
                         WHERE s.shantytown_id IS NOT NULL /* filter out history of deleted shantytowns */
+                        ${where.length > 0 ? `AND (${where.join(') AND (')})` : ''}
                     )
                     UNION
                     (
@@ -798,6 +809,7 @@ module.exports = (database) => {
                             NULL AS "highCommentDptCode"
                         FROM shantytowns
                         ${SQL.joins.map(({ table, on }) => `LEFT JOIN ${table} ON ${on}`).join('\n')}
+                        ${where.length > 0 ? `WHERE (${where.join(') AND (')})` : ''}
                     )
                     UNION
                     (
@@ -830,6 +842,7 @@ module.exports = (database) => {
                         LEFT JOIN shantytown_covid_comments covid_comments ON covid_comments.fk_comment = comments.shantytown_comment_id
                         ${SQL.joins.map(({ table, on }) => `LEFT JOIN ${table} ON ${on}`).join('\n')}
                         WHERE shantytowns.shantytown_id IS NOT NULL /* filter out history of deleted shantytowns */
+                        ${where.length > 0 ? `AND (${where.join(') AND (')})` : ''}
                     )
                     UNION
                     (
@@ -859,12 +872,14 @@ module.exports = (database) => {
                         ${SQL.joins.map(({ table, on }) => `LEFT JOIN ${table} ON ${on}`).join('\n')}
                         LEFT JOIN high_covid_comment_territories territories ON territories.fk_comment = comments.high_covid_comment_id
                         LEFT JOIN departements d2 ON territories.fk_departement = d2.code
+                        ${where.length > 0 ? `WHERE (${where.join(') AND (')})` : ''}
                     )) activities
                 LEFT JOIN users author ON activities.author_id = author.user_id
                 ORDER BY activities.date ASC
                 `,
                 {
                     type: database.QueryTypes.SELECT,
+                    replacements,
                 },
             );
 
