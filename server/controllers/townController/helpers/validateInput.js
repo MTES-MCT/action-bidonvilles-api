@@ -66,7 +66,6 @@ module.exports = async function validateInput(models, body, permission, format =
         justiceChallenged,
         fieldType,
         ownerType,
-        owner,
         declaredAt,
     } = cleanParams(body, format);
 
@@ -158,8 +157,6 @@ module.exports = async function validateInput(models, body, permission, format =
         const type = await models.ownerType.findOne(ownerType);
         if (type === null) {
             error(toFormat('owner_type', format), 'La valeur choisie pour "type de propriétaire" n\'a pas été retrouvée en base de données');
-        } else if (type.label !== 'Inconnu' && owner === null) {
-            error(toFormat('owner', format), 'L\'identité du propriétaire est obligatoire');
         }
     }
 
