@@ -394,37 +394,31 @@ module.exports = (middlewares, controllers) => {
     );
     app.get(
         '/organization-categories',
-        middlewares.charte.check,
         controllers.organization.categories,
     );
 
     app.get(
         '/organization-categories/:categoryId/organization-types',
-        middlewares.charte.check,
         controllers.organization.types,
     );
 
     app.get(
         '/organization-categories/:categoryId/users',
-        middlewares.charte.check,
         controllers.organization.getMembersByCategory,
     );
 
     app.get(
         '/organization-categories/:categoryId/organizations',
-        middlewares.charte.check,
         controllers.organization.getByCategory,
     );
 
     app.get(
         '/organization-types/:typeId/organizations',
-        middlewares.charte.check,
         controllers.organization.getByType,
     );
 
     app.get(
         '/organizations/:organizationId/users',
-        middlewares.charte.check,
         controllers.organization.getMembers,
     );
 
