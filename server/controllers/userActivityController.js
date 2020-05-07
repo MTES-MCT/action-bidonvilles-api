@@ -1,13 +1,26 @@
 module.exports = models => ({
     async list(req, res) {
         try {
-            let results = await models.shantytown.getHistory(req.user);
+            let permission;
+            if (req.filters.covid === '1') {
+                permission = {
+                    entity: 'covid_comment',
+                    feature: 'list',
+                };
+            } else {
+                permission = {
+                    entity: 'shantytown_comment',
+                    feature: 'moderate',
+                };
+            }
+
+            let results = await models.shantytown.getHistory(req.user, permission);
 
             if (req.filters.covid === '1') {
                 results = results.filter(({ covid, highCovid }) => (covid !== null && covid !== undefined) || (highCovid !== null && highCovid !== undefined));
 
                 let allowedDepartements = null;
-                if (req.user.permissions.covid_comment.list.geographic_level !== 'nation') {
+                if (req.user.permissions[permission.entity][permission.feature].geographic_level !== 'nation') {
                     switch (req.user.organization.location.type) {
                         case 'nation':
                             break;

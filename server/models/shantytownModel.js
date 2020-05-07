@@ -734,11 +734,11 @@ module.exports = (database) => {
 
         getComments,
 
-        getHistory: async (user) => {
+        getHistory: async (user, permission) => {
             // apply geographic level permission
             const where = [];
             const replacements = {};
-            if (user.permissions.shantytown_comment.moderate.geographic_level !== 'nation'
+            if (user.permissions[permission.entity][permission.feature].geographic_level !== 'nation'
                 && user.organization.location.type !== 'nation') {
                 where.push(`${fromGeoLevelToTableName(user.organization.location.type)}.code = :locationCode`);
                 replacements.locationCode = user.organization.location[user.organization.location.type].code;
