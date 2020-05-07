@@ -508,17 +508,13 @@ module.exports = (middlewares, controllers) => {
                 try {
                     middlewares.auth.checkPermissions(['covid_comment.list'], req, res, next, false);
                 } catch (error) {
-                    return res.status(500).send({
-                        success: false,
-                    });
+                    return undefined;
                 }
             } else {
                 try {
                     middlewares.auth.checkPermissions(['shantytown_comment.moderate'], req, res, next, false);
                 } catch (error) {
-                    return res.status(500).send({
-                        success: false,
-                    });
+                    return undefined;
                 }
             }
 
