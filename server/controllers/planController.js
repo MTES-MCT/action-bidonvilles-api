@@ -209,12 +209,18 @@ function sanitizeState(plan, data) {
 
     // indicateurs logement
     if (topics.indexOf('housing') !== -1) {
-        sanitizedData.siao = getIntOrNull(data.siao);
-        sanitizedData.logement_social = getIntOrNull(data.logement_social);
-        sanitizedData.dalo = getIntOrNull(data.dalo);
-        sanitizedData.accompagnes = getIntOrNull(data.accompagnes);
-        sanitizedData.non_accompagnes = getIntOrNull(data.non_accompagnes);
-        sanitizedData.heberges = getIntOrNull(data.heberges);
+        sanitizedData.siao = getIntOrNull(data.siao.families);
+        sanitizedData.siao_people = getIntOrNull(data.siao.people);
+        sanitizedData.logement_social = getIntOrNull(data.logement_social.families);
+        sanitizedData.logement_social_people = getIntOrNull(data.logement_social.people);
+        sanitizedData.dalo = getIntOrNull(data.dalo.families);
+        sanitizedData.dalo_people = getIntOrNull(data.dalo.people);
+        sanitizedData.accompagnes = getIntOrNull(data.accompagnes.families);
+        sanitizedData.accompagnes_people = getIntOrNull(data.accompagnes.people);
+        sanitizedData.non_accompagnes = getIntOrNull(data.non_accompagnes.families);
+        sanitizedData.non_accompagnes_people = getIntOrNull(data.non_accompagnes.people);
+        sanitizedData.heberges = getIntOrNull(data.heberges.families);
+        sanitizedData.heberges_people = getIntOrNull(data.heberges.people);
     }
 
     // indicateurs sécurisation
@@ -1236,24 +1242,33 @@ module.exports = models => ({
 
         // indicateurs logement
         if (topics.indexOf('housing') !== -1) {
-            if (stateData.siao !== null && (Number.isNaN(stateData.siao) || stateData.siao < 0)) {
-                addError('siao', 'Ce champ est obligatoire et sa valeur ne peut pas être négative');
-            }
-            if (stateData.logement_social !== null && (Number.isNaN(stateData.logement_social) || stateData.logement_social < 0)) {
-                addError('logement_social', 'Ce champ est obligatoire et sa valeur ne peut pas être négative');
-            }
-            if (stateData.dalo !== null && (Number.isNaN(stateData.dalo) || stateData.dalo < 0)) {
-                addError('dalo', 'Ce champ est obligatoire et sa valeur ne peut pas être négative');
-            }
-            if (stateData.accompagnes !== null && (Number.isNaN(stateData.accompagnes) || stateData.accompagnes < 0)) {
-                addError('accompagnes', 'Ce champ est obligatoire et sa valeur ne peut pas être négative');
-            }
-            if (stateData.non_accompagnes !== null && (Number.isNaN(stateData.non_accompagnes) || stateData.non_accompagnes < 0)) {
-                addError('non_accompagnes', 'Ce champ est obligatoire et sa valeur ne peut pas être négative');
-            }
-            if (stateData.heberges !== null && (Number.isNaN(stateData.heberges) || stateData.heberges < 0)) {
-                addError('heberges', 'Ce champ est obligatoire et sa valeur ne peut pas être négative');
-            }
+            const inputs = [
+                { name: 'siao', label: 'SIAO' },
+                { name: 'logement_social', label: 'Logement social' },
+                { name: 'dalo', label: 'DALO' },
+                { name: 'accompagnes', label: 'Logement accompagné / adapté' },
+                { name: 'non_accompagnes', label: 'Logement sans accompagnement' },
+                { name: 'heberges', label: 'Hébergement' },
+            ];
+            inputs.forEach(({ name, label }) => {
+                let families = null;
+                if (stateData[name] !== null && (Number.isNaN(stateData[name]) || stateData[name] < 0)) {
+                    addError('housing', `La valeur du champ ${label} (ménages) est invalide : veuillez saisir un nombre supérieur à 0`);
+                } else {
+                    families = stateData[name];
+                }
+
+                let people = null;
+                if (stateData[`${name}_people`] !== null && (Number.isNaN(stateData[`${name}_people`]) || stateData[`${name}_people`] < 0)) {
+                    addError('housing', `La valeur du champ ${label} (personnes) est invalide : veuillez saisir un nombre supérieur à 0`);
+                } else {
+                    people = stateData[`${name}_people`];
+                }
+
+                if (families !== null && people !== null && families > people) {
+                    addError('housing', `Le nombre de ménages ne peut pas être supérieur au nombre de personnes pour le champ ${label}`);
+                }
+            });
         }
 
         // indicateurs sécurisation
@@ -1455,8 +1470,8 @@ module.exports = models => ({
                 if (topics.indexOf('housing') !== -1) {
                     indicateurPromises.push(
                         sequelize.query(
-                            `INSERT INTO indicateurs_logement(siao, logement_social, dalo, accompagnes, non_accompagnes, heberges, created_by)
-                            VALUES(:siao, :logement_social, :dalo, :accompagnes, :non_accompagnes, :heberges, :createdBy)
+                            `INSERT INTO indicateurs_logement(siao, siao_people, logement_social, logement_social_people, dalo, dalo_people, accompagnes, accompagnes_people, non_accompagnes, non_accompagnes_people, heberges, heberges_people, created_by)
+                            VALUES(:siao, :siao_people, :logement_social, :logement_social_people, :dalo, :dalo_people, :accompagnes, :accompagnes_people, :non_accompagnes, :non_accompagnes_people, :heberges, :heberges_people, :createdBy)
                             RETURNING indicateurs_logement_id AS id`,
                             {
                                 replacements: stateData,
