@@ -68,7 +68,8 @@ function createTable(queryInterface, Sequelize, name, additionalColumns = {}) {
                 allowNull: true,
             },
             justice_status: {
-                type: Sequelize.ENUM('none', 'seized', 'rendered'),
+                type: Sequelize.ENUM,
+                values: ['none', 'seized', 'rendered'],
                 allowNull: true,
             },
             created_at: {
@@ -87,96 +88,97 @@ function createTable(queryInterface, Sequelize, name, additionalColumns = {}) {
                 onUpdate: Sequelize.literal('CURRENT_TIMESTAMP'),
             },
         }, additionalColumns),
-    ).then(() => Promise.all([
-        queryInterface.addConstraint(name, ['fk_city'], {
-            type: 'foreign key',
-            name: 'fk_shantytowns_city',
-            references: {
-                table: 'cities',
-                field: 'code',
-            },
-            onUpdate: 'cascade',
-            onDelete: 'restrict',
-        }),
+    )
+        .then(() => Promise.all([
+            queryInterface.addConstraint(name, ['fk_city'], {
+                type: 'foreign key',
+                name: 'fk_shantytowns_city',
+                references: {
+                    table: 'cities',
+                    field: 'code',
+                },
+                onUpdate: 'cascade',
+                onDelete: 'restrict',
+            }),
 
-        queryInterface.addConstraint(name, ['fk_field_type'], {
-            type: 'foreign key',
-            name: 'fk_shantytowns_field_type',
-            references: {
-                table: 'field_types',
-                field: 'field_type_id',
-            },
-            onUpdate: 'cascade',
-            onDelete: 'restrict',
-        }),
+            queryInterface.addConstraint(name, ['fk_field_type'], {
+                type: 'foreign key',
+                name: 'fk_shantytowns_field_type',
+                references: {
+                    table: 'field_types',
+                    field: 'field_type_id',
+                },
+                onUpdate: 'cascade',
+                onDelete: 'restrict',
+            }),
 
-        queryInterface.addConstraint(name, ['fk_owner_type'], {
-            type: 'foreign key',
-            name: 'fk_shantytowns_owner_type',
-            references: {
-                table: 'owner_types',
-                field: 'owner_type_id',
-            },
-            onUpdate: 'cascade',
-            onDelete: 'restrict',
-        }),
+            queryInterface.addConstraint(name, ['fk_owner_type'], {
+                type: 'foreign key',
+                name: 'fk_shantytowns_owner_type',
+                references: {
+                    table: 'owner_types',
+                    field: 'owner_type_id',
+                },
+                onUpdate: 'cascade',
+                onDelete: 'restrict',
+            }),
 
-        queryInterface.addConstraint(name, ['created_by'], {
-            type: 'foreign key',
-            name: 'fk_shantytowns_creator',
-            references: {
-                table: 'users',
-                field: 'user_id',
-            },
-            onUpdate: 'cascade',
-            onDelete: 'restrict',
-        }),
+            queryInterface.addConstraint(name, ['created_by'], {
+                type: 'foreign key',
+                name: 'fk_shantytowns_creator',
+                references: {
+                    table: 'users',
+                    field: 'user_id',
+                },
+                onUpdate: 'cascade',
+                onDelete: 'restrict',
+            }),
 
-        queryInterface.addConstraint(name, ['closed_at'], {
-            type: 'check',
-            name: 'check_closed_after_built',
-            where: {
-                $or: [
-                    {
-                        built_at: { $eq: null },
-                    },
-                    {
-                        closed_at: { $eq: null },
-                    },
-                    {
-                        $and: {
-                            built_at: { $ne: null },
-                            closed_at: {
-                                $ne: null,
-                                $gt: Sequelize.col('built_at'),
-                            },
+            queryInterface.addConstraint(name, ['closed_at'], {
+                type: 'check',
+                name: 'check_closed_after_built',
+                where: {
+                    $or: [
+                        {
+                            built_at: { $eq: null },
                         },
-                    },
-                ],
-            },
-        }),
-
-        queryInterface.addConstraint(name, ['closed_at'], {
-            type: 'check',
-            name: 'check_closed_at_notNull',
-            where: {
-                $or: [
-                    {
-                        $and: {
-                            status: { $eq: 'open' },
+                        {
                             closed_at: { $eq: null },
                         },
-                    },
-                    {
-                        $and: {
-                            status: { $ne: 'open' },
-                            closed_at: { $ne: null },
+                        {
+                            $and: {
+                                built_at: { $ne: null },
+                                closed_at: {
+                                    $ne: null,
+                                    $gt: Sequelize.col('built_at'),
+                                },
+                            },
                         },
-                    },
-                ],
-            },
-        }),
-    ]));
+                    ],
+                },
+            }),
+
+            queryInterface.addConstraint(name, ['closed_at'], {
+                type: 'check',
+                name: 'check_closed_at_notNull',
+                where: {
+                    $or: [
+                        {
+                            $and: {
+                                status: { $eq: 'open' },
+                                closed_at: { $eq: null },
+                            },
+                        },
+                        {
+                            $and: {
+                                status: { $ne: 'open' },
+                                closed_at: { $ne: null },
+                            },
+                        },
+                    ],
+                },
+            }),
+        ]));
 }
 
 module.exports = {
@@ -205,7 +207,12 @@ module.exports = {
                 allowNull: false,
             },
         }),
-    ]),
+    ])
+        .then(() => queryInterface.sequelize.query(
+            `CREATE CAST (
+                "enum_shantytowns_justice_status" AS "enum_ShantytownHistories_justice_status"
+            ) WITH INOUT AS ASSIGNMENT`,
+        )),
 
     down: queryInterface => Promise.all([
         queryInterface.dropTable('shantytowns'),

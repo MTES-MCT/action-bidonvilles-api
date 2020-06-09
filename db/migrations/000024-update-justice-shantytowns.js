@@ -1,46 +1,58 @@
-function addColumn(queryInterface, name, options) {
+function addColumn(queryInterface, name, options, queryOptions) {
     return Promise.all([
-        queryInterface.addColumn('shantytowns', name, options),
-        queryInterface.addColumn('ShantytownHistories', name, options),
+        queryInterface.addColumn('shantytowns', name, options, queryOptions),
+        queryInterface.addColumn('ShantytownHistories', name, options, queryOptions),
     ]);
 }
 
-function removeColumn(queryInterface, name) {
+function removeColumn(queryInterface, name, options) {
     return Promise.all([
-        queryInterface.removeColumn('shantytowns', name),
-        queryInterface.removeColumn('ShantytownHistories', name),
+        queryInterface.removeColumn('shantytowns', name, options),
+        queryInterface.removeColumn('ShantytownHistories', name, options),
     ]);
 }
 
 module.exports = {
-    up: (queryInterface, Sequelize) => Promise.all([
-        // @todo : we should probably have constraints over those fields
-        addColumn(
-            queryInterface,
-            'justice_procedure',
-            {
-                type: Sequelize.BOOLEAN,
-                allowNull: true,
-            },
-        ),
-        addColumn(
-            queryInterface,
-            'justice_rendered',
-            {
-                type: Sequelize.BOOLEAN,
-                allowNull: true,
-            },
-        ),
-        addColumn(
-            queryInterface,
-            'justice_challenged',
-            {
-                type: Sequelize.BOOLEAN,
-                allowNull: true,
-            },
-        ),
-        queryInterface.removeColumn('shantytowns', 'justice_status'),
-    ]),
+    up: (queryInterface, Sequelize) => queryInterface.sequelize.transaction(
+        transaction => Promise.all([
+            // @todo : we should probably have constraints over those fields
+            addColumn(
+                queryInterface,
+                'justice_procedure',
+                {
+                    type: Sequelize.BOOLEAN,
+                    allowNull: true,
+                },
+                {
+                    transaction,
+                },
+            ),
+            addColumn(
+                queryInterface,
+                'justice_rendered',
+                {
+                    type: Sequelize.BOOLEAN,
+                    allowNull: true,
+                },
+                {
+                    transaction,
+                },
+            ),
+            addColumn(
+                queryInterface,
+                'justice_challenged',
+                {
+                    type: Sequelize.BOOLEAN,
+                    allowNull: true,
+                },
+                {
+                    transaction,
+                },
+            ),
+        ])
+            .then(() => queryInterface.removeColumn('shantytowns', 'justice_status', { transaction }))
+            .then(() => queryInterface.sequelize.query('DROP TYPE "enum_shantytowns_justice_status" CASCADE', { transaction })),
+    ),
 
     down: (queryInterface, Sequelize) => Promise.all([
         removeColumn(queryInterface, 'justice_procedure'),

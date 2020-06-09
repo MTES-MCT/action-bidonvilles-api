@@ -25,7 +25,18 @@ module.exports = {
                 onUpdate: Sequelize.literal('CURRENT_TIMESTAMP'),
             },
         },
-    ),
+    )
+        .then(() => queryInterface.bulkInsert(
+            'plan_types',
+            [
+                { label: 'Espace temporaire d’insertion' },
+                { label: 'Accompagnement social global' },
+                { label: 'Intervention sanitaire' },
+                { label: 'Accompagnement scolaire' },
+                { label: 'Protection de l’enfance' },
+                { label: 'Accompagnement emploi' },
+            ],
+        )),
 
     down: queryInterface => queryInterface.dropTable('plan_types'),
 

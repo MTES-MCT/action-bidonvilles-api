@@ -52,5 +52,5 @@ module.exports = {
             queryInterface.sequelize.query('ALTER TABLE "ShantytownHistories" DROP COLUMN status_tmp'),
         ])),
 
-    down: () => {},
+    down: () => Promise.resolve(null),
 };

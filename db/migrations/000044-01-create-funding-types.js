@@ -25,7 +25,18 @@ module.exports = {
                 onUpdate: Sequelize.literal('CURRENT_TIMESTAMP'),
             },
         },
-    ),
+    )
+        .then(() => queryInterface.bulkInsert(
+            'funding_types',
+            [
+                { label: 'Financements étatiques hors crédits dédiés' },
+                { label: 'Crédits dédiés à la résorption des bidonvilles' },
+                { label: 'Cofinancement collectivité territoriale' },
+                { label: 'Financement européen' },
+                { label: 'Financement privé' },
+                { label: 'Autre' },
+            ],
+        )),
 
     down: queryInterface => queryInterface.dropTable('funding_types'),
 
