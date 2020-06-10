@@ -10,11 +10,11 @@ module.exports = function (sequelize, DataTypes) {
             allowNull: false,
         },
         latitude: {
-            type: DataTypes.DOUBLE(2, 15),
+            type: DataTypes.DOUBLE,
             allowNull: false,
         },
         longitude: {
-            type: DataTypes.DOUBLE(2, 15),
+            type: DataTypes.DOUBLE,
             allowNull: false,
         },
         region: {

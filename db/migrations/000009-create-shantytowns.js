@@ -12,11 +12,11 @@ function createTable(queryInterface, Sequelize, name, additionalColumns = {}) {
                 allowNull: true,
             },
             latitude: {
-                type: Sequelize.DOUBLE(2, 15),
+                type: Sequelize.DOUBLE,
                 allowNull: false,
             },
             longitude: {
-                type: Sequelize.DOUBLE(2, 15),
+                type: Sequelize.DOUBLE,
                 allowNull: false,
             },
             address: {
@@ -44,15 +44,15 @@ function createTable(queryInterface, Sequelize, name, additionalColumns = {}) {
                 allowNull: false,
             },
             population_total: {
-                type: Sequelize.INTEGER.UNSIGNED,
+                type: Sequelize.INTEGER,
                 allowNull: true,
             },
             population_couples: {
-                type: Sequelize.INTEGER.UNSIGNED,
+                type: Sequelize.INTEGER,
                 allowNull: true,
             },
             population_minors: {
-                type: Sequelize.INTEGER.UNSIGNED,
+                type: Sequelize.INTEGER,
                 allowNull: true,
             },
             access_to_electricity: {
@@ -138,19 +138,19 @@ function createTable(queryInterface, Sequelize, name, additionalColumns = {}) {
                 type: 'check',
                 name: 'check_closed_after_built',
                 where: {
-                    $or: [
+                    [Sequelize.Op.or]: [
                         {
-                            built_at: { $eq: null },
+                            built_at: { [Sequelize.Op.eq]: null },
                         },
                         {
-                            closed_at: { $eq: null },
+                            closed_at: { [Sequelize.Op.eq]: null },
                         },
                         {
-                            $and: {
-                                built_at: { $ne: null },
+                            [Sequelize.Op.and]: {
+                                built_at: { [Sequelize.Op.ne]: null },
                                 closed_at: {
-                                    $ne: null,
-                                    $gt: Sequelize.col('built_at'),
+                                    [Sequelize.Op.ne]: null,
+                                    [Sequelize.Op.gt]: Sequelize.col('built_at'),
                                 },
                             },
                         },
@@ -162,17 +162,17 @@ function createTable(queryInterface, Sequelize, name, additionalColumns = {}) {
                 type: 'check',
                 name: 'check_closed_at_notNull',
                 where: {
-                    $or: [
+                    [Sequelize.Op.or]: [
                         {
-                            $and: {
-                                status: { $eq: 'open' },
-                                closed_at: { $eq: null },
+                            [Sequelize.Op.and]: {
+                                status: { [Sequelize.Op.eq]: 'open' },
+                                closed_at: { [Sequelize.Op.eq]: null },
                             },
                         },
                         {
-                            $and: {
-                                status: { $ne: 'open' },
-                                closed_at: { $ne: null },
+                            [Sequelize.Op.and]: {
+                                status: { [Sequelize.Op.ne]: 'open' },
+                                closed_at: { [Sequelize.Op.ne]: null },
                             },
                         },
                     ],

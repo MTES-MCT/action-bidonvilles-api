@@ -16,11 +16,11 @@ module.exports = {
                 allowNull: false,
             },
             latitude: {
-                type: Sequelize.DOUBLE(2, 15),
+                type: Sequelize.DOUBLE,
                 allowNull: false,
             },
             longitude: {
-                type: Sequelize.DOUBLE(2, 15),
+                type: Sequelize.DOUBLE,
                 allowNull: false,
             },
             fk_region: {

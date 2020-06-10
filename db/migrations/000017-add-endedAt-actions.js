@@ -10,14 +10,14 @@ module.exports = {
         type: 'check',
         name: 'check_ended_after_start',
         where: {
-            $or: [
+            [Sequelize.Op.or]: [
                 {
-                    ended_at: { $eq: null },
+                    ended_at: { [Sequelize.Op.eq]: null },
                 },
                 {
                     ended_at: {
-                        $ne: null,
-                        $gt: Sequelize.col('started_at'),
+                        [Sequelize.Op.ne]: null,
+                        [Sequelize.Op.gt]: Sequelize.col('started_at'),
                     },
                 },
             ],
