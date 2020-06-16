@@ -28,7 +28,11 @@ function hasPermission(user, plan, feature) {
         }
 
         case 'own':
-            return plan[feature === 'updateMarks' ? 'operators' : 'managers'].some(({ id }) => id === user.id);
+            if (feature === 'updateMarks') {
+                return plan.operators.some(contact => contact.organization.id === user.organization.id);
+            }
+
+            return plan.managers.some(({ id }) => id === user.id);
 
         default:
             return false;
