@@ -54,7 +54,7 @@ function checkPassword(str) {
     return errors;
 }
 
-function fromOptionToPermissions(option, dataJustice) {
+function fromOptionToPermissions(user, option, dataJustice) {
     switch (option.id) {
         case 'close_shantytown':
             return [
@@ -85,30 +85,17 @@ function fromOptionToPermissions(option, dataJustice) {
                 },
             ];
 
-        case 'hide_justice':
-            return [
-                {
-                    entity: 'shantytown',
-                    feature: 'list',
-                    level: 'local',
-                    data: { data_justice: false },
-                    allowed: true,
-                },
-                {
-                    entity: 'shantytown',
-                    feature: 'read',
-                    level: 'local',
-                    data: { data_justice: false },
-                    allowed: true,
-                },
-                {
-                    entity: 'shantytown',
-                    feature: 'export',
-                    level: 'local',
-                    data: { data_justice: false },
-                    allowed: true,
-                },
-            ];
+        case 'hide_justice': {
+            const defaultPermissions = user.permissions.shantytown || {};
+
+            return Object.keys(defaultPermissions).map(feature => ({
+                entity: 'shantytown',
+                feature,
+                level: defaultPermissions[feature].geographic_level,
+                data: { data_justice: false },
+                allowed: defaultPermissions[feature].allowed,
+            }));
+        }
 
         default:
             return [];
@@ -122,17 +109,17 @@ class MultipleError extends Error {
     }
 }
 
-function fromOptionsToPermissions(options) {
+function fromOptionsToPermissions(user, options) {
     if (options.length === 0) {
         return [];
     }
 
     // special case of data_justice
-    const dataJustice = options.find(({ id }) => id === 'hide_justice') === null;
+    const dataJustice = options.find(({ id }) => id === 'hide_justice') === undefined;
 
     return options.reduce((permissions, option) => [
         ...permissions,
-        ...fromOptionToPermissions(option, dataJustice),
+        ...fromOptionToPermissions(user, option, dataJustice),
     ], []);
 }
 
@@ -1016,7 +1003,7 @@ module.exports = (models) => {
                 const requestedOptions = options.filter(({ id }) => req.body.options && req.body.options[id] === true);
 
                 // inject additional permissions related to options
-                const additionalPermissions = fromOptionsToPermissions(requestedOptions);
+                const additionalPermissions = fromOptionsToPermissions(user, requestedOptions);
                 try {
                     await models.organization.setCustomPermissions(user.organization.id, additionalPermissions);
                 } catch (error) {
