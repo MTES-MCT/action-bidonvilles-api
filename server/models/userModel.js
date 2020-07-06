@@ -89,6 +89,7 @@ function serializeUser(user, latestCharte, filters, permissionMap) {
         is_admin: user.is_admin,
         role: user.role_name || user.organization_type_role_name,
         role_id: user.role || user.organization_type_role,
+        is_superuser: user.role === 'national_admin',
     };
 
     if (serialized.last_activation_link_sent_on !== null) {
