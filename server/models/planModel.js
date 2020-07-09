@@ -16,15 +16,16 @@ function hasPermission(user, plan, feature) {
 
         case 'local': {
             const userLevel = user.organization.location.type;
-            if (userLevel === 'nation') {
-                return true;
-            }
+            switch (userLevel) {
+                case 'nation':
+                    return true;
 
-            if (user.organization.location[userLevel] === null) {
-                return false;
-            }
+                case 'region':
+                    return user.organization.location.region.code === plan.region_code;
 
-            return plan.managers[0].organization.location[userLevel] && plan.managers[0].organization.location[userLevel].code === user.organization.location[userLevel].code;
+                default:
+                    return user.organization.location.departement.code === plan.departement_code;
+            }
         }
 
         case 'own':
@@ -63,7 +64,14 @@ function serializePlan(user, permissions, plan) {
         location_details: plan.locationDetails,
         final_comment: plan.finalComment,
         government_contacts: plan.managers,
-        departement: plan.managers[0].organization.location.departement ? plan.managers[0].organization.location.departement.code : '',
+        departement: {
+            code: plan.departement_code,
+            name: plan.departement_name,
+        },
+        region: {
+            code: plan.region_code,
+            name: plan.region_name,
+        },
         operator_contacts: plan.operators,
         states: plan.states || [],
         topics: plan.topics,
@@ -156,15 +164,31 @@ module.exports = (database) => {
         const featureLevel = user.permissions.plan[feature].geographic_level;
         const userLevel = user.organization.location.type;
 
-        const locationWhere = [];
-        if (featureLevel !== 'nation' && (featureLevel !== 'local' || userLevel !== 'nation')) {
-            const level = featureLevel === 'local' ? userLevel : featureLevel;
-            if (user.organization.location[level] === null) {
-                return [];
+        // list-read
+        if (featureLevel === 'own') {
+            // not supported at the moment
+        } else if (featureLevel !== 'nation' && userLevel !== 'nation') {
+            const levelValue = {
+                city: 1,
+                epci: 2,
+                departement: 3,
+                region: 4,
+            };
+
+            let level;
+            if (featureLevel === 'local' || levelValue[featureLevel] <= levelValue[userLevel]) {
+                level = userLevel;
+            } else {
+                level = featureLevel;
             }
 
-            locationWhere.push(`${level}_code = :locationCode`);
-            replacements.locationCode = user.organization.location[level].code;
+            if (level === 'region') {
+                where.push('regions.code = :locationCode');
+                replacements.locationCode = user.organization.location.region.code;
+            } else {
+                where.push('departements.code = :locationCode');
+                replacements.locationCode = user.organization.location.departement.code;
+            }
         }
 
         // integrate custom filters
@@ -190,6 +214,10 @@ module.exports = (database) => {
                 plans.location_type AS "locationType",
                 plans.location_details AS "locationDetails",
                 plans.final_comment AS "finalComment",
+                departements.code AS "departement_code",
+                departements.name AS "departement_name",
+                regions.code AS "region_code",
+                regions.name AS "region_name",
                 locations.address AS "location_address",
                 (SELECT regexp_matches(locations.address, '^(.+) [0-9]+ [^,]+,? [0-9]+,? [^, ]+(,.+)?$'))[1] AS "location_address_simple",
                 locations.latitude AS "location_latitude",
@@ -200,6 +228,9 @@ module.exports = (database) => {
                 plan_categories.name AS "planCategoryName"
             FROM plans2 AS plans
             LEFT JOIN plan_categories ON plans.fk_category = plan_categories.uid
+            LEFT JOIN plan_departements ON plan_departements.fk_plan = plans.plan_id
+            LEFT JOIN departements ON plan_departements.fk_departement = departements.code
+            LEFT JOIN regions ON departements.fk_region = regions.code
             LEFT JOIN locations ON plans.fk_location = locations.location_id
             ${where.length > 0 ? `WHERE (${where.join(') AND (')})` : ''}
             ORDER BY plans.plan_id ASC`,
@@ -222,19 +253,9 @@ module.exports = (database) => {
             database.query(
                 `SELECT
                     fk_plan,
-                    fk_user,
-                    organizations.region_code,
-                    organizations.region_name,
-                    organizations.departement_code,
-                    organizations.departement_name,
-                    organizations.epci_code,
-                    organizations.epci_name,
-                    organizations.city_code,
-                    organizations.city_name
+                    fk_user
                 FROM plan_managers
-                LEFT JOIN users ON plan_managers.fk_user = users.user_id
-                LEFT JOIN localized_organizations organizations ON users.fk_organization = organizations.organization_id
-                WHERE (${['fk_plan IN (:planIds)', ...locationWhere].join(') AND (')})
+                WHERE fk_plan IN (:planIds)
                 ORDER BY fk_plan ASC`,
                 {
                     type: database.QueryTypes.SELECT,
@@ -400,7 +421,6 @@ module.exports = (database) => {
         planManagers.forEach(({ fk_plan: planId, fk_user: userId }) => {
             if (hashedPlans[planId].managers === undefined) {
                 hashedPlans[planId].managers = [];
-                hashedPlans[planId].location = hashedUsers[userId].organization.location;
             }
 
             hashedPlans[planId].managers.push(hashedUsers[userId]);
@@ -624,7 +644,6 @@ module.exports = (database) => {
         });
 
         return rows
-            .filter(({ managers }) => managers !== undefined && managers.length > 0)
             .map(serializePlan.bind(this, user, {
                 plan: user.permissions.plan[feature],
                 finances: (user.permissions.plan_finances && user.permissions.plan_finances.access) || null,

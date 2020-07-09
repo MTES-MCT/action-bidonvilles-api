@@ -9,6 +9,11 @@ function sanitize(data) {
         sanitizedData.name = trim(data.name);
     }
 
+    // departement
+    if (typeof data.departement === 'string') {
+        sanitizedData.departement = trim(data.departement);
+    }
+
     // started at
     const startedAt = new Date(data.startedAt);
     if (!Number.isNaN(startedAt.getTime())) {
@@ -497,6 +502,21 @@ module.exports = models => ({
             errors[field].push(error);
         }
 
+        try {
+            const departement = await models.departement.findOne(planData.departement);
+            if (departement === null) {
+                addError('departement', 'Le département d\'intervention est obligatoire');
+            }
+        } catch (error) {
+            return res.status(500).send({
+                success: false,
+                error: {
+                    developer_message: 'Could not find the matching departement in database',
+                    user_message: 'Une erreur de lecture en base de données est survenue',
+                },
+            });
+        }
+
         let financeTypes;
         try {
             financeTypes = (await models.financeType.findAll()).reduce((acc, type) => Object.assign({}, acc, {
@@ -724,6 +744,19 @@ module.exports = models => ({
                     },
                 );
                 const planId = response[0][0].id;
+
+                await sequelize.query(
+                    `INSERT INTO plan_departements(fk_plan, fk_departement, created_by)
+                    VALUES (:planId, :departement, :createdBy)`,
+                    {
+                        replacements: {
+                            planId,
+                            departement: planData.departement,
+                            createdBy: req.user.id,
+                        },
+                        transaction: t,
+                    },
+                );
 
                 await sequelize.query(
                     `INSERT INTO plan_topics(fk_plan, fk_topic, created_by)

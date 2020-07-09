@@ -210,7 +210,8 @@ module.exports = (database) => {
                 FROM cities
                 LEFT JOIN departements ON cities.fk_departement = departements.code
                 WHERE fk_${locationType} = :locationCode
-                GROUP BY departements.code, departements.name`,
+                GROUP BY departements.code, departements.name
+                ORDER BY departements.code ASC`,
                 {
                     type: database.QueryTypes.SELECT,
                     replacements: {
