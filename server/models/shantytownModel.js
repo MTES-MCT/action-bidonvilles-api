@@ -737,10 +737,12 @@ module.exports = (database) => {
         getHistory: async (user, permission) => {
             // apply geographic level permission
             const where = [];
+            const highCovidWhere = [];
             const replacements = {};
             if (user.permissions[permission.entity][permission.feature].geographic_level !== 'nation'
                 && user.organization.location.type !== 'nation') {
                 where.push(`${fromGeoLevelToTableName(user.organization.location.type)}.code = :locationCode`);
+                highCovidWhere.push('d2.code = :locationCode');
                 replacements.locationCode = user.organization.location[user.organization.location.type].code;
             }
 
@@ -872,7 +874,7 @@ module.exports = (database) => {
                         ${SQL.joins.map(({ table, on }) => `LEFT JOIN ${table} ON ${on}`).join('\n')}
                         LEFT JOIN high_covid_comment_territories territories ON territories.fk_comment = comments.high_covid_comment_id
                         LEFT JOIN departements d2 ON territories.fk_departement = d2.code
-                        ${where.length > 0 ? `WHERE (${where.join(') AND (')})` : ''}
+                        ${highCovidWhere.length > 0 ? `WHERE (${highCovidWhere.join(') AND (')})` : ''}
                     )) activities
                 LEFT JOIN users author ON activities.author_id = author.user_id
                 ORDER BY activities.date ASC
