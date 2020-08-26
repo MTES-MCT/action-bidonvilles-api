@@ -16,92 +16,72 @@ module.exports = (app) => {
     );
     app.get(
         '/refreshToken',
-        [
-            middlewares.auth.authenticate,
-            middlewares.appVersion.sync,
-        ],
+        middlewares.auth.authenticate,
+        middlewares.appVersion.sync,
         controllers.user.renewToken,
     );
     app.get(
         '/config',
-        [
-            middlewares.auth.authenticate,
-            middlewares.appVersion.sync,
-        ],
+        middlewares.auth.authenticate,
+        middlewares.appVersion.sync,
         controllers.config.list,
     );
     app.post(
         '/changelog',
-        [
-            middlewares.auth.authenticate,
-            middlewares.appVersion.sync,
-        ],
+        middlewares.auth.authenticate,
+        middlewares.appVersion.sync,
         controllers.user.setLastChangelog,
     );
 
     // directory
     app.get(
         '/directory',
-        [
-            middlewares.auth.authenticate,
-            middlewares.charte.check,
-            middlewares.appVersion.sync,
-        ],
+        middlewares.auth.authenticate,
+        middlewares.charte.check,
+        middlewares.appVersion.sync,
         controllers.directory.list,
     );
 
     // user
     app.get(
         '/users',
-        [
-            middlewares.auth.authenticate,
-            (...args) => middlewares.auth.checkPermissions(['user.list'], ...args),
-            middlewares.charte.check,
-            middlewares.appVersion.sync,
-        ],
+        middlewares.auth.authenticate,
+        (...args) => middlewares.auth.checkPermissions(['user.list'], ...args),
+        middlewares.charte.check,
+        middlewares.appVersion.sync,
         controllers.user.list,
     );
     app.get(
         '/me',
-        [
-            middlewares.auth.authenticate,
-            middlewares.appVersion.sync,
-        ],
+        middlewares.auth.authenticate,
+        middlewares.appVersion.sync,
         controllers.user.me,
     );
     app.post(
         '/me',
-        [
-            middlewares.auth.authenticate,
-            middlewares.charte.check,
-            middlewares.appVersion.sync,
-        ],
+        middlewares.auth.authenticate,
+        middlewares.charte.check,
+        middlewares.appVersion.sync,
         controllers.user.edit,
     );
     app.get(
         '/users/:id',
-        [
-            middlewares.auth.authenticate,
-            (...args) => middlewares.auth.checkPermissions(['user.read'], ...args),
-            middlewares.charte.check,
-            middlewares.appVersion.sync,
-        ],
+        middlewares.auth.authenticate,
+        (...args) => middlewares.auth.checkPermissions(['user.read'], ...args),
+        middlewares.charte.check,
+        middlewares.appVersion.sync,
         controllers.user.get,
     );
     app.put(
         '/users/:id/charte_engagement',
-        [
-            middlewares.auth.authenticate,
-        ],
+        middlewares.auth.authenticate,
         controllers.user.acceptCharte,
     );
     app.post(
         '/me/default-export',
-        [
-            middlewares.auth.authenticate,
-            middlewares.charte.check,
-            middlewares.appVersion.sync,
-        ],
+        middlewares.auth.authenticate,
+        middlewares.charte.check,
+        middlewares.appVersion.sync,
         controllers.user.setDefaultExport,
     );
     app.post(
@@ -210,22 +190,18 @@ module.exports = (app) => {
     );
     app.post(
         '/plans/:id',
-        [
-            middlewares.auth.authenticate,
-            (...args) => middlewares.auth.checkPermissions(['plan.update'], ...args),
-            middlewares.charte.check,
-            middlewares.appVersion.sync,
-        ],
+        middlewares.auth.authenticate,
+        (...args) => middlewares.auth.checkPermissions(['plan.update'], ...args),
+        middlewares.charte.check,
+        middlewares.appVersion.sync,
         controllers.plan.update,
     );
     app.post(
         '/plans/:id/states',
-        [
-            middlewares.auth.authenticate,
-            (...args) => middlewares.auth.checkPermissions(['plan.updateMarks'], ...args),
-            middlewares.charte.check,
-            middlewares.appVersion.sync,
-        ],
+        middlewares.auth.authenticate,
+        (...args) => middlewares.auth.checkPermissions(['plan.updateMarks'], ...args),
+        middlewares.charte.check,
+        middlewares.appVersion.sync,
         controllers.plan.addState,
     );
     app.patch(
@@ -298,90 +274,72 @@ module.exports = (app) => {
     );
     app.post(
         '/towns',
-        [
-            middlewares.auth.authenticate,
-            (...args) => middlewares.auth.checkPermissions(['shantytown.create'], ...args),
-            middlewares.charte.check,
-            middlewares.appVersion.sync,
-        ],
+        middlewares.auth.authenticate,
+        (...args) => middlewares.auth.checkPermissions(['shantytown.create'], ...args),
+        middlewares.charte.check,
+        middlewares.appVersion.sync,
         controllers.town.add,
     );
     app.post(
         '/towns/:id',
-        [
-            middlewares.auth.authenticate,
-            (...args) => middlewares.auth.checkPermissions(['shantytown.update'], ...args),
-            middlewares.charte.check,
-            middlewares.appVersion.sync,
-        ],
+        middlewares.auth.authenticate,
+        (...args) => middlewares.auth.checkPermissions(['shantytown.update'], ...args),
+        middlewares.charte.check,
+        middlewares.appVersion.sync,
         controllers.town.edit,
     );
     app.post(
         '/towns/:id/close',
-        [
-            middlewares.auth.authenticate,
-            (...args) => middlewares.auth.checkPermissions(['shantytown.close'], ...args),
-            middlewares.charte.check,
-            middlewares.appVersion.sync,
-        ],
+        middlewares.auth.authenticate,
+        (...args) => middlewares.auth.checkPermissions(['shantytown.close'], ...args),
+        middlewares.charte.check,
+        middlewares.appVersion.sync,
         controllers.town.close,
     );
     app.delete(
         '/towns/:id',
-        [
-            middlewares.auth.authenticate,
-            (...args) => middlewares.auth.checkPermissions(['shantytown.delete'], ...args),
-            middlewares.charte.check,
-            middlewares.appVersion.sync,
-        ],
+        middlewares.auth.authenticate,
+        (...args) => middlewares.auth.checkPermissions(['shantytown.delete'], ...args),
+        middlewares.charte.check,
+        middlewares.appVersion.sync,
         controllers.town.delete,
     );
     app.post(
         '/towns/:id/comments',
-        [
-            middlewares.auth.authenticate,
-            (...args) => middlewares.auth.checkPermissions(['shantytown_comment.create'], ...args),
-            middlewares.charte.check,
-            middlewares.appVersion.sync,
-        ],
+        middlewares.auth.authenticate,
+        (...args) => middlewares.auth.checkPermissions(['shantytown_comment.create'], ...args),
+        middlewares.charte.check,
+        middlewares.appVersion.sync,
         controllers.town.addComment,
     );
     app.post(
         '/towns/:id/comments/:commentId',
-        [
-            middlewares.auth.authenticate,
-            middlewares.charte.check,
-            middlewares.appVersion.sync,
-        ],
+        middlewares.auth.authenticate,
+        middlewares.charte.check,
+        middlewares.appVersion.sync,
         controllers.town.updateComment,
     );
     app.post(
         '/towns/:id/covidComments',
-        [
-            middlewares.auth.authenticate,
-            middlewares.charte.check,
-            middlewares.appVersion.sync,
-        ],
+        middlewares.auth.authenticate,
+        middlewares.charte.check,
+        middlewares.appVersion.sync,
         controllers.town.createCovidComment,
     );
     app.delete(
         '/towns/:id/comments/:commentId',
-        [
-            middlewares.auth.authenticate,
-            middlewares.charte.check,
-            middlewares.appVersion.sync,
-        ],
+        middlewares.auth.authenticate,
+        middlewares.charte.check,
+        middlewares.appVersion.sync,
         controllers.town.deleteComment,
     );
 
     // high covid comment
     app.post(
         '/high-covid-comments',
-        [
-            middlewares.auth.authenticate,
-            middlewares.charte.check,
-            middlewares.appVersion.sync,
-        ],
+        middlewares.auth.authenticate,
+        middlewares.charte.check,
+        middlewares.appVersion.sync,
         controllers.town.createHighCovidComment,
     );
 
