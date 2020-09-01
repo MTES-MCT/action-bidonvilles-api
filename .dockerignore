@@ -1,0 +1,8 @@
+.git*
+node_modules
+postgres-data
+docker-compose.yml
+Dockerfile
+jsconfig.json
+README.md
+schema_*
