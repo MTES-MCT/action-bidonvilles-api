@@ -285,6 +285,7 @@ module.exports = (models) => {
                 status,
                 closedAt,
                 solutions,
+                closedWithSolutions,
             } = cleanParams(req.body);
 
             const now = Date.now();
@@ -298,6 +299,11 @@ module.exports = (models) => {
                 error('status', 'La cause de fermeture du site est obligatoire');
             } else if (['open', 'closed_by_justice', 'closed_by_admin', 'other', 'unknown'].indexOf(status) === -1) {
                 error('status', 'La cause de fermeture du site fournie n\'est pas reconnue');
+            }
+
+            // validate closed with solutions
+            if (closedWithSolutions === null) {
+                error('closed_with_solutions', 'Ce champ est obligatoire');
             }
 
             // validate the closed-at date
@@ -372,6 +378,7 @@ module.exports = (models) => {
                     await town.update({
                         status,
                         closedAt,
+                        closedWithSolutions: closedWithSolutions === true ? 'yes' : 'no',
                         updatedBy: req.user.id,
                     });
 

@@ -54,6 +54,7 @@ module.exports = function cleanParams(body, format) {
     let police_granted_at;
     let bailiff;
     let solutions;
+    let closed_with_solutions;
 
     if (format === 'camel') {
         ({
@@ -94,6 +95,7 @@ module.exports = function cleanParams(body, format) {
             policeGrantedAt: police_granted_at,
             bailiff,
             solutions,
+            closedWithSolutions: closed_with_solutions,
         } = body);
     } else {
         ({
@@ -134,6 +136,7 @@ module.exports = function cleanParams(body, format) {
             police_granted_at,
             bailiff,
             solutions,
+            closed_with_solutions,
         } = body);
     }
 
@@ -179,5 +182,6 @@ module.exports = function cleanParams(body, format) {
             peopleAffected: getIntOrNull(solution.peopleAffected),
             householdsAffected: getIntOrNull(solution.householdsAffected),
         })) : [],
+        closedWithSolutions: typeof closed_with_solutions === 'boolean' ? closed_with_solutions : null,
     };
 };
