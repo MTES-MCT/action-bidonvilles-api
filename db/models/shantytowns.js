@@ -185,6 +185,11 @@ module.exports = function (sequelize, DataTypes) {
             allowNull: true,
             field: 'police_granted_at',
         },
+        closedWithSolutions: {
+            type: DataTypes.ENUM('unknown', 'yes', 'no'),
+            allowNull: true,
+            field: 'closed_with_solutions',
+        },
         bailiff: {
             type: DataTypes.STRING,
             allowNull: true,
