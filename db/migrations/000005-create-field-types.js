@@ -24,10 +24,19 @@ module.exports = {
                 onUpdate: Sequelize.literal('CURRENT_TIMESTAMP'),
             },
         },
-    ).then(() => queryInterface.addConstraint('field_types', ['label'], {
-        type: 'unique',
-        name: 'uk_field_types_label',
-    })),
+    )
+        .then(() => queryInterface.addConstraint('field_types', ['label'], {
+            type: 'unique',
+            name: 'uk_field_types_label',
+        }))
+        .then(() => queryInterface.bulkInsert(
+            'field_types',
+            [
+                { label: 'Inconnu' },
+                { label: 'Terrain' },
+                { label: 'Immeuble bâti' },
+            ],
+        )),
 
     down: queryInterface => queryInterface.dropTable('field_types'),
 };

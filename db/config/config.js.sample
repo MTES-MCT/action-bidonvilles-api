@@ -1,8 +1,9 @@
 module.exports = {
-    username: 'fabnum',
-    password: 'fabnum',
-    database: 'action_bidonvilles',
+    username: 'postgres',
+    password: 'resorption_bidonvilles',
+    database: 'resorption_bidonvilles',
     host: 'database',
     port: 5432,
     dialect: 'postgres',
+    operatorsAliases: false,
 };

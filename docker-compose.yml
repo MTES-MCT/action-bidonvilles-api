@@ -1,0 +1,29 @@
+version: '3.7'
+
+services:
+    api:
+        build:
+            context: .
+            target: development
+        container_name: rb_api
+        command: yarn dev
+        ports:
+            - '1236:8080'
+        volumes:
+            - .:/home/node/app
+            - api_node_modules:/home/node/app/node_modules
+
+    database:
+        image: postgres:latest
+        container_name: rb_database
+        restart: always
+        ports:
+            - '1237:5432'
+        volumes:
+            - ./postgres-data:/var/lib/postgresql/data
+        environment:
+            - POSTGRES_DB=resorption_bidonvilles
+            - POSTGRES_PASSWORD=resorption_bidonvilles
+
+volumes:
+    api_node_modules:

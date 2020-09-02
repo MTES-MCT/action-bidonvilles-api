@@ -25,7 +25,17 @@ module.exports = {
                 onUpdate: Sequelize.literal('CURRENT_TIMESTAMP'),
             },
         },
-    ),
+    )
+        .then(() => queryInterface.bulkInsert(
+            'electricity_types',
+            [
+                { label: 'Inconnu' },
+                { label: 'Non' },
+                { label: 'Oui' },
+                { label: 'Oui (accès régulier)' },
+                { label: 'Oui (accès irrégulier)' },
+            ],
+        )),
 
     down: queryInterface => queryInterface.dropTable('electricity_types'),
 

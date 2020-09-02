@@ -3,7 +3,7 @@ const path = require('path');
 const config = {
     assetsSrc: path.resolve(__dirname, '../assets'),
     frontUrl: 'http://localhost:1234',
-    port: 810,
+    port: 8080,
     auth: {
         secret: 'secret used for generating authentication tokens',
         expiresIn: '168h', // 7 days

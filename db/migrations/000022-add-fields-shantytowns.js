@@ -120,7 +120,12 @@ module.exports = {
     up: (queryInterface, Sequelize) => Promise.all([
         addColumnsTo(queryInterface, Sequelize, 'shantytowns'),
         addColumnsTo(queryInterface, Sequelize, 'ShantytownHistories'),
-    ]),
+    ])
+        .then(() => queryInterface.sequelize.query(
+            `CREATE CAST (
+                "enum_shantytowns_census_status" AS "enum_ShantytownHistories_census_status"
+            ) WITH INOUT AS ASSIGNMENT`,
+        )),
 
     down: queryInterface => Promise.all([
         removeColumnsFrom(queryInterface, 'shantytowns'),

@@ -38,7 +38,7 @@ function addDepartementConstraintToCities(queryInterface) {
  */
 function fillCitiesWithDepartements() {
     return parser(
-        fs.readFileSync(path.resolve(__dirname, '../seeders/data/cities.csv'), { encoding: 'utf8' }),
+        fs.readFileSync(path.resolve(__dirname, '..', 'data/cities.csv'), { encoding: 'utf8' }),
         {
             headers: ['code', 'name', 'epciCode', 'epciName', 'departementCode', 'regionCode'],
             separator: ';',
@@ -165,7 +165,98 @@ module.exports = {
     up: (queryInterface, Sequelize) => Promise.all([
         createRelationCitiesToDepartements(queryInterface, Sequelize),
         removeRelationEpciToDepartements(queryInterface, Sequelize),
-    ]),
+    ])
+        .then(() => parser(
+            fs.readFileSync(path.join(__dirname, '..', 'data', 'cities.csv'), { encoding: 'utf8' }),
+            {
+                headers: ['code', 'name', 'epciCode', 'epciName', 'departementCode', 'regionCode'],
+                separator: ';',
+            },
+        ))
+        .then(cities => cities.filter(city => city.epciName !== 'Sans objet'))
+        .then((cities) => {
+            const epci = {};
+            cities.forEach((city) => {
+                epci[city.epciCode] = {
+                    code: city.epciCode,
+                    name: city.epciName,
+                };
+            });
+
+            return queryInterface.bulkInsert('epci', Object.values(epci)).then(() => cities);
+        })
+        .then(cities => queryInterface.bulkInsert(
+            'cities',
+            cities.map(city => ({
+                code: city.code,
+                name: city.name,
+                fk_epci: city.epciCode,
+                fk_departement: city.departementCode,
+            })),
+        ))
+        .then(() => parser(
+            fs.readFileSync(path.join(__dirname, '..', 'data', 'cities_with_districts.csv'), { encoding: 'latin1' }),
+            {
+                headers: [
+                    'ACTUAL',
+                    'CHEFLIEU',
+                    'CDC',
+                    'RANG',
+                    'REG',
+                    'DEP',
+                    'COM',
+                    'AR',
+                    'CT',
+                    'MODIF',
+                    'POLE',
+                    'TNCC',
+                    'ARTMAJ',
+                    'NCC',
+                    'ARTMIN',
+                    'NCCENR',
+                    'ARTICLCT',
+                    'NCCCT',
+                ],
+                separator: '	',
+            },
+        ))
+        .then(cities => cities.slice(1).filter(city => city.POLE !== ''))
+        .then(async (cities) => {
+            const mainCities = await sequelize.query(`
+                SELECT
+                    code,
+                    fk_departement,
+                    fk_epci
+                FROM cities
+                WHERE code IN (:codes)`, {
+                type: sequelize.QueryTypes.SELECT,
+                replacements: {
+                    codes: cities.map(city => city.POLE),
+                },
+            });
+
+            const data = {
+                departements: {},
+                epci: {},
+            };
+            mainCities.forEach((city) => {
+                data.departements[city.code] = city.fk_departement;
+                data.epci[city.code] = city.fk_epci;
+            });
+            data.cities = cities.filter(city => data.departements[city.POLE] !== undefined);
+
+            return data;
+        })
+        .then(data => queryInterface.bulkInsert(
+            'cities',
+            data.cities.map(city => ({
+                code: `${city.DEP}${city.COM}`,
+                name: city.NCCENR,
+                fk_epci: data.epci[city.POLE],
+                fk_departement: data.departements[city.POLE],
+                fk_main: city.POLE,
+            })),
+        )),
 
     down: (queryInterface, Sequelize) => Promise.all([
         removeRelationCitiesToDepartements(queryInterface, Sequelize),

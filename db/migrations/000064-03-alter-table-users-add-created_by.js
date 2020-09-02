@@ -1,24 +1,17 @@
 module.exports = {
 
     up: (queryInterface, Sequelize) => queryInterface.sequelize.transaction(
-        transaction => queryInterface.sequelize.query(
-            'SELECT user_id FROM users WHERE email = \'anis@beta.gouv.fr\'',
+        transaction => queryInterface.addColumn(
+            'users',
+            'created_by',
             {
-                type: queryInterface.sequelize.QueryTypes.SELECT,
+                type: Sequelize.INTEGER,
+                allowNull: true,
+            },
+            {
+                transaction,
             },
         )
-            .then(([{ user_id: userId }]) => queryInterface.addColumn(
-                'users',
-                'created_by',
-                {
-                    type: Sequelize.INTEGER,
-                    allowNull: true,
-                    defaultValue: userId,
-                },
-                {
-                    transaction,
-                },
-            ))
             .then(() => queryInterface.changeColumn(
                 'users',
                 'created_by',

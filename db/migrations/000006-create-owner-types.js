@@ -24,10 +24,19 @@ module.exports = {
                 onUpdate: Sequelize.literal('CURRENT_TIMESTAMP'),
             },
         },
-    ).then(() => queryInterface.addConstraint('owner_types', ['label'], {
-        type: 'unique',
-        name: 'uk_owner_types_label',
-    })),
+    )
+        .then(() => queryInterface.addConstraint('owner_types', ['label'], {
+            type: 'unique',
+            name: 'uk_owner_types_label',
+        }))
+        .then(() => queryInterface.bulkInsert(
+            'owner_types',
+            [
+                { label: 'Inconnu' },
+                { label: 'Public' },
+                { label: 'Privé' },
+            ],
+        )),
 
     down: queryInterface => queryInterface.dropTable('owner_types'),
 };

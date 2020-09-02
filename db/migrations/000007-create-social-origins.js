@@ -24,10 +24,19 @@ module.exports = {
                 onUpdate: Sequelize.literal('CURRENT_TIMESTAMP'),
             },
         },
-    ).then(() => queryInterface.addConstraint('social_origins', ['label'], {
-        type: 'unique',
-        name: 'uk_social_origins_label',
-    })),
+    )
+        .then(() => queryInterface.addConstraint('social_origins', ['label'], {
+            type: 'unique',
+            name: 'uk_social_origins_label',
+        }))
+        .then(() => queryInterface.bulkInsert(
+            'social_origins',
+            [
+                { label: 'Ressortissants français' },
+                { label: 'Ressortissants européens' },
+                { label: 'Ressortissants extracommunautaires' },
+            ],
+        )),
 
     down: queryInterface => queryInterface.dropTable('social_origins'),
 };

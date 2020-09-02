@@ -30,17 +30,17 @@ module.exports = {
         type: 'check',
         name: 'check_active_user_has_password',
         where: {
-            $or: [
+            [Sequelize.Op.or]: [
                 {
-                    $and: {
-                        active: { $eq: false },
-                        password: { $eq: null },
+                    [Sequelize.Op.and]: {
+                        active: { [Sequelize.Op.eq]: false },
+                        password: { [Sequelize.Op.eq]: null },
                     },
                 },
                 {
-                    $and: {
-                        active: { $eq: true },
-                        password: { $ne: null },
+                    [Sequelize.Op.and]: {
+                        active: { [Sequelize.Op.eq]: true },
+                        password: { [Sequelize.Op.ne]: null },
                     },
                 },
             ],

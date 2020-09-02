@@ -24,10 +24,22 @@ module.exports = {
                 onUpdate: Sequelize.literal('CURRENT_TIMESTAMP'),
             },
         },
-    ).then(() => queryInterface.addConstraint('closing_solutions', ['label'], {
-        type: 'unique',
-        name: 'uk_closing_solutions_label',
-    })),
+    )
+        .then(() => queryInterface.addConstraint('closing_solutions', ['label'], {
+            type: 'unique',
+            name: 'uk_closing_solutions_label',
+        }))
+        .then(() => queryInterface.bulkInsert(
+            'closing_solutions',
+            [
+                { label: 'Mise à l’abri / hébergement d’urgence (CHU)' },
+                { label: 'Hébergement d’insertion (CHRS, ALT)' },
+                { label: 'Logement ordinaire ou adapté (résidences sociales, IML, pensions de famille, logements social ou privé accompagnés)' },
+                { label: 'Dispositif dédié (CADA, HUDA, CAO, CHUM, ARV, ...)' },
+                { label: 'Dispositif spécifique d’insertion au territoire' },
+                { label: 'Dispositifs de veille sociale ou sans solution' },
+            ],
+        )),
 
     down: queryInterface => queryInterface.dropTable('closing_solutions'),
 };

@@ -24,11 +24,11 @@ module.exports = function (sequelize, DataTypes) {
             field: 'closed_at',
         },
         latitude: {
-            type: DataTypes.DOUBLE(2, 15),
+            type: DataTypes.DOUBLE,
             allowNull: false,
         },
         longitude: {
-            type: DataTypes.DOUBLE(2, 15),
+            type: DataTypes.DOUBLE,
             allowNull: false,
         },
         address: {
@@ -97,17 +97,17 @@ module.exports = function (sequelize, DataTypes) {
             field: 'fk_owner_type',
         },
         populationTotal: {
-            type: DataTypes.INTEGER.UNSIGNED,
+            type: DataTypes.INTEGER,
             allowNull: true,
             field: 'population_total',
         },
         populationCouples: {
-            type: DataTypes.INTEGER.UNSIGNED,
+            type: DataTypes.INTEGER,
             allowNull: true,
             field: 'population_couples',
         },
         populationMinors: {
-            type: DataTypes.INTEGER.UNSIGNED,
+            type: DataTypes.INTEGER,
             allowNull: true,
             field: 'population_minors',
         },

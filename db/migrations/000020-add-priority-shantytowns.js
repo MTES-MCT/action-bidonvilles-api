@@ -10,17 +10,17 @@ function addColumnTo(queryInterface, Sequelize, table) {
     );
 }
 
-function addConstraintTo(queryInterface, table) {
+function addConstraintTo(queryInterface, Sequelize, table) {
     queryInterface.addConstraint(table, ['priority'], {
         type: 'check',
         name: 'check_priority_value',
         where: {
-            $and: [
+            [Sequelize.Op.and]: [
                 {
-                    priority: { $gte: 1 },
+                    priority: { [Sequelize.Op.gte]: 1 },
                 },
                 {
-                    priority: { $lte: 4 },
+                    priority: { [Sequelize.Op.lte]: 4 },
                 },
             ],
         },
@@ -32,8 +32,8 @@ module.exports = {
         addColumnTo(queryInterface, Sequelize, 'shantytowns'),
         addColumnTo(queryInterface, Sequelize, 'ShantytownHistories'),
     ]).then(() => Promise.all([
-        addConstraintTo(queryInterface, 'shantytowns'),
-        addConstraintTo(queryInterface, 'ShantytownHistories'),
+        addConstraintTo(queryInterface, Sequelize, 'shantytowns'),
+        addConstraintTo(queryInterface, Sequelize, 'ShantytownHistories'),
     ])),
 
     down: queryInterface => Promise.all([

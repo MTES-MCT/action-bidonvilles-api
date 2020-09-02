@@ -78,30 +78,30 @@ module.exports = {
                 type: 'check',
                 name: 'check_only_one_target',
                 where: {
-                    $or: [
+                    [Sequelize.Op.or]: [
                         {
-                            fk_city: { $ne: null },
-                            fk_epci: { $eq: null },
-                            fk_departement: { $eq: null },
-                            fk_region: { $eq: null },
+                            fk_city: { [Sequelize.Op.ne]: null },
+                            fk_epci: { [Sequelize.Op.eq]: null },
+                            fk_departement: { [Sequelize.Op.eq]: null },
+                            fk_region: { [Sequelize.Op.eq]: null },
                         },
                         {
-                            fk_city: { $eq: null },
-                            fk_epci: { $ne: null },
-                            fk_departement: { $eq: null },
-                            fk_region: { $eq: null },
+                            fk_city: { [Sequelize.Op.eq]: null },
+                            fk_epci: { [Sequelize.Op.ne]: null },
+                            fk_departement: { [Sequelize.Op.eq]: null },
+                            fk_region: { [Sequelize.Op.eq]: null },
                         },
                         {
-                            fk_city: { $eq: null },
-                            fk_epci: { $eq: null },
-                            fk_departement: { $ne: null },
-                            fk_region: { $eq: null },
+                            fk_city: { [Sequelize.Op.eq]: null },
+                            fk_epci: { [Sequelize.Op.eq]: null },
+                            fk_departement: { [Sequelize.Op.ne]: null },
+                            fk_region: { [Sequelize.Op.eq]: null },
                         },
                         {
-                            fk_city: { $eq: null },
-                            fk_epci: { $eq: null },
-                            fk_departement: { $eq: null },
-                            fk_region: { $ne: null },
+                            fk_city: { [Sequelize.Op.eq]: null },
+                            fk_epci: { [Sequelize.Op.eq]: null },
+                            fk_departement: { [Sequelize.Op.eq]: null },
+                            fk_region: { [Sequelize.Op.ne]: null },
                         },
                     ],
                 },
@@ -188,14 +188,14 @@ module.exports = {
                 type: 'check',
                 name: 'check_ended_after_start',
                 where: {
-                    $or: [
+                    [Sequelize.Op.or]: [
                         {
-                            ended_at: { $eq: null },
+                            ended_at: { [Sequelize.Op.eq]: null },
                         },
                         {
                             ended_at: {
-                                $ne: null,
-                                $gt: Sequelize.col('started_at'),
+                                [Sequelize.Op.ne]: null,
+                                [Sequelize.Op.gt]: Sequelize.col('started_at'),
                             },
                         },
                     ],
