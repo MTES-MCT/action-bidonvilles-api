@@ -6,3 +6,4 @@ coverage
 TODO
 .DS_Store
 postgres-data
+.idea
