@@ -9,6 +9,7 @@ function serializeElectricityType(electricityType) {
     return {
         id: electricityType.id,
         label: electricityType.label,
+        position: electricityType.position,
     };
 }
 
@@ -17,8 +18,10 @@ module.exports = database => ({
         const electricityTypes = await database.query(
             `SELECT
                 electricity_types.electricity_type_id AS id,
-                electricity_types.label AS label
-            FROM electricity_types`,
+                electricity_types.label AS label,
+                electricity_types.position AS position
+            FROM electricity_types
+            ORDER BY position`,
             {
                 type: database.QueryTypes.SELECT,
             },
