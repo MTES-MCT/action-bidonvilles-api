@@ -20,55 +20,50 @@ module.exports = {
         return queryInterface.sequelize.transaction(transaction => Promise.all([
             // Update Oui (acces régulier)
             queryInterface.sequelize.query(
-                'UPDATE shantytowns SET electricity_comments = :comment WHERE fk_electricity_type = :id',
+                `UPDATE shantytowns SET electricity_comments = CONCAT(:regularComment, COALESCE(electricity_comments, '')) WHERE fk_electricity_type = ${yesRegular.id}`,
                 {
                     transaction,
-                    replacements: { comment: regularComment, id: yesRegular.id },
+                    replacements: { regularComment },
                 },
             ),
             queryInterface.sequelize.query(
-                'UPDATE "ShantytownHistories" SET electricity_comments = :comment WHERE fk_electricity_type = :id',
+                `UPDATE "ShantytownHistories" SET electricity_comments = CONCAT(:regularComment, COALESCE(electricity_comments, '')) WHERE fk_electricity_type = ${yesRegular.id}`,
                 {
                     transaction,
-                    replacements: { comment: regularComment, id: yesRegular.id },
+                    replacements: { regularComment },
                 },
             ),
             // Update Oui (acces irrégulier)
             queryInterface.sequelize.query(
-                'UPDATE shantytowns SET electricity_comments = :comment WHERE fk_electricity_type = :id',
+                `UPDATE shantytowns SET electricity_comments = CONCAT(:irregularComment, COALESCE(electricity_comments, '')) WHERE fk_electricity_type = ${yesIrregular.id}`,
                 {
                     transaction,
-                    replacements: { comment: irregularComment, id: yesIrregular.id },
+                    replacements: { irregularComment },
                 },
             ),
             queryInterface.sequelize.query(
-                'UPDATE "ShantytownHistories" SET electricity_comments = :comment WHERE fk_electricity_type = :id',
+                `UPDATE "ShantytownHistories" SET electricity_comments = CONCAT(:irregularComment, COALESCE(electricity_comments, '')) WHERE fk_electricity_type = ${yesIrregular.id}`,
                 {
                     transaction,
-                    replacements: { comment: irregularComment, id: yesIrregular.id },
+                    replacements: { irregularComment },
                 },
             ),
             queryInterface.sequelize.query(
-                'UPDATE shantytowns SET fk_electricity_type = :idYes where fk_electricity_type IN (:idRegular, :idIrregular)',
+                `UPDATE shantytowns SET fk_electricity_type = ${yes.id} where fk_electricity_type IN (${yesRegular.id}, ${yesIrregular.id})`,
                 {
                     transaction,
-                    replacements: { idYes: yes.id, idRegular: yesRegular.id, idIrregular: yesIrregular.id },
                 },
             ),
             queryInterface.sequelize.query(
-                'UPDATE "ShantytownHistories" SET fk_electricity_type = :idYes where fk_electricity_type IN (:idRegular, :idIrregular)',
+                `UPDATE "ShantytownHistories" SET fk_electricity_type = ${yes.id} where fk_electricity_type IN (${yesRegular.id}, ${yesIrregular.id})`,
                 {
                     transaction,
-                    replacements: { idYes: yes.id, idRegular: yesRegular.id, idIrregular: yesIrregular.id },
                 },
             ),
         ]))
             // This needs to be outside of the transaction or it breaks the foreign key condition
             .then(() => queryInterface.sequelize.query(
-                'DELETE FROM electricity_types WHERE electricity_type_id IN (:idRegular, :idIrregular)',
-                {
-                    replacements: { idRegular: yesRegular.id, idIrregular: yesIrregular.id },
-                },
+                `DELETE FROM electricity_types WHERE electricity_type_id IN (${yesRegular.id}, ${yesIrregular.id})`,
             ));
     }),
 
@@ -89,53 +84,64 @@ module.exports = {
 
             return Promise.all([
                 queryInterface.sequelize.query(
-                    'UPDATE shantytowns SET fk_electricity_type = :id where electricity_comments = :comment',
+                    `UPDATE shantytowns SET fk_electricity_type = ${yesRegular.id} where electricity_comments ILIKE CONCAT (:regularComment, '%')`,
                     {
                         transaction,
-                        replacements: { comment: regularComment, id: yesRegular.id },
+                        replacements: { regularComment },
+                    },
+                ),
+                queryInterface.sequelize.query(`UPDATE "ShantytownHistories" SET fk_electricity_type = ${yesRegular.id} where electricity_comments ILIKE CONCAT (:regularComment, '%')`,
+                    {
+                        transaction,
+                        replacements: { regularComment },
+                    }),
+                queryInterface.sequelize.query(
+                    `UPDATE shantytowns SET fk_electricity_type = ${yesIrregular.id} where electricity_comments ILIKE CONCAT (:irregularComment, '%')`,
+                    {
+                        transaction,
+                        replacements: { irregularComment },
                     },
                 ),
                 queryInterface.sequelize.query(
-                    'UPDATE "ShantytownHistories" SET fk_electricity_type = :id where electricity_comments = :comment',
+                    `UPDATE "ShantytownHistories" SET fk_electricity_type = ${yesIrregular.id} where electricity_comments ILIKE CONCAT (:irregularComment, '%')`,
                     {
                         transaction,
-                        replacements: { comment: regularComment, id: yesRegular.id },
-                    },
-                ),
-                queryInterface.sequelize.query(
-                    'UPDATE shantytowns SET fk_electricity_type = :id where electricity_comments = :comment',
-                    {
-                        transaction,
-                        replacements: { comment: irregularComment, id: yesIrregular.id },
-                    },
-                ),
-                queryInterface.sequelize.query(
-                    'UPDATE "ShantytownHistories" SET fk_electricity_type = :id where electricity_comments = :comment',
-                    {
-                        transaction,
-                        replacements: { comment: irregularComment, id: yesIrregular.id },
+                        replacements: { irregularComment },
                     },
                 ),
             ])
                 .then(() => Promise.all([
                     queryInterface.sequelize.query(
-                        'UPDATE shantytowns SET electricity_comments = NULL where electricity_comments IN (:comment, :comment2)',
+                        'UPDATE shantytowns SET electricity_comments = REPLACE(electricity_comments, :irregularComment, \'\') where electricity_comments ILIKE CONCAT (:irregularComment, \'%\')',
                         {
                             transaction,
-
-                            replacements: { comment: irregularComment, comment2: regularComment },
+                            replacements: { irregularComment },
                         },
                     ),
                     queryInterface.sequelize.query(
-                        'UPDATE "ShantytownHistories" SET electricity_comments = NULL where electricity_comments IN (:comment, :comment2)',
+                        'UPDATE "ShantytownHistories" SET electricity_comments = REPLACE(electricity_comments, :irregularComment, \'\') where electricity_comments ILIKE CONCAT (:irregularComment, \'%\')',
                         {
                             transaction,
-
-                            replacements: { comment: irregularComment, comment2: regularComment },
+                            replacements: { irregularComment },
+                        },
+                    ),
+                    queryInterface.sequelize.query(
+                        'UPDATE shantytowns SET electricity_comments = REPLACE(electricity_comments, :regularComment, \'\') where electricity_comments ILIKE CONCAT (:regularComment, \'%\')',
+                        {
+                            transaction,
+                            replacements: { regularComment },
+                        },
+                    ),
+                    queryInterface.sequelize.query(
+                        'UPDATE "ShantytownHistories" SET electricity_comments = REPLACE(electricity_comments, :regularComment, \'\') where electricity_comments ILIKE CONCAT (:regularComment, \'%\')',
+                        {
+                            transaction,
+                            replacements: { regularComment },
                         },
                     ),
                 ]));
         }),
     )),
+    // down: () => Promise.resolve()
 
 };
