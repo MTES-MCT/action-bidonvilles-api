@@ -1,125 +1,155 @@
-const regularAccess = 'L\'accès à l\'électricité est régulier.';
-const irregularAccess = 'L\'accès à l\'électricité est irrégulier.';
+const regularComment = 'L\'accès à l\'électricité est régulier.';
+const irregularComment = 'L\'accès à l\'électricité est irrégulier.';
+const yesLabel = 'Oui';
+const regularLabel = 'Oui (Accès régulier)';
+const irregularLabel = 'Oui (Accès irrégulier)';
 
 module.exports = {
-    up: (queryInterface, Sequelize) => queryInterface.sequelize.transaction(
-        // Update Oui (acces régulier)
-        transaction => queryInterface.sequelize.query(
-            'UPDATE shantytowns SET electricity_comments = :value WHERE fk_electricity_type = 4',
-            {
-                transaction,
-                replacements: { value: regularAccess },
-            },
-        )
-            .then(() => queryInterface.sequelize.query(
-                'UPDATE "ShantytownHistories" SET electricity_comments = :value where fk_electricity_type = 4',
+    up: queryInterface => queryInterface.sequelize.query('SELECT electricity_type_id as id, label FROM electricity_types', {
+        type: queryInterface.sequelize.QueryTypes.SELECT,
+    }).then((data) => {
+        const yes = data.find(d => d.label === yesLabel);
+        const yesRegular = data.find(d => d.label === regularLabel);
+        const yesIrregular = data.find(d => d.label === irregularLabel);
+
+        if (!yes || !yesRegular || !yesIrregular) {
+            throw new Error('Electricity types should exist');
+        }
+
+        // Add comments
+        return queryInterface.sequelize.transaction(transaction => Promise.all([
+            // Update Oui (acces régulier)
+            queryInterface.sequelize.query(
+                'UPDATE shantytowns SET electricity_comments = :comment WHERE fk_electricity_type = :id',
                 {
                     transaction,
-                    replacements: { value: regularAccess },
+                    replacements: { comment: regularComment, id: yesRegular.id },
                 },
-
-            ))
-
+            ),
+            queryInterface.sequelize.query(
+                'UPDATE "ShantytownHistories" SET electricity_comments = :comment WHERE fk_electricity_type = :id',
+                {
+                    transaction,
+                    replacements: { comment: regularComment, id: yesRegular.id },
+                },
+            ),
             // Update Oui (acces irrégulier)
-            .then(() => queryInterface.sequelize.query(
-                'UPDATE shantytowns SET electricity_comments = :value where fk_electricity_type = 5',
+            queryInterface.sequelize.query(
+                'UPDATE shantytowns SET electricity_comments = :comment WHERE fk_electricity_type = :id',
                 {
                     transaction,
-                    replacements: { value: irregularAccess },
+                    replacements: { comment: irregularComment, id: yesIrregular.id },
                 },
-            ))
-            .then(() => queryInterface.sequelize.query(
-                'UPDATE "ShantytownHistories" SET electricity_comments = :value where fk_electricity_type = 5',
+            ),
+            queryInterface.sequelize.query(
+                'UPDATE "ShantytownHistories" SET electricity_comments = :comment WHERE fk_electricity_type = :id',
                 {
                     transaction,
-                    replacements: { value: irregularAccess },
+                    replacements: { comment: irregularComment, id: yesIrregular.id },
                 },
-            ))
-            // Update Reference to Oui
-            .then(() => queryInterface.sequelize.query(
-                'UPDATE shantytowns SET fk_electricity_type = 3 where fk_electricity_type = 4 OR fk_electricity_type = 5',
+            ),
+            queryInterface.sequelize.query(
+                'UPDATE shantytowns SET fk_electricity_type = :idYes where fk_electricity_type = :idRegular OR fk_electricity_type = :idIrregular',
                 {
                     transaction,
+                    replacements: { idYes: yes.id, idRegular: yesRegular.id, idIrregular: yesIrregular.id },
                 },
-            ))
-            .then(() => queryInterface.sequelize.query(
-                'UPDATE "ShantytownHistories" SET fk_electricity_type = 3 where fk_electricity_type = 4 OR fk_electricity_type = 5',
+            ),
+            queryInterface.sequelize.query(
+                'UPDATE "ShantytownHistories" SET fk_electricity_type = :idYes where fk_electricity_type = :idRegular OR fk_electricity_type = :idIrregular',
                 {
                     transaction,
+                    replacements: { idYes: yes.id, idRegular: yesRegular.id, idIrregular: yesIrregular.id },
                 },
-            ))
-            // Delete Oui (régulier) and oui (irrégulier)
+            ),
+        ]))
+            // This needs to be outside of the transaction or it breaks the foreign key condition
             .then(() => queryInterface.sequelize.query(
-                'DELETE FROM electricity_types WHERE electricity_type_id = 4 OR electricity_type_id = 5',
+                'DELETE FROM electricity_types WHERE electricity_type_id = :idRegular OR electricity_type_id = :idIrregular',
                 {
-                    transaction,
+                    replacements: { idRegular: yesRegular.id, idIrregular: yesIrregular.id },
                 },
-            )),
+            ));
+    }),
 
-
-    ),
 
     down: queryInterface => queryInterface.sequelize.transaction(
         // Insert back Oui (acces régulier and acces irrégulier)
-        transaction => queryInterface.sequelize.query(
-            'INSERT INTO electricity_types(electricity_type_id, label) VALUES (4, :value)',
-            {
-                transaction,
-                replacements: { value: 'Oui (Accès régulier)' },
-            },
-        )
-            .then(() => queryInterface.sequelize.query(
-                'INSERT INTO electricity_types(electricity_type_id, label) VALUES (5, :value)',
+        transaction => Promise.all([
+            queryInterface.sequelize.query(
+                'INSERT INTO electricity_types(label) VALUES (:label)',
                 {
                     transaction,
-                    replacements: { value: 'Oui (Accès irrégulier)' },
+                    replacements: { label: regularLabel },
                 },
-            ))
-            // Update value where acces régulier
-            .then(() => queryInterface.sequelize.query(
-                'UPDATE shantytowns SET fk_electricity_type = 4 where electricity_comments = :value',
+            ),
+            queryInterface.sequelize.query(
+                'INSERT INTO electricity_types(label) VALUES (:label)',
                 {
                     transaction,
-                    replacements: { value: regularAccess },
+                    replacements: { label: irregularLabel },
                 },
-            )).then(() => queryInterface.sequelize.query(
-                'UPDATE "ShantytownHistories" SET fk_electricity_type = 4 where electricity_comments = :value',
-                {
-                    transaction,
-                    replacements: { value: regularAccess },
-                },
-            ))
-            // Update value where acces irrégulier
-            .then(() => queryInterface.sequelize.query(
-                'UPDATE shantytowns SET fk_electricity_type = 5 where electricity_comments = :value',
-                {
-                    transaction,
-                    replacements: { value: irregularAccess },
-                },
-            ))
-            .then(() => queryInterface.sequelize.query(
-                'UPDATE "ShantytownHistories" SET fk_electricity_type = 5 where electricity_comments = :value',
-                {
-                    transaction,
-                    replacements: { value: irregularAccess },
-                },
-            ))
-            // Delete comments where comments match Acces régulier or Irrégulier
-            .then(() => queryInterface.sequelize.query(
-                'UPDATE shantytowns SET electricity_comments = NULL where electricity_comments = :value OR electricity_comments = :value2',
-                {
-                    transaction,
-                    replacements: { value: irregularAccess, value2: regularAccess },
-                },
-            ))
-            .then(() => queryInterface.sequelize.query(
-                'UPDATE "ShantytownHistories" SET electricity_comments = NULL where electricity_comments = :value OR electricity_comments = :value2',
-                {
-                    transaction,
-                    replacements: { value: irregularAccess, value2: regularAccess },
-                },
-            )),
-    ),
+            )]),
+    ).then(() => queryInterface.sequelize.transaction(
+        transaction => queryInterface.sequelize.query('SELECT electricity_type_id as id, label FROM electricity_types', {
+            type: queryInterface.sequelize.QueryTypes.SELECT,
+        }).then((data) => {
+            const yesRegular = data.find(d => d.label === regularLabel);
+            const yesIrregular = data.find(d => d.label === irregularLabel);
 
+            if (!yesRegular || !yesIrregular) {
+                throw new Error('Electricity types should exist');
+            }
+
+            return Promise.all([
+                queryInterface.sequelize.query(
+                    'UPDATE shantytowns SET fk_electricity_type = :id where electricity_comments = :comment',
+                    {
+                        transaction,
+                        replacements: { comment: regularComment, id: yesRegular.id },
+                    },
+                ),
+                queryInterface.sequelize.query(
+                    'UPDATE "ShantytownHistories" SET fk_electricity_type = :id where electricity_comments = :comment',
+                    {
+                        transaction,
+                        replacements: { comment: regularComment, id: yesRegular.id },
+                    },
+                ),
+                queryInterface.sequelize.query(
+                    'UPDATE shantytowns SET fk_electricity_type = :id where electricity_comments = :comment',
+                    {
+                        transaction,
+                        replacements: { comment: irregularComment, id: yesIrregular.id },
+                    },
+                ),
+                queryInterface.sequelize.query(
+                    'UPDATE "ShantytownHistories" SET fk_electricity_type = :id where electricity_comments = :comment',
+                    {
+                        transaction,
+                        replacements: { comment: irregularComment, id: yesIrregular.id },
+                    },
+                ),
+            ])
+                .then(() => Promise.all([
+                    queryInterface.sequelize.query(
+                        'UPDATE shantytowns SET electricity_comments = NULL where electricity_comments = :comment OR electricity_comments = :comment2',
+                        {
+                            transaction,
+
+                            replacements: { comment: irregularComment, comment2: regularComment },
+                        },
+                    ),
+                    queryInterface.sequelize.query(
+                        'UPDATE "ShantytownHistories" SET electricity_comments = NULL where electricity_comments = :comment OR electricity_comments = :comment2',
+                        {
+                            transaction,
+
+                            replacements: { comment: irregularComment, comment2: regularComment },
+                        },
+                    ),
+                ]));
+        }),
+    )),
 
 };
