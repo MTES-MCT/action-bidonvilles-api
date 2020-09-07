@@ -49,14 +49,14 @@ module.exports = {
                 },
             ),
             queryInterface.sequelize.query(
-                'UPDATE shantytowns SET fk_electricity_type = :idYes where fk_electricity_type = :idRegular OR fk_electricity_type = :idIrregular',
+                'UPDATE shantytowns SET fk_electricity_type = :idYes where fk_electricity_type IN (:idRegular, :idIrregular)',
                 {
                     transaction,
                     replacements: { idYes: yes.id, idRegular: yesRegular.id, idIrregular: yesIrregular.id },
                 },
             ),
             queryInterface.sequelize.query(
-                'UPDATE "ShantytownHistories" SET fk_electricity_type = :idYes where fk_electricity_type = :idRegular OR fk_electricity_type = :idIrregular',
+                'UPDATE "ShantytownHistories" SET fk_electricity_type = :idYes where fk_electricity_type IN (:idRegular, :idIrregular)',
                 {
                     transaction,
                     replacements: { idYes: yes.id, idRegular: yesRegular.id, idIrregular: yesIrregular.id },
@@ -65,7 +65,7 @@ module.exports = {
         ]))
             // This needs to be outside of the transaction or it breaks the foreign key condition
             .then(() => queryInterface.sequelize.query(
-                'DELETE FROM electricity_types WHERE electricity_type_id = :idRegular OR electricity_type_id = :idIrregular',
+                'DELETE FROM electricity_types WHERE electricity_type_id IN (:idRegular, :idIrregular)',
                 {
                     replacements: { idRegular: yesRegular.id, idIrregular: yesIrregular.id },
                 },
@@ -75,21 +75,7 @@ module.exports = {
 
     down: queryInterface => queryInterface.sequelize.transaction(
         // Insert back Oui (acces régulier and acces irrégulier)
-        transaction => Promise.all([
-            queryInterface.sequelize.query(
-                'INSERT INTO electricity_types(label) VALUES (:label)',
-                {
-                    transaction,
-                    replacements: { label: regularLabel },
-                },
-            ),
-            queryInterface.sequelize.query(
-                'INSERT INTO electricity_types(label) VALUES (:label)',
-                {
-                    transaction,
-                    replacements: { label: irregularLabel },
-                },
-            )]),
+        transaction => queryInterface.bulkInsert('electricity_types', [{ label: regularLabel }, { label: irregularLabel }], { transaction }),
     ).then(() => queryInterface.sequelize.transaction(
         transaction => queryInterface.sequelize.query('SELECT electricity_type_id as id, label FROM electricity_types', {
             type: queryInterface.sequelize.QueryTypes.SELECT,
@@ -133,7 +119,7 @@ module.exports = {
             ])
                 .then(() => Promise.all([
                     queryInterface.sequelize.query(
-                        'UPDATE shantytowns SET electricity_comments = NULL where electricity_comments = :comment OR electricity_comments = :comment2',
+                        'UPDATE shantytowns SET electricity_comments = NULL where electricity_comments IN (:comment, :comment2)',
                         {
                             transaction,
 
@@ -141,7 +127,7 @@ module.exports = {
                         },
                     ),
                     queryInterface.sequelize.query(
-                        'UPDATE "ShantytownHistories" SET electricity_comments = NULL where electricity_comments = :comment OR electricity_comments = :comment2',
+                        'UPDATE "ShantytownHistories" SET electricity_comments = NULL where electricity_comments IN (:comment, :comment2)',
                         {
                             transaction,
 
