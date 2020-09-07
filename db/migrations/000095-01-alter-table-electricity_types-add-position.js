@@ -13,7 +13,6 @@ module.exports = {
                 transaction,
             },
         )
-            // SET position 0 to oui
             .then(() => Promise.all([
                 queryInterface.sequelize.query(
                     'UPDATE electricity_types SET position = 0 WHERE label = :value',
