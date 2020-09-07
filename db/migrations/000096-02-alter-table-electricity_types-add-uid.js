@@ -13,7 +13,7 @@ module.exports = {
     ).then(() => queryInterface.sequelize.transaction(
         transaction => Promise.all([
             queryInterface.sequelize.query(
-                'UPDATE electricity_types SET uid = :value where label = :label',
+                `UPDATE electricity_types SET uid = :value where label = :label`,
                 {
                     transaction,
                     replacements: { value: 'inconnu', label: unknownLabel },
