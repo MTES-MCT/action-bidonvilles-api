@@ -23,7 +23,7 @@ module.exports = database => ({
                 field_types.color AS color,
                 field_types.position AS position
             FROM field_types
-            ORDER BY position`,
+            ORDER BY position ASC`,
             {
                 type: database.QueryTypes.SELECT,
             },

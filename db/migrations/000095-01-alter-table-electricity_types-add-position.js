@@ -1,3 +1,4 @@
+
 module.exports = {
 
     up: (queryInterface, Sequelize) => queryInterface.sequelize.transaction(
@@ -13,42 +14,52 @@ module.exports = {
             },
         )
             // SET position 0 to oui
-            .then(() => queryInterface.sequelize.query(
-                'UPDATE electricity_types SET position = 0 WHERE electricity_type_id = 3',
-                {
-                    transaction,
-                },
-            ))
-            // SET position 1 to oui (acces régulier)
-            .then(() => queryInterface.sequelize.query(
-                'UPDATE electricity_types SET position = 1 WHERE electricity_type_id = 4',
-                {
-                    transaction,
-                },
-            ))
-            // SET position 2 to oui (acces irrégulier)
-            .then(() => queryInterface.sequelize.query(
-                'UPDATE electricity_types SET position = 2 WHERE electricity_type_id = 5',
-                {
-                    transaction,
-                },
-            ))
-            // SET position 3 to non
-            .then(() => queryInterface.sequelize.query(
-                'UPDATE electricity_types SET position = 3 WHERE electricity_type_id = 2',
-                {
-                    transaction,
-                },
-            ))
-            // SET position 4 to inconnu
-            .then(() => queryInterface.sequelize.query(
-                'UPDATE electricity_types SET position = 4 WHERE electricity_type_id = 1',
-                {
-                    transaction,
-                },
-            )),
-
-    ),
+            .then(() => Promise.all([
+                queryInterface.sequelize.query(
+                    'UPDATE electricity_types SET position = 0 WHERE label = :value',
+                    {
+                        transaction,
+                        replacements: { value: 'Oui' },
+                    },
+                ),
+                queryInterface.sequelize.query(
+                    'UPDATE electricity_types SET position = 1 WHERE label = :value',
+                    {
+                        transaction,
+                        replacements: { value: 'Oui (Accès régulier)' },
+                    },
+                ),
+                queryInterface.sequelize.query(
+                    'UPDATE electricity_types SET position = 2 WHERE label = :value',
+                    {
+                        transaction,
+                        replacements: { value: 'Oui (Accès irrégulier)' },
+                    },
+                ),
+                queryInterface.sequelize.query(
+                    'UPDATE electricity_types SET position = 3 WHERE label = :value',
+                    {
+                        transaction,
+                        replacements: { value: 'Non' },
+                    },
+                ),
+                queryInterface.sequelize.query(
+                    'UPDATE electricity_types SET position = 4 WHERE label = :value',
+                    {
+                        transaction,
+                        replacements: { value: 'Inconnu' },
+                    },
+                ),
+            ]))
+        ,
+    ).then(() => queryInterface.changeColumn(
+        'electricity_types',
+        'position',
+        {
+            type: Sequelize.INTEGER,
+            allowNull: false,
+        },
+    )),
 
     down: queryInterface => queryInterface.sequelize.transaction(
         transaction => queryInterface.removeColumn(

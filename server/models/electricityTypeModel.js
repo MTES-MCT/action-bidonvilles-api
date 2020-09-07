@@ -21,7 +21,7 @@ module.exports = database => ({
                 electricity_types.label AS label,
                 electricity_types.position AS position
             FROM electricity_types
-            ORDER BY position`,
+            ORDER BY position ASC`,
             {
                 type: database.QueryTypes.SELECT,
             },
