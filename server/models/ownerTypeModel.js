@@ -5,7 +5,7 @@ module.exports = database => ({
             owner_types.label AS label,
             owner_types.position AS position
         FROM owner_types
-        ORDER BY position`,
+        ORDER BY position ASC`,
         {
             type: database.QueryTypes.SELECT,
         },
@@ -17,7 +17,7 @@ module.exports = database => ({
                 owner_types.label AS label,
             FROM owner_types
             WHERE owner_types.owner_type_id = :id
-            ORDER BY position`,
+            ORDER BY position ASC`,
             {
                 type: database.QueryTypes.SELECT,
                 replacements: {

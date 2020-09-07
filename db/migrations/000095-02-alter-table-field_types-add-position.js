@@ -12,29 +12,36 @@ module.exports = {
                 transaction,
             },
         )
-            // SET position 0 to terrain
-            .then(() => queryInterface.sequelize.query(
-                'UPDATE field_types SET position = 0 WHERE field_type_id = 2',
-                {
-                    transaction,
-                },
-            ))
-            // SET position 1 to immeuble
-            .then(() => queryInterface.sequelize.query(
-                'UPDATE field_types SET position = 1 WHERE field_type_id = 3',
-                {
-                    transaction,
-                },
-            ))
-            // SET position 2 to inconnu
-            .then(() => queryInterface.sequelize.query(
-                'UPDATE field_types SET position = 2 WHERE field_type_id = 1',
-                {
-                    transaction,
-                },
-            ))
-
-    ),
+            .then(() => Promise.all([
+                queryInterface.sequelize.query(
+                    'UPDATE field_types SET position = 0 WHERE label = :value',
+                    {
+                        transaction,
+                        replacements: { value: 'Terrain' },
+                    },
+                ),
+                queryInterface.sequelize.query(
+                    'UPDATE field_types SET position = 1 WHERE label = :value',
+                    {
+                        transaction,
+                        replacements: { value: 'Immeuble bâti' },
+                    },
+                ),
+                queryInterface.sequelize.query(
+                    'UPDATE field_types SET position = 2 WHERE label = :value',
+                    {
+                        transaction, replacements: { value: 'Inconnu' },
+                    },
+                ),
+            ])),
+    ).then(() => queryInterface.changeColumn(
+        'field_types',
+        'position',
+        {
+            type: Sequelize.INTEGER,
+            allowNull: false,
+        },
+    )),
 
     down: queryInterface => queryInterface.sequelize.transaction(
         transaction => queryInterface.removeColumn(
