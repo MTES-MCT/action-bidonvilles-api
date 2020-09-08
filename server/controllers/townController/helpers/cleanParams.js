@@ -32,6 +32,8 @@ module.exports = function cleanParams(body, format) {
     let population_minors;
     let electricity_type;
     let electricity_comments;
+    let access_to_sanitary;
+    let sanitary_comments;
     let access_to_water;
     let water_comments;
     let trash_evacuation;
@@ -75,6 +77,8 @@ module.exports = function cleanParams(body, format) {
             electricityComments: electricity_comments,
             accessToWater: access_to_water,
             waterComments: water_comments,
+            accessToSanitary: access_to_sanitary,
+            sanitaryComments: sanitary_comments,
             trashEvacuation: trash_evacuation,
             ownerComplaint: owner_complaint,
             justiceProcedure: justice_procedure,
@@ -114,6 +118,8 @@ module.exports = function cleanParams(body, format) {
             population_minors,
             electricity_type,
             electricity_comments,
+            access_to_sanitary,
+            sanitary_comments,
             access_to_water,
             water_comments,
             trash_evacuation,
@@ -156,6 +162,8 @@ module.exports = function cleanParams(body, format) {
         populationMinors: getIntOrNull(population_minors),
         electricityType: getIntOrNull(electricity_type),
         electricityComments: trim(electricity_comments),
+        accessToSanitary: getIntOrNull(access_to_sanitary),
+        sanitaryComments: trim(sanitary_comments),
         accessToWater: getIntOrNull(access_to_water),
         waterComments: trim(water_comments),
         trashEvacuation: getIntOrNull(trash_evacuation),

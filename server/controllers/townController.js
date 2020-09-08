@@ -189,6 +189,8 @@ module.exports = (models) => {
                 electricityType,
                 electricityComments,
                 accessToWater,
+                accessToSanitary,
+                sanitaryComments,
                 waterComments,
                 trashEvacuation,
                 fieldType,
@@ -226,6 +228,8 @@ module.exports = (models) => {
                         populationMinors,
                         electricityType,
                         electricityComments,
+                        accessToSanitary: toBool(accessToSanitary),
+                        sanitaryComments,
                         accessToWater: toBool(accessToWater),
                         waterComments,
                         trashEvacuation: toBool(trashEvacuation),
@@ -928,6 +932,26 @@ module.exports = (models) => {
                 electricityComments: {
                     title: 'Modalités d\'accès à l\'électricité',
                     data: ({ electricityComments }) => electricityComments,
+                    width: COLUMN_WIDTHS.LARGE,
+                },
+                accessToSanitary: {
+                    title: 'Accès à des toilettes',
+                    data: ({ accessToSanitary }) => {
+                        if (accessToSanitary === true) {
+                            return 'oui';
+                        }
+
+                        if (accessToSanitary === false) {
+                            return 'non';
+                        }
+
+                        return null;
+                    },
+                    width: COLUMN_WIDTHS.SMALL,
+                },
+                sanitaryComments: {
+                    title: 'Modalités d\'accès aux toilettes',
+                    data: ({ sanitaryComments }) => sanitaryComments,
                     width: COLUMN_WIDTHS.LARGE,
                 },
                 accessToWater: {

@@ -125,6 +125,16 @@ module.exports = function (sequelize, DataTypes) {
             allowNull: true,
             field: 'electricity_comments',
         },
+        accessToSanitary: {
+            type: DataTypes.BOOLEAN,
+            allowNull: true,
+            field: 'access_to_sanitary',
+        },
+        sanitaryComments: {
+            type: DataTypes.TEXT,
+            allowNull: true,
+            field: 'sanitary_comments',
+        },
         accessToWater: {
             type: DataTypes.BOOLEAN,
             allowNull: true,
