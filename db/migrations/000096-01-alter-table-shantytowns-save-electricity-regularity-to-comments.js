@@ -62,7 +62,6 @@ module.exports = {
                     },
                 ),
             ])
-                // This needs to be outside of the transaction or it breaks the foreign key condition
                 .then(() => queryInterface.sequelize.query(
                     `DELETE FROM electricity_types WHERE electricity_type_id IN (${yesRegular.id}, ${yesIrregular.id})`,
                     {
@@ -75,7 +74,16 @@ module.exports = {
 
     down: queryInterface => queryInterface.sequelize.transaction(
         // Insert back Oui (acces régulier and acces irrégulier)
-        transaction => queryInterface.bulkInsert('electricity_types', [{ label: regularLabel }, { label: irregularLabel }], { transaction })
+        transaction => queryInterface.bulkInsert(
+            'electricity_types',
+            [
+                { label: regularLabel, position: 1 },
+                { label: irregularLabel, position: 2 },
+            ],
+            {
+                transaction,
+            },
+        )
             .then(() => queryInterface.sequelize.query('SELECT electricity_type_id as id, label FROM electricity_types', {
                 type: queryInterface.sequelize.QueryTypes.SELECT,
                 transaction,
