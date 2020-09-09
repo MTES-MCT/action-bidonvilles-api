@@ -59,11 +59,11 @@ module.exports = {
         transaction => removeColumn('shantytowns', queryInterface, transaction)
             .then(() => removeColumn('ShantytownHistories', queryInterface, transaction))
             .then(() => queryInterface.sequelize.query(
-                `DROP TYPE "enum_shantytowns_closed_with_solutions" CASCADE`,
+                'DROP TYPE "enum_shantytowns_closed_with_solutions" CASCADE',
                 { transaction },
             ))
             .then(() => queryInterface.sequelize.query(
-                `DROP TYPE "enum_ShantytownHistories_closed_with_solutions" CASCADE`,
+                'DROP TYPE "enum_ShantytownHistories_closed_with_solutions" CASCADE',
                 { transaction },
             )),
     ),
