@@ -30,18 +30,23 @@ module.exports = {
                 queryInterface.sequelize.query(
                     'UPDATE field_types SET position = 2 WHERE label = :value',
                     {
-                        transaction, replacements: { value: 'Inconnu' },
+                        transaction,
+                        replacements: { value: 'Inconnu' },
                     },
                 ),
-            ])),
-    ).then(() => queryInterface.changeColumn(
-        'field_types',
-        'position',
-        {
-            type: Sequelize.INTEGER,
-            allowNull: false,
-        },
-    )),
+            ]))
+            .then(() => queryInterface.changeColumn(
+                'field_types',
+                'position',
+                {
+                    type: Sequelize.INTEGER,
+                    allowNull: false,
+                },
+                {
+                    transaction,
+                },
+            )),
+    ),
 
     down: queryInterface => queryInterface.sequelize.transaction(
         transaction => queryInterface.removeColumn(

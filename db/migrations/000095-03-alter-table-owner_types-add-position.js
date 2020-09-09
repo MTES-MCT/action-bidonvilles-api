@@ -34,15 +34,19 @@ module.exports = {
                         replacements: { value: 'Inconnu' },
                     },
                 ),
-            ])),
-    ).then(() => queryInterface.changeColumn(
-        'electricity_types',
-        'position',
-        {
-            type: Sequelize.INTEGER,
-            allowNull: false,
-        },
-    )),
+            ]))
+            .then(() => queryInterface.changeColumn(
+                'electricity_types',
+                'position',
+                {
+                    type: Sequelize.INTEGER,
+                    allowNull: false,
+                },
+                {
+                    transaction,
+                },
+            )),
+    ),
 
     down: queryInterface => queryInterface.sequelize.transaction(
         transaction => queryInterface.removeColumn(

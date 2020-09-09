@@ -50,15 +50,19 @@ module.exports = {
                     },
                 ),
             ]))
+            .then(() => queryInterface.changeColumn(
+                'electricity_types',
+                'position',
+                {
+                    type: Sequelize.INTEGER,
+                    allowNull: false,
+                },
+                {
+                    transaction,
+                },
+            ))
         ,
-    ).then(() => queryInterface.changeColumn(
-        'electricity_types',
-        'position',
-        {
-            type: Sequelize.INTEGER,
-            allowNull: false,
-        },
-    )),
+    ),
 
     down: queryInterface => queryInterface.sequelize.transaction(
         transaction => queryInterface.removeColumn(
