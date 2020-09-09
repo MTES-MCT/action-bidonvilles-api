@@ -216,4 +216,28 @@ describe.only('townController.edit()', () => {
             );
         });
     });
+
+    describe('Access to sanitary', () => {
+        it('Should update correctly accessToSanitary and sanitaryComments fields', async () => {
+            const mock = new models.Shantytown();
+            rewiredStubs['#db/models'].Shantytown.findOne.withArgs({
+                where: {
+                    shantytown_id: reqArg.params.id,
+                },
+            }).resolves(mock);
+            reqArg.body = { ...reqArg.body, access_to_sanitary: 1, sanitary_comments: 'test' };
+            const req = mockReq(reqArg);
+            const res = mockRes();
+
+            // execute
+            await edit(req, res);
+
+            expect(mock.update).to.have.been.calledWithMatch(
+                {
+                    sanitaryComments: 'test',
+                    accessToSanitary: true,
+                },
+            );
+        });
+    });
 });
