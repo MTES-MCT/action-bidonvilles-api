@@ -380,7 +380,7 @@ const SQL = {
         'shantytowns.police_requested_at': 'policeRequestedAt',
         'shantytowns.police_granted_at': 'policeGrantedAt',
         'shantytowns.bailiff': 'bailiff',
-        'shantytowns.closed_with_solutions': 'closedWithSolutions',
+        'shantytowns.closed_with_solutions::text': 'closedWithSolutions',
         'shantytowns.updated_at': 'updatedAt',
         'users.user_id': 'updatedById',
         'users.first_name': 'updatedByFirstName',
