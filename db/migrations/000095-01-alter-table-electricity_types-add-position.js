@@ -25,14 +25,14 @@ module.exports = {
                     'UPDATE electricity_types SET position = 1 WHERE label = :value',
                     {
                         transaction,
-                        replacements: { value: 'Oui (Accès régulier)' },
+                        replacements: { value: 'Oui (accès régulier)' },
                     },
                 ),
                 queryInterface.sequelize.query(
                     'UPDATE electricity_types SET position = 2 WHERE label = :value',
                     {
                         transaction,
-                        replacements: { value: 'Oui (Accès irrégulier)' },
+                        replacements: { value: 'Oui (accès irrégulier)' },
                     },
                 ),
                 queryInterface.sequelize.query(
