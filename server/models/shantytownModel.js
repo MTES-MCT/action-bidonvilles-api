@@ -305,6 +305,7 @@ function serializeShantytown(town, permission) {
             covid: [],
         },
         closingSolutions: [],
+        closedWithSolutions: town.closedWithSolutions,
         changelog: [],
         updatedAt: town.updatedAt !== null ? (town.updatedAt.getTime() / 1000) : null,
         updatedBy: {
@@ -379,6 +380,7 @@ const SQL = {
         'shantytowns.police_requested_at': 'policeRequestedAt',
         'shantytowns.police_granted_at': 'policeGrantedAt',
         'shantytowns.bailiff': 'bailiff',
+        'shantytowns.closed_with_solutions': 'closedWithSolutions',
         'shantytowns.updated_at': 'updatedAt',
         'users.user_id': 'updatedById',
         'users.first_name': 'updatedByFirstName',
