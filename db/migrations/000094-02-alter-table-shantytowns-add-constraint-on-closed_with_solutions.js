@@ -22,7 +22,7 @@ function addConstraint(tableName, queryInterface, Sequelize, transaction) {
                 ],
             },
             transaction,
-        }
+        },
     );
 }
 
@@ -39,7 +39,7 @@ module.exports = {
 
     down: queryInterface => queryInterface.sequelize.transaction(
         transaction => removeConstraint('shantytowns', queryInterface, transaction)
-            .then(() => removeConstraint('ShantytownHistories', queryInterface, transaction))
+            .then(() => removeConstraint('ShantytownHistories', queryInterface, transaction)),
     ),
 
 };
