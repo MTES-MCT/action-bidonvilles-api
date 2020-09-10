@@ -7,7 +7,7 @@ module.exports = {
                 'shantytowns',
                 'sanitary_comments',
                 {
-                    type: Sequelize.STRING,
+                    type: Sequelize.TEXT,
                     allowNull: true,
                 },
                 {
@@ -18,7 +18,7 @@ module.exports = {
                 'ShantytownHistories',
                 'sanitary_comments',
                 {
-                    type: Sequelize.STRING,
+                    type: Sequelize.TEXT,
                     allowNull: true,
                 },
                 {
@@ -47,9 +47,7 @@ module.exports = {
                     transaction,
                 },
             )]),
-
     ),
-
 
     down: queryInterface => queryInterface.sequelize.transaction(
         transaction => Promise.all([

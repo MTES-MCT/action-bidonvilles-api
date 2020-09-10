@@ -91,6 +91,8 @@ describe.only('townController.edit()', () => {
                 electricity_type: 1,
                 electricity_comments: null,
                 access_to_water: -1,
+                access_to_sanitary: -1,
+                sanitary_comments: '',
                 water_comments: null,
                 trash_evacuation: -1,
                 owner_complaint: -1,
@@ -196,6 +198,8 @@ describe.only('townController.edit()', () => {
                     electricityType: 1,
                     electricityComments: null,
                     accessToWater: null,
+                    accessToSanitary: null,
+                    sanitaryComments: '',
                     waterComments: null,
                     trashEvacuation: null,
 
