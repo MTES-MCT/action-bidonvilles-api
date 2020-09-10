@@ -55,6 +55,7 @@ module.exports = async function validateInput(models, body, user, permission, fo
         populationMinors,
         electricityType,
         accessToWater,
+        accessToSanitary,
         trashEvacuation,
         ownerComplaint,
         justiceProcedure,
@@ -240,6 +241,13 @@ module.exports = async function validateInput(models, body, user, permission, fo
         error(toFormat('access_to_water', format), 'Le champ "Accès à l\'eau" est obligatoire');
     } else if ([-1, 0, 1].indexOf(accessToWater) === -1) {
         error(toFormat('access_to_water', format), 'Valeur invalide');
+    }
+
+    // access to sanitary
+    if (accessToSanitary === null) {
+        error(toFormat('access_to_sanitary', format), 'Le champ "Accès aux toilettes" est obligatoire');
+    } else if ([-1, 0, 1].indexOf(accessToSanitary) === -1) {
+        error(toFormat('access_to_sanitary', format), 'Valeur invalide');
     }
 
     // trash evacuatioon

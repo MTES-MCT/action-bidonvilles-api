@@ -70,6 +70,8 @@ function getDiff(oldVersion, newVersion) {
         electricityType: 'Accès à l\'électricité',
         electricityComments: 'Modalités d\'accès à l\'électricité',
         accessToWater: 'Accès à l\'eau',
+        accessToSanitary: 'Accès à des toilettes',
+        sanitaryComments: 'Modalités d\'accès aux toilettes',
         waterComments: 'Modalités d\'accès à l\'eau',
         trashEvacuation: 'Évacuation des déchets',
         ownerComplaint: 'Dépôt de plainte par le propriétaire',
@@ -159,6 +161,7 @@ function getDiff(oldVersion, newVersion) {
             return e.label;
         },
         accessToWater: baseProcessors.bool,
+        accessToSanitary: baseProcessors.bool,
         trashEvacuation: baseProcessors.bool,
         ownerComplaint: baseProcessors.bool,
         justiceProcedure: baseProcessors.bool,

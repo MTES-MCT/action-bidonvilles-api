@@ -1233,6 +1233,8 @@ module.exports = (models) => {
                         properties.electricityComments,
                         properties.accessToWater,
                         properties.waterComments,
+                        properties.accessToSanitary,
+                        properties.sanitaryComments,
                         properties.trashEvacuation,
                     ],
                 });
