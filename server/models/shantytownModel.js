@@ -50,7 +50,7 @@ function getDiff(oldVersion, newVersion) {
     ];
 
     const labels = {
-        name: 'Nom',
+        name: 'Appellation du site',
         priority: 'Priorité',
         builtAt: 'Date d\'installation',
         declaredAt: 'Date de signalement',
