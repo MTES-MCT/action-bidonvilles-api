@@ -58,6 +58,7 @@ module.exports = models => async (req, res) => {
     // edit the town
     const {
         priority,
+        name,
         declaredAt,
         builtAt,
         status,
@@ -99,6 +100,7 @@ module.exports = models => async (req, res) => {
     try {
         await sequelize.transaction(async () => {
             const baseTown = {
+                name,
                 priority,
                 declaredAt,
                 builtAt,
@@ -127,6 +129,8 @@ module.exports = models => async (req, res) => {
                 city: citycode,
                 updatedBy: req.user.id,
             };
+
+            console.log('before update');
 
             await town.update(
                 Object.assign(

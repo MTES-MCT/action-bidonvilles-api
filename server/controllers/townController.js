@@ -176,6 +176,7 @@ module.exports = (models) => {
 
             // create the town
             const {
+                name,
                 priority,
                 address,
                 citycode,
@@ -217,6 +218,7 @@ module.exports = (models) => {
                 let town;
                 await sequelize.transaction(async () => {
                     const baseTown = {
+                        name,
                         priority,
                         latitude,
                         longitude,
@@ -866,6 +868,11 @@ module.exports = (models) => {
                     data: ({ addressDetails }) => addressDetails,
                     width: COLUMN_WIDTHS.LARGE,
                 },
+                name: {
+                    title: 'Name',
+                    data: ({ name }) => name,
+                    width: COLUMN_WIDTHS.SMALL,
+                },
                 fieldType: {
                     title: 'Type de site',
                     data: ({ fieldType }) => fieldType.label,
@@ -1181,6 +1188,7 @@ module.exports = (models) => {
                     properties.departement,
                     properties.city,
                     properties.address,
+                    properties.name,
                 ],
                 lastFrozen: true,
             });
