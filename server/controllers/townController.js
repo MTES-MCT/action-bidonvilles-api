@@ -869,7 +869,7 @@ module.exports = (models) => {
                     width: COLUMN_WIDTHS.LARGE,
                 },
                 name: {
-                    title: 'Name',
+                    title: 'Appellation du site',
                     data: ({ name }) => name,
                     width: COLUMN_WIDTHS.SMALL,
                 },
