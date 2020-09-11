@@ -26,6 +26,7 @@ module.exports = function cleanParams(body, format) {
     let city;
     let citycode;
     let address;
+    let name;
     let detailed_address;
     let population_total;
     let population_couples;
@@ -60,6 +61,7 @@ module.exports = function cleanParams(body, format) {
 
     if (format === 'camel') {
         ({
+            name,
             priority,
             builtAt: built_at,
             status,
@@ -103,6 +105,7 @@ module.exports = function cleanParams(body, format) {
         } = body);
     } else {
         ({
+            name,
             priority,
             built_at,
             status,
@@ -147,6 +150,7 @@ module.exports = function cleanParams(body, format) {
     }
 
     return {
+        name,
         priority: getIntOrNull(priority),
         builtAt: built_at !== '' ? built_at : null,
         status: trim(status),

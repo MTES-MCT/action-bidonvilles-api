@@ -40,7 +40,7 @@ function fromGeoLevelToTableName(geoLevel) {
  */
 function getDiff(oldVersion, newVersion) {
     const properties = [
-        'priority', 'builtAt', 'declaredAt', 'addressSimple', /* 'latitude', 'longitude', */
+        'name', 'priority', 'builtAt', 'declaredAt', 'addressSimple', /* 'latitude', 'longitude', */
         'addressDetails', 'fieldType', 'ownerType', 'owner', 'censusStatus', 'censusConductedAt',
         'censusConductedBy', 'populationTotal', 'populationCouples', 'populationMinors',
         'socialOrigins', 'electricityType', 'electricityComments', 'accessToSanitary', 'sanitaryComments', 'accessToWater', 'waterComments',
@@ -50,6 +50,7 @@ function getDiff(oldVersion, newVersion) {
     ];
 
     const labels = {
+        name: 'Nom',
         priority: 'Priorité',
         builtAt: 'Date d\'installation',
         declaredAt: 'Date de signalement',
@@ -252,6 +253,7 @@ function serializeComment(comment) {
 function serializeShantytown(town, permission) {
     const serializedTown = {
         id: town.id,
+        name: town.name,
         status: town.status,
         latitude: town.latitude,
         longitude: town.longitude,
@@ -355,6 +357,7 @@ function serializeShantytown(town, permission) {
 const SQL = {
     selection: {
         'shantytowns.shantytown_id': 'id',
+        'shantytowns.name': 'name',
         'shantytowns.priority': 'priority',
         'shantytowns.status': 'status',
         'shantytowns.declared_at': 'declaredAt',

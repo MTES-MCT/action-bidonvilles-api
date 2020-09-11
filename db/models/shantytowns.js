@@ -9,6 +9,10 @@ module.exports = function (sequelize, DataTypes) {
             autoIncrement: true,
             field: 'shantytown_id',
         },
+        name: {
+            type: DataTypes.TEXT,
+            allowNull: true,
+        },
         priority: {
             type: DataTypes.INTEGER,
             allowNull: true,
