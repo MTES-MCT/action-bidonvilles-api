@@ -130,8 +130,6 @@ module.exports = models => async (req, res) => {
                 updatedBy: req.user.id,
             };
 
-            console.log('before update');
-
             await town.update(
                 Object.assign(
                     {},
