@@ -41,7 +41,7 @@ module.exports = function (sequelize, DataTypes) {
         },
     }, {
         tableName: 'shantytown_closing_solutions',
-        underscored: true,
+        underscored: false,
         paranoid: false,
         timestamps: true,
     });

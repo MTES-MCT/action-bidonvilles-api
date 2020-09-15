@@ -231,7 +231,7 @@ module.exports = function (sequelize, DataTypes) {
         },
     }, {
         tableName: 'shantytowns',
-        underscored: true,
+        underscored: false,
         paranoid: false,
         timestamps: true,
     });
