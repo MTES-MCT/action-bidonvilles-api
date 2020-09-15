@@ -31,7 +31,7 @@ module.exports = function (sequelize, DataTypes) {
         },
     }, {
         tableName: 'shantytown_origins',
-        underscored: true,
+        underscored: false,
         paranoid: false,
         timestamps: true,
     });
