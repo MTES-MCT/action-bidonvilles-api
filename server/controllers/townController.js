@@ -212,7 +212,7 @@ module.exports = (models) => {
                 policeRequestedAt,
                 policeGrantedAt,
                 bailiff,
-            } = cleanParams(req.body, 'camel');
+            } = await cleanParams(models, req.body, 'camel');
 
             try {
                 let town;
@@ -292,7 +292,7 @@ module.exports = (models) => {
                 closedAt,
                 solutions,
                 closedWithSolutions,
-            } = cleanParams(req.body);
+            } = await cleanParams(models, req.body);
 
             const now = Date.now();
             const fieldErrors = {};

@@ -66,7 +66,7 @@ module.exports = async function validateInput(models, body, user, permission, fo
         fieldType,
         ownerType,
         declaredAt,
-    } = cleanParams(body, format);
+    } = await cleanParams(models, body, format);
 
     const now = Date.now();
     const fieldErrors = {};
@@ -105,7 +105,6 @@ module.exports = async function validateInput(models, body, user, permission, fo
 
     // address
     let dbCity = null;
-
     if (address === null || address.length === 0) {
         error('address', 'L\'adresse du site est obligatoire');
     } else if (city === null || citycode === null) {
