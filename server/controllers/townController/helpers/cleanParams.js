@@ -16,7 +16,7 @@ function trim(str) {
     return str.replace(/^\s*|\s*$/g, '');
 }
 
-module.exports = function cleanParams(body, format) {
+module.exports = async function cleanParams(models, body, format) {
     let priority;
     let built_at;
     let status;
@@ -149,6 +149,20 @@ module.exports = function cleanParams(body, format) {
         } = body);
     }
 
+    const ownerTypeId = getIntOrNull(owner_type);
+    if (ownerTypeId !== null) {
+        try {
+            const ownerType = await models.ownerType.findOne(ownerTypeId);
+            if (ownerType.label === 'Inconnu') {
+                owner = null;
+            }
+        } catch (error) {
+            owner = null;
+        }
+    } else {
+        owner = null;
+    }
+
     return {
         name: trim(name) || null,
         priority: getIntOrNull(priority),
@@ -179,7 +193,7 @@ module.exports = function cleanParams(body, format) {
         justiceChallenged: getIntOrNull(justice_challenged),
         socialOrigins: social_origins || [],
         fieldType: getIntOrNull(field_type),
-        ownerType: getIntOrNull(owner_type),
+        ownerType: ownerTypeId,
         owner: trim(owner),
         declaredAt: declared_at !== '' ? declared_at : null,
         censusStatus: trim(census_status),

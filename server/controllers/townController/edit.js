@@ -95,7 +95,7 @@ module.exports = models => async (req, res) => {
         policeRequestedAt,
         policeGrantedAt,
         bailiff,
-    } = cleanParams(req.body);
+    } = await cleanParams(models, req.body);
 
     try {
         await sequelize.transaction(async () => {
@@ -162,9 +162,7 @@ module.exports = models => async (req, res) => {
                 ),
             );
 
-            if (populationTotal > 10) {
-                await town.setSocialOrigins(socialOrigins);
-            }
+            await town.setSocialOrigins(populationTotal > 10 ? socialOrigins : []);
         });
 
         return res.status(200).send(town);
