@@ -10,7 +10,7 @@ module.exports = function (sequelize, DataTypes) {
             field: 'shantytown_id',
         },
         name: {
-            type: DataTypes.TEXT,
+            type: DataTypes.STRING,
             allowNull: true,
         },
         priority: {

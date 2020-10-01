@@ -7,7 +7,7 @@ module.exports = {
                 'shantytowns',
                 'name',
                 {
-                    type: Sequelize.TEXT,
+                    type: Sequelize.STRING,
                     allowNull: true,
                 },
                 {
@@ -18,7 +18,7 @@ module.exports = {
                 'ShantytownHistories',
                 'name',
                 {
-                    type: Sequelize.TEXT,
+                    type: Sequelize.STRING,
                     allowNull: true,
                 },
                 {
