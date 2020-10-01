@@ -150,7 +150,7 @@ module.exports = function cleanParams(body, format) {
     }
 
     return {
-        name,
+        name: trim(name) || null,
         priority: getIntOrNull(priority),
         builtAt: built_at !== '' ? built_at : null,
         status: trim(status),
