@@ -40,7 +40,7 @@ function fromGeoLevelToTableName(geoLevel) {
  */
 function getDiff(oldVersion, newVersion) {
     const properties = [
-        'name', 'priority', 'builtAt', 'declaredAt', 'addressSimple', /* 'latitude', 'longitude', */
+        'name', 'priority', 'builtAt', 'declaredAt', 'addressSimple',
         'addressDetails', 'fieldType', 'ownerType', 'owner', 'censusStatus', 'censusConductedAt',
         'censusConductedBy', 'populationTotal', 'populationCouples', 'populationMinors',
         'socialOrigins', 'electricityType', 'electricityComments', 'accessToSanitary', 'sanitaryComments', 'accessToWater', 'waterComments',
