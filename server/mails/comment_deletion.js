@@ -1,5 +1,5 @@
-const signature = require('./signature');
 const validator = require('validator');
+const signature = require('./signature');
 const { generateUserSignature } = require('#server/utils/mail');
 const { fromTsToFormat } = require('#server/utils/date');
 
@@ -17,7 +17,7 @@ module.exports = (town, comment, message, administrator) => {
         "${message}".
 
         "${comment.description}"
-        Écrit le ${fromTsToFormat(comment.createdAt, 'd/m/Y')} à ${fromTsToFormat(comment.createdAt, 'h:i')}, concernant le site : ${town.addressSimple || 'Pas d\'adresse précise'}, ${town.city.name}
+        Écrit le ${fromTsToFormat(comment.createdAt, 'd/m/Y')} à ${fromTsToFormat(comment.createdAt, 'h:i')}, concernant le site : ${town.usename}, ${town.city.name}
 
         Pour rappel, conformément à la réglementation relative aux données à caractère personnel, un commentaire doit :
         - être neutre et factuel ;
@@ -56,7 +56,7 @@ module.exports = (town, comment, message, administrator) => {
                                 <td bgcolor="#ffffff" style="border: 1px solid #ccc; padding: 15px 20px;">
                                     ${fromTsToFormat(comment.createdAt, 'd/m/Y')} à ${fromTsToFormat(comment.createdAt, 'h:i')}<br/>
                                     <font style="font-style: italic; font-weight: bold; color: red;"><b>Commentaire supprimé</b></font><br/>
-                                    <font style="font-style: italic; font-weight: bold; color: #ADB9C9;"><b>Site : ${town.addressSimple || 'Pas d\'adresse précise'}, ${town.city.name}</b></font><br/><br/>
+                                    <font style="font-style: italic; font-weight: bold; color: #ADB9C9;"><b>Site : ${town.usename}, ${town.city.name}</b></font><br/><br/>
                                     <table width="100%" border="0" cellpadding="0" cellspacing="0">
                                         <tbody>
                                             <tr>

@@ -243,6 +243,43 @@ function serializeComment(comment) {
 }
 
 /**
+ * Computes the simplified address of the given shantytown
+ *
+ * @param {Object} shantytown
+ *
+ * @returns {String}
+ */
+function getAddressSimpleOf(shantytown) {
+    return shantytown.addressSimple || 'Pas d\'adresse précise';
+}
+
+/**
+ * Computes the usename of the given shantytown
+ *
+ * @param {Object} shantytown
+ *
+ * @returns {String}
+ */
+function getUsenameOf(shantytown) {
+    const addressSimple = getAddressSimpleOf(shantytown);
+
+    // process usename
+    if (shantytown.name) {
+        let aka;
+        if (!shantytown.addressSimple) {
+            aka = `site dit ${shantytown.name}`;
+        } else {
+            aka = shantytown.name;
+        }
+
+        return `${addressSimple} « ${aka} »`;
+    }
+
+    return addressSimple;
+}
+
+
+/**
  * Serializes a single shantytown row
  *
  * @param {Object} town
@@ -280,7 +317,8 @@ function serializeShantytown(town, permission) {
         closedAt: town.closedAt !== null ? (town.closedAt.getTime() / 1000) : null,
         address: town.address,
         addressDetails: town.addressDetails,
-        addressSimple: town.addressSimple || 'Pas d\'adresse précise',
+        addressSimple: getAddressSimpleOf(town),
+        usename: getUsenameOf(town),
         populationTotal: town.populationTotal,
         populationCouples: town.populationCouples,
         populationMinors: town.populationMinors,
@@ -910,7 +948,7 @@ module.exports = (database) => {
                         },
                         shantytown: {
                             id: activity.id,
-                            name: activity.addressSimple,
+                            usename: getUsenameOf(activity),
                             city: activity.cityName,
                             departement: activity.departement,
                         },
@@ -965,7 +1003,7 @@ module.exports = (database) => {
                     if (previousVersion === null) {
                         action = 'creation';
                     } else {
-                        o.shantytown.name = previousVersion.addressSimple;
+                        o.shantytown.usename = getUsenameOf(previousVersion);
 
                         if (previousVersion.closedAt === null && activity.closedAt !== null) {
                             action = 'closing';
