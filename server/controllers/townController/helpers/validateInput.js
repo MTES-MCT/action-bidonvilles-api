@@ -46,6 +46,7 @@ module.exports = async function validateInput(models, body, user, permission, fo
         priority,
         builtAt,
         address,
+        name,
         city,
         citycode,
         latitude,
@@ -158,6 +159,11 @@ module.exports = async function validateInput(models, body, user, permission, fo
         if (longitude < -180 || longitude > 180) {
             error('address', 'La longitude est invalide');
         }
+    }
+
+    // name
+    if (name !== null && name.length > 35) {
+        error('name', 'L\'appelation du site ne peut pas dépasser 35 caractères');
     }
 
     // field type
