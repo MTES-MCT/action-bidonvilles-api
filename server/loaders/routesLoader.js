@@ -180,12 +180,10 @@ module.exports = (app) => {
     );
     app.post(
         '/plans',
-        [
-            middlewares.auth.authenticate,
-            (...args) => middlewares.auth.checkPermissions(['plan.create'], ...args),
-            middlewares.charte.check,
-            middlewares.appVersion.sync,
-        ],
+        middlewares.auth.authenticate,
+        (...args) => middlewares.auth.checkPermissions(['plan.create'], ...args),
+        middlewares.charte.check,
+        middlewares.appVersion.sync,
         controllers.plan.create,
     );
     app.post(
