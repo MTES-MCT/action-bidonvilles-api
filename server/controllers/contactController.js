@@ -65,8 +65,13 @@ module.exports = models => ({
             return res.status(200).send(result);
         }
 
-        await sendEmailNewContactMessageToAdmins(req.body, models);
+        try {
+            await sendEmailNewContactMessageToAdmins(req.body, models);
+        } catch (err) {
+            // ignore
+        }
 
-        return res.status(200);
+
+        return res.status(200).send();
     },
 });
