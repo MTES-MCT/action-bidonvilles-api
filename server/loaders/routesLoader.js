@@ -111,6 +111,10 @@ module.exports = (app) => {
         },
     );
     app.post(
+        '/contact',
+        controllers.contact.contact,
+    );
+    app.post(
         '/users/:id/sendActivationLink',
         middlewares.auth.authenticate,
         (...args) => middlewares.auth.checkPermissions(['user.activate'], ...args),
