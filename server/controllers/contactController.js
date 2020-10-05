@@ -39,6 +39,7 @@ module.exports = models => ({
     async contact(req, res) {
         const { request_type, is_actor } = req.body;
 
+        // user creation
         if (request_type.includes('access-request') && is_actor) {
             // create the user
             const result = await userService.create(
@@ -64,6 +65,7 @@ module.exports = models => ({
             return res.status(200).send(result);
         }
 
+        // contact request
         try {
             await sendEmailNewContactMessageToAdmins(req.body, models);
         } catch (err) {

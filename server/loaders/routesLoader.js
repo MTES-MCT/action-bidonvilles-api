@@ -6,6 +6,7 @@ const { sequelize } = require('#db/models');
 const models = require('#server/models')(sequelize);
 const middlewares = require('#server/middlewares')(models);
 const controllers = require('#server/controllers')(models);
+const validators = require('#server/middlewares/validators');
 
 module.exports = (app) => {
     app.use('/assets', express.static(path.resolve(__dirname, '../assets')));
@@ -94,6 +95,8 @@ module.exports = (app) => {
     );
     app.post(
         '/contact',
+        validators.createContact,
+        middlewares.validation,
         controllers.contact.contact,
     );
     app.post(
