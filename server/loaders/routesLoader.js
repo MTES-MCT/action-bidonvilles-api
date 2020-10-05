@@ -86,29 +86,11 @@ module.exports = (app) => {
     );
     app.post(
         '/users',
-        async (...args) => {
-            const [, res] = args;
-
-            try {
-                await middlewares.auth.authenticate(...args, false);
-            } catch (error) {
-                return controllers.user.signup(...args);
-            }
-
-            try {
-                await middlewares.auth.checkPermissions(['user.create'], ...args, false);
-                await middlewares.charte.check(...args, false);
-            } catch (error) {
-                // @todo: return a detailed error
-                return res.status(500).send({
-                    success: false,
-                    user_message: 'Vous n\'avez pas accés à cette fonctionnalité',
-                });
-            }
-
-            await middlewares.appVersion.sync(...args, false);
-            return controllers.user.create(...args);
-        },
+        middlewares.auth.authenticate,
+        (...args) => middlewares.auth.checkPermissions(['user.create'], ...args),
+        middlewares.charte.check,
+        middlewares.appVersion.sync,
+        controllers.user.create,
     );
     app.post(
         '/contact',

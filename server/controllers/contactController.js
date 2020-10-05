@@ -61,7 +61,6 @@ module.exports = models => ({
                 // ignore
             }
 
-
             return res.status(200).send(result);
         }
 
@@ -70,7 +69,6 @@ module.exports = models => ({
         } catch (err) {
             // ignore
         }
-
 
         return res.status(200).send();
     },
