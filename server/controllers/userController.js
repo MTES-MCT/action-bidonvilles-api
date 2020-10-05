@@ -14,8 +14,6 @@ const {
 const permissionsDescription = require('#server/permissions_description');
 
 const MAIL_TEMPLATES = {};
-MAIL_TEMPLATES.new_user_confirmation = require('#server/mails/new_user_confirmation');
-MAIL_TEMPLATES.new_user_alert = require('#server/mails/new_user_alert');
 MAIL_TEMPLATES.access_granted = require('#server/mails/access_granted');
 MAIL_TEMPLATES.access_denied = require('#server/mails/access_denied');
 MAIL_TEMPLATES.new_password = require('#server/mails/new_password');
@@ -300,46 +298,6 @@ module.exports = models => ({
             return res.status(result.error.code).send(result.error.response);
         }
 
-        return res.status(200).send(result);
-    },
-
-    /**
-     *
-     */
-    async signup(req, res) {
-        // create the user
-        const result = await userService.create(
-            req.body,
-            [
-                { key: 'access_request_message', sanitizer: 'string' },
-            ],
-        );
-
-        if (result.error) {
-            return res.status(result.error.code).send(result.error.response);
-        }
-
-        // send mails
-        try {
-            await sendMail(result, MAIL_TEMPLATES.new_user_confirmation());
-        } catch (error) {
-            // ignore
-        }
-
-        try {
-            const user = await models.user.findOne(result.id, { extended: true });
-            const admins = await models.user.getAdminsFor(user);
-            const mailTemplate = MAIL_TEMPLATES.new_user_alert(user, new Date());
-
-            for (let i = 0; i < admins.length; i += 1) {
-                // eslint-disable-next-line no-await-in-loop
-                await sendMail(admins[i], mailTemplate);
-            }
-        } catch (error) {
-            // ignore
-        }
-
-        // congratulations
         return res.status(200).send(result);
     },
 
