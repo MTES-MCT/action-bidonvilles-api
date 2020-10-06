@@ -82,6 +82,7 @@ module.exports = [
         }),
 
     body('organization_type')
+        .toInt()
         .if((value, { req }) => req.body.organization_category_full.uid === 'public_establishment')
         .custom(async (value, { req }) => {
             if (!value) {
@@ -108,6 +109,7 @@ module.exports = [
         }),
 
     body('organization_public')
+        .toInt()
         .if((value, { req }) => req.body.organization_type_full !== undefined)
         .custom(async (value, { req }) => {
             if (!value) {
