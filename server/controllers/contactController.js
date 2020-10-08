@@ -42,12 +42,18 @@ module.exports = models => ({
         // user creation
         if (request_type.includes('access-request') && is_actor) {
             // create the user
-            const result = await userService.create(
-                req.body,
-                [
-                    { key: 'access_request_message', sanitizer: 'string' },
-                ],
-            );
+            const result = await userService.create({
+                last_name: req.body.last_name,
+                first_name: req.body.first_name,
+                email: req.body.email,
+                organization: req.body.organization_full ? req.body.organization_full.id : null,
+                new_association: req.body.new_association === true,
+                new_association_name: req.body.new_association_name || null,
+                new_association_abbreviation: req.body.new_association_abbreviation || null,
+                departement: req.body.departement || null,
+                position: req.body.position,
+                access_request_message: req.body.access_request_message,
+            });
 
             if (result.error) {
                 return res.status(result.error.code).send(result.error.response);

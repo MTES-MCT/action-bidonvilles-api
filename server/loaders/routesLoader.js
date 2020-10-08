@@ -91,6 +91,8 @@ module.exports = (app) => {
         (...args) => middlewares.auth.checkPermissions(['user.create'], ...args),
         middlewares.charte.check,
         middlewares.appVersion.sync,
+        validators.createUser,
+        middlewares.validation,
         controllers.user.create,
     );
     app.post(
