@@ -157,17 +157,22 @@ describe.only('contactController.contact()', () => {
             })(controllerMockModels);
 
             req.body = {
-                access_request_message: "ceci est une demande d'acces",
-                email: 'gael.destrem@gmail.com',
-                first_name: 'gael',
-                last_name: 'destrem',
-                legal: true,
                 request_type: ['access-request'],
                 is_actor: true,
+                access_request_message: "ceci est une demande d'acces",
+                last_name: 'destrem',
+                first_name: 'gael',
+                email: 'gael.destrem@gmail.com',
                 organization_category: 'public_establishment',
-                organization_public: '40765',
+                organization_category_full: {},
                 organization_type: '12',
+                organization_type_full: {},
+                organization_public: '40765',
+                organization_full: {
+                    id: 92,
+                },
                 position: 'test',
+                legal: true,
             };
             res = mockRes();
 
@@ -175,17 +180,17 @@ describe.only('contactController.contact()', () => {
 
             // It should send a message to all admins and ensure that it returns a 200
             expect(createUserStub).to.have.been.calledOnceWith({
+                last_name: 'destrem',
+                first_name: 'gael',
+                email: 'gael.destrem@gmail.com',
+                organization: 92,
+                new_association: false,
+                new_association_name: null,
+                new_association_abbreviation: null,
+                departement: null,
+                position: 'test',
                 access_request_message: "ceci est une demande d'acces",
                 created_by: null,
-                email: 'gael.destrem@gmail.com',
-                first_name: 'gael',
-                last_name: 'destrem',
-                legal: true,
-                organization: undefined,
-                organization_category: 'public_establishment',
-                organization_public: 40765,
-                organization_type: 12,
-                position: 'test',
             });
             expect(res.status).to.have.been.calledOnceWith(200);
         });
@@ -209,13 +214,12 @@ describe.only('contactController.contact()', () => {
             })(controllerMockModels);
 
             req.body = {
-                access_request_message: "ceci est une demande d'acces",
-                email: 'gael.destrem@gmail.com',
-                first_name: 'gael',
-                last_name: 'destrem',
-                legal: true,
                 request_type: ['access-request'],
                 is_actor: true,
+                access_request_message: "ceci est une demande d'acces",
+                last_name: 'destrem',
+                first_name: 'gael',
+                email: 'gael.destrem@gmail.com',
                 organization_category: 'territorial_collectivity',
                 territorial_collectivity: {
                     category: 'Commune',
@@ -225,7 +229,11 @@ describe.only('contactController.contact()', () => {
                     id: '40101',
                     label: '(40) Gaas',
                 },
+                organization_full: {
+                    id: 92,
+                },
                 position: 'test',
+                legal: true,
             };
             res = mockRes();
 
@@ -233,23 +241,17 @@ describe.only('contactController.contact()', () => {
 
             // It should send a message to all admins and ensure that it returns a 200
             expect(createUserStub).to.have.been.calledOnceWith({
+                last_name: 'destrem',
+                first_name: 'gael',
+                email: 'gael.destrem@gmail.com',
+                organization: 92,
+                new_association: false,
+                new_association_name: null,
+                new_association_abbreviation: null,
+                departement: null,
+                position: 'test',
                 access_request_message: "ceci est une demande d'acces",
                 created_by: null,
-                email: 'gael.destrem@gmail.com',
-                first_name: 'gael',
-                last_name: 'destrem',
-                legal: true,
-                organization: undefined,
-                organization_category: 'territorial_collectivity',
-                position: 'test',
-                territorial_collectivity: {
-                    category: 'Commune',
-                    code: '40101',
-                    data: { code: '40101', type: 'city' },
-                    id: '40101',
-                    label: '(40) Gaas',
-                    type: 'city',
-                },
             });
             expect(res.status).to.have.been.calledOnceWith(200);
         });
@@ -272,16 +274,19 @@ describe.only('contactController.contact()', () => {
             })(controllerMockModels);
 
             req.body = {
-                access_request_message: "ceci est une demande d'acces",
-                email: 'gael.destrem@gmail.com',
-                first_name: 'gael',
-                last_name: 'destrem',
-                legal: true,
                 request_type: ['access-request'],
                 is_actor: true,
+                access_request_message: "ceci est une demande d'acces",
+                last_name: 'destrem',
+                first_name: 'gael',
+                email: 'gael.destrem@gmail.com',
                 organization_category: 'administration',
                 organization_administration: '40752',
+                organization_full: {
+                    id: 92,
+                },
                 position: 'rte',
+                legal: true,
             };
             res = mockRes();
 
@@ -290,16 +295,17 @@ describe.only('contactController.contact()', () => {
             // It should send a message to all admins and ensure that it returns a 200
             expect(res.status).to.have.been.calledOnceWith(200);
             expect(createUserStub).to.have.been.calledOnceWith({
+                last_name: 'destrem',
+                first_name: 'gael',
+                email: 'gael.destrem@gmail.com',
+                organization: 92,
+                new_association: false,
+                new_association_name: null,
+                new_association_abbreviation: null,
+                departement: null,
+                position: 'rte',
                 access_request_message: "ceci est une demande d'acces",
                 created_by: null,
-                email: 'gael.destrem@gmail.com',
-                first_name: 'gael',
-                last_name: 'destrem',
-                legal: true,
-                organization: undefined,
-                organization_administration: 40752,
-                organization_category: 'administration',
-                position: 'rte',
             });
         });
 
@@ -324,17 +330,23 @@ describe.only('contactController.contact()', () => {
             })(controllerMockModels);
 
             req.body = {
-                access_request_message: "ceci est une demande d'acces",
-                email: 'gael.destrem@gmail.com',
-                first_name: 'gael',
-                last_name: 'destrem',
-                legal: true,
                 request_type: ['access-request'],
                 is_actor: true,
+                access_request_message: "ceci est une demande d'acces",
+                last_name: 'destrem',
+                first_name: 'gael',
+                email: 'gael.destrem@gmail.com',
                 organization_category: 'association',
-                association: 'Accueuil coopération insertion pour les nouveaux arrivants',
-                departement: '04',
-                position: 'test',
+                association: 'Accueil coopération insertion pour les nouveaux arrivants',
+                association_name: 'Accueil coopération insertion pour les nouveaux arrivants',
+                association_abbreviation: 'ACINA',
+                departement: '92',
+                new_association: false,
+                organization_full: {
+                    id: 92,
+                },
+                position: 'rte',
+                legal: true,
             };
             res = mockRes();
 
@@ -343,18 +355,17 @@ describe.only('contactController.contact()', () => {
             // It should send a message to all admins and ensure that it returns a 200
             expect(res.status).to.have.been.calledOnceWith(200);
             expect(createUserStub).to.have.been.calledOnceWith({
-                access_request_message: "ceci est une demande d'acces",
-                association: 'Accueuil coopération insertion pour les nouveaux arrivants',
-                created_by: null,
-                departement: '04',
-                email: 'gael.destrem@gmail.com',
-                first_name: 'gael',
                 last_name: 'destrem',
-                legal: true,
-                newAssociationAbbreviation: null,
-                newAssociationName: null,
-                organization_category: 'association',
-                position: 'test',
+                first_name: 'gael',
+                email: 'gael.destrem@gmail.com',
+                organization: 92,
+                new_association: false,
+                new_association_name: null,
+                new_association_abbreviation: null,
+                departement: '92',
+                position: 'rte',
+                access_request_message: "ceci est une demande d'acces",
+                created_by: null,
             });
         });
 
@@ -379,19 +390,22 @@ describe.only('contactController.contact()', () => {
             })(controllerMockModels);
 
             req.body = {
-                access_request_message: "ceci est une demande d'acces",
-                email: 'gael.destrem@gmail.com',
-                first_name: 'gael',
-                last_name: 'destrem',
-                legal: true,
                 request_type: ['access-request'],
                 is_actor: true,
+                access_request_message: "ceci est une demande d'acces",
+                last_name: 'destrem',
+                first_name: 'gael',
+                email: 'gael.destrem@gmail.com',
                 organization_category: 'association',
-                association: 'Autre',
-                newAssociationName: 'Nouvelle asso',
-                newAssociationAbbreviation: 'Nouvelle asso abbreviation',
+                association: 'Accueil coopération insertion pour les nouveaux arrivants',
+                association_name: 'Accueil coopération insertion pour les nouveaux arrivants',
+                association_abbreviation: 'ACINA',
                 departement: '04',
-                position: 'test',
+                new_association: true,
+                new_association_name: 'Accueil coopération insertion pour les nouveaux arrivants',
+                new_association_abbreviation: 'ACINA',
+                position: 'rte',
+                legal: true,
             };
             res = mockRes();
 
@@ -400,18 +414,17 @@ describe.only('contactController.contact()', () => {
             // It should send a message to all admins and ensure that it returns a 200
             expect(res.status).to.have.been.calledOnceWith(200);
             expect(createUserStub).to.have.been.calledOnceWith({
-                access_request_message: "ceci est une demande d'acces",
-                association: 'Autre',
-                created_by: null,
-                departement: '04',
-                email: 'gael.destrem@gmail.com',
-                first_name: 'gael',
                 last_name: 'destrem',
-                legal: true,
-                newAssociationName: 'Nouvelle asso',
-                newAssociationAbbreviation: 'Nouvelle asso abbreviation',
-                organization_category: 'association',
-                position: 'test',
+                first_name: 'gael',
+                email: 'gael.destrem@gmail.com',
+                organization: null,
+                new_association: true,
+                new_association_name: 'Accueil coopération insertion pour les nouveaux arrivants',
+                new_association_abbreviation: 'ACINA',
+                departement: '04',
+                position: 'rte',
+                access_request_message: "ceci est une demande d'acces",
+                created_by: null,
             });
         });
     });
