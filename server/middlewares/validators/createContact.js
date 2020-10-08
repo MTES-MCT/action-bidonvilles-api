@@ -193,7 +193,7 @@ module.exports = [
 
     body('association')
         .if((value, { req }) => req.body.organization_category_full.uid === 'association')
-        .custom(async (value) => {
+        .custom(async (value, { req }) => {
             if (!value) {
                 throw new Error('Vous devez préciser le nom de votre structure');
             }
@@ -212,6 +212,9 @@ module.exports = [
             if (organization === null) {
                 throw new Error('Le nom de structure que vous avez sélectionné n\'existe pas en base de données');
             }
+
+            req.body.association_name = organization.name;
+            req.body.association_abbreviation = organization.abbreviation;
 
             return true;
         }),
@@ -249,26 +252,7 @@ module.exports = [
                 throw new Error('Vous devez préciser votre territoire de rattachement');
             }
 
-            // case of an existing association
-            let association = null;
-            if (req.body.association !== 'Autre' && req.body.association) {
-                try {
-                    association = await organizationModel.findOneAssociation(
-                        req.body.association,
-                        value,
-                    );
-                } catch (error) {
-                    throw new Error('Une erreur est survenue lors de la vérification de votre territoire de rattachement');
-                }
-
-                if (association !== null) {
-                    req.body.organization_full = association;
-                    req.body.new_association = false;
-                    return true;
-                }
-            }
-
-            // case of a new association (brand new, or new departement)
+            // check the departement
             let departement;
             try {
                 departement = await departementModel.findOne(value);
@@ -280,6 +264,31 @@ module.exports = [
                 throw new Error('Le territoire de rattachement que vous avez sélectionné n\'existe pas en base de données');
             }
 
+            // case of an existing association
+            if (req.body.association !== 'Autre') {
+                let association = null;
+                try {
+                    association = await organizationModel.findOneAssociation(
+                        req.body.association,
+                        value,
+                    );
+                } catch (error) {
+                    throw new Error('Une erreur est survenue lors de la vérification de votre territoire de rattachement');
+                }
+
+                if (association !== null) {
+                    req.body.new_association = false;
+                    req.body.organization_full = association;
+                } else {
+                    req.body.new_association = true;
+                    req.body.new_association_name = req.body.association_name;
+                    req.body.new_association_abbreviation = req.body.association_abbreviation;
+                }
+
+                return true;
+            }
+
+            // case of a brand new association
             req.body.new_association = true;
             return true;
         }),
