@@ -7,46 +7,21 @@ const { generateSalt } = require('#server/utils/auth');
 async function createUser(data) {
     const userId = await sequelize.transaction(async (t) => {
         // create association if necessary
-        if (data.organization_category === 'association') {
-            let create = null;
-            let organization = null;
-            if (data.association === 'Autre') {
-                create = {
-                    name: data.newAssociationName,
-                    abbreviation: data.newAssociationAbbreviation || null,
-                };
-            } else {
-                organization = await organizationModel.findOneAssociation(
-                    data.association,
-                    data.departement,
-                );
+        if (data.new_association === true) {
+            const type = (await organizationTypeModel.findByCategory('association'))[0].id;
+            const [[association]] = (await organizationModel.create(
+                data.new_association_name,
+                data.new_association_abbreviation,
+                type,
+                null,
+                data.departement,
+                null,
+                null,
+                false,
+                t,
+            ));
 
-                if (organization === null) {
-                    const association = await organizationModel.findAssociationName(data.association);
-
-                    create = {
-                        name: association !== null ? association.name : data.association,
-                        abbreviation: association !== null ? association.abbreviation : null,
-                    };
-                }
-            }
-
-            if (create !== null) {
-                const type = (await organizationTypeModel.findByCategory('association'))[0].id;
-                [[organization]] = (await organizationModel.create(
-                    create.name,
-                    create.abbreviation,
-                    type,
-                    null,
-                    data.departement,
-                    null,
-                    null,
-                    false,
-                    t,
-                ));
-            }
-
-            Object.assign(data, { organization: organization.id });
+            Object.assign(data, { organization: association.id });
         }
 
         // create the user himself
