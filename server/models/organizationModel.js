@@ -137,6 +137,7 @@ module.exports = database => ({
             `SELECT
                 organizations.organization_id AS id,
                 organizations.name,
+                organizations.abbreviation,
                 organization_types.fk_category
             FROM localized_organizations AS organizations
             LEFT JOIN
