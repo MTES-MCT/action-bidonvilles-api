@@ -8,6 +8,10 @@ const bodyParser = require('body-parser');
  * @returns {Function} An express callback that encapsulates the original one around a Promise
  */
 function asyncHandler(fn) {
+    if (typeof fn !== 'function') {
+        return fn;
+    }
+
     return (req, res, next) => Promise.resolve(fn(req, res, next)).catch(next);
 }
 

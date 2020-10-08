@@ -591,6 +591,8 @@ module.exports = (database) => {
             },
         ),
 
+        getNationalAdmins,
+
         getDirectory: async () => {
             const users = await database.query(
                 `
