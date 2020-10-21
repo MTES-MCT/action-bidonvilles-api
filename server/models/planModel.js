@@ -2,7 +2,7 @@ const locationTypes = {
     shantytowns: 'sur site(s) : bidonville ou squat',
     location: 'sur terrain d\'insertion',
     housing: 'dans le logement',
-    other: 'dans plusieurs lieux',
+    other: 'dans plusieurs lieux (hébergement, permanence, rue...)',
 };
 
 function hasPermission(user, plan, feature) {
