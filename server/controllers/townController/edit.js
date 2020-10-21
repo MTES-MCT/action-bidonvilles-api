@@ -1,45 +1,10 @@
 
-const validateInput = require('./helpers/validateInput');
-const cleanParams = require('./helpers/cleanParams');
 const {
     sequelize,
     Shantytown: ShantyTowns,
 } = require('#db/models');
 
-function toBool(int) {
-    if (int === 1) {
-        return true;
-    }
-
-    if (int === 0) {
-        return false;
-    }
-
-    return null;
-}
-
-module.exports = models => async (req, res) => {
-    const permission = req.user.permissions.shantytown.update;
-
-    // check errors
-    let fieldErrors = {};
-    try {
-        fieldErrors = await validateInput(models, req.body, req.user, permission);
-    } catch (error) {
-        return res.status(500).send({ error });
-    }
-
-    if (Object.keys(fieldErrors).length > 0) {
-        return res.status(400).send({
-            error: {
-                developer_message: 'The submitted data contains errors',
-                user_message: 'Certaines données sont invalides',
-                fields: fieldErrors,
-            },
-        });
-    }
-
-    // check if the town exists
+module.exports = () => async (req, res) => {
     const town = await ShantyTowns.findOne({
         where: {
             shantytown_id: req.params.id,
@@ -55,78 +20,34 @@ module.exports = models => async (req, res) => {
         });
     }
 
-    // edit the town
-    const {
-        priority,
-        name,
-        declaredAt,
-        builtAt,
-        status,
-        closedAt,
-        address,
-        citycode,
-        latitude,
-        longitude,
-        addressDetails,
-        censusStatus,
-        censusConductedAt,
-        censusConductedBy,
-        populationTotal,
-        populationCouples,
-        populationMinors,
-        electricityType,
-        electricityComments,
-        accessToSanitary,
-        sanitaryComments,
-        accessToWater,
-        waterComments,
-        trashEvacuation,
-        fieldType,
-        ownerType,
-        owner,
-        socialOrigins,
-        ownerComplaint,
-        justiceProcedure,
-        justiceRendered,
-        justiceRenderedBy,
-        justiceRenderedAt,
-        justiceChallenged,
-        policeStatus,
-        policeRequestedAt,
-        policeGrantedAt,
-        bailiff,
-    } = await cleanParams(models, req.body);
-
     try {
         await sequelize.transaction(async () => {
             const baseTown = {
-                name,
-                priority,
-                declaredAt,
-                builtAt,
-                status,
-                closedAt,
-                latitude,
-                longitude,
-                address,
-                addressDetails,
-                censusStatus,
-                censusConductedAt,
-                censusConductedBy,
-                populationTotal,
-                populationCouples,
-                populationMinors,
-                electricityType,
-                electricityComments,
-                accessToSanitary: toBool(accessToSanitary),
-                sanitaryComments,
-                accessToWater: toBool(accessToWater),
-                waterComments,
-                trashEvacuation: toBool(trashEvacuation),
-                fieldType,
-                ownerType,
-                owner,
-                city: citycode,
+                name: req.body.name,
+                priority: req.body.priority,
+                latitude: req.body.latitude,
+                longitude: req.body.longitude,
+                address: req.body.address,
+                addressDetails: req.body.detailed_address,
+                builtAt: req.body.built_at,
+                populationTotal: req.body.population_total,
+                populationCouples: req.body.population_couples,
+                populationMinors: req.body.population_minors,
+                electricityType: req.body.electricity_type,
+                electricityComments: req.body.electricity_comments,
+                accessToSanitary: req.body.access_to_sanitary,
+                sanitaryComments: req.body.sanitary_comments,
+                accessToWater: req.body.access_to_water,
+                waterComments: req.body.water_comments,
+                trashEvacuation: req.body.trash_evacuation,
+                fieldType: req.body.field_type,
+                ownerType: req.body.owner_type,
+                city: req.body.citycode,
+                owner: req.body.owner,
+                declaredAt: req.body.declared_at,
+                censusStatus: req.body.census_status,
+                censusConductedAt: req.body.census_conducted_at,
+                censusConductedBy: req.body.census_conducted_by,
                 updatedBy: req.user.id,
             };
 
@@ -134,18 +55,18 @@ module.exports = models => async (req, res) => {
                 Object.assign(
                     {},
                     baseTown,
-                    permission.data_justice === true
+                    req.user.permissions.shantytown.update.data_justice === true
                         ? {
-                            ownerComplaint: toBool(ownerComplaint),
-                            justiceProcedure: toBool(justiceProcedure),
-                            justiceRendered: toBool(justiceRendered),
-                            justiceRenderedBy,
-                            justiceRenderedAt,
-                            justiceChallenged: toBool(justiceChallenged),
-                            policeStatus,
-                            policeRequestedAt,
-                            policeGrantedAt,
-                            bailiff,
+                            ownerComplaint: req.body.owner_complaint,
+                            justiceProcedure: req.body.justice_procedure,
+                            justiceRendered: req.body.justice_rendered,
+                            justiceRenderedBy: req.body.justice_rendered_by,
+                            justiceRenderedAt: req.body.justice_rendered_at,
+                            justiceChallenged: req.body.justice_challenged,
+                            policeStatus: req.body.police_status,
+                            policeRequestedAt: req.body.police_requested_at,
+                            policeGrantedAt: req.body.police_granted_at,
+                            bailiff: req.body.bailiff,
                         }
                         : {
                             ownerComplaint: town.ownerComplaint,
@@ -162,7 +83,7 @@ module.exports = models => async (req, res) => {
                 ),
             );
 
-            await town.setSocialOrigins(populationTotal > 10 ? socialOrigins : []);
+            await town.setSocialOrigins(req.body.social_origins);
         });
 
         return res.status(200).send(town);

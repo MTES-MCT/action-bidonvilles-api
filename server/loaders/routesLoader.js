@@ -267,6 +267,8 @@ module.exports = (app) => {
         (...args) => middlewares.auth.checkPermissions(['shantytown.create'], ...args),
         middlewares.charte.check,
         middlewares.appVersion.sync,
+        validators.createTown,
+        middlewares.validation,
         controllers.town.add,
     );
     app.post(
@@ -275,6 +277,8 @@ module.exports = (app) => {
         (...args) => middlewares.auth.checkPermissions(['shantytown.update'], ...args),
         middlewares.charte.check,
         middlewares.appVersion.sync,
+        validators.editTown,
+        middlewares.validation,
         controllers.town.edit,
     );
     app.post(
