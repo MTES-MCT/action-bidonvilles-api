@@ -269,7 +269,7 @@ module.exports = (app) => {
         middlewares.appVersion.sync,
         validators.createTown,
         middlewares.validation,
-        controllers.town.add,
+        controllers.town.create,
     );
     app.post(
         '/towns/:id',
