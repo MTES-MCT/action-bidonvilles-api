@@ -4,6 +4,7 @@ const config = {
     assetsSrc: path.resolve(__dirname, '../assets'),
     frontUrl: 'http://localhost:1234',
     port: 8080,
+    externalPort: 1236,
     auth: {
         secret: 'secret used for generating authentication tokens',
         expiresIn: '168h', // 7 days
@@ -15,6 +16,6 @@ const config = {
         privateKey: 'MAILJET_API_PRIVATE_KEY',
     },
 };
-config.backUrl = `http://localhost:${config.port}`;
+config.backUrl = `http://localhost:${config.externalPort}`;
 
 module.exports = config;
