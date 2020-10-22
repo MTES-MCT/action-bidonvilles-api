@@ -21,7 +21,7 @@ module.exports = () => async (req, res) => {
     }
 
     try {
-        await sequelize.transaction(async () => {
+        await sequelize.transaction(async (transaction) => {
             const baseTown = {
                 name: req.body.name,
                 priority: req.body.priority,
@@ -81,9 +81,14 @@ module.exports = () => async (req, res) => {
                             bailiff: town.bailiff,
                         },
                 ),
+                {
+                    transaction,
+                },
             );
 
-            await town.setSocialOrigins(req.body.social_origins);
+            await town.setSocialOrigins(req.body.social_origins, {
+                transaction,
+            });
         });
 
         return res.status(200).send(town);

@@ -143,7 +143,7 @@ module.exports = (models) => {
         async create(req, res) {
             try {
                 let town;
-                await sequelize.transaction(async () => {
+                await sequelize.transaction(async (transaction) => {
                     const baseTown = {
                         name: req.body.name,
                         priority: req.body.priority,
@@ -192,10 +192,18 @@ module.exports = (models) => {
                                 }
                                 : {},
                         ),
+                        {
+                            transaction,
+                        },
                     );
 
                     if (req.body.social_origins.length > 0) {
-                        await town.setSocialOrigins(req.body.social_origins);
+                        await town.setSocialOrigins(
+                            req.body.social_origins,
+                            {
+                                transaction,
+                            },
+                        );
                     }
                 });
 
@@ -307,16 +315,19 @@ module.exports = (models) => {
 
             // close the town
             try {
-                await sequelize.transaction(async () => {
+                await sequelize.transaction(async (transaction) => {
                     await town.update({
                         status,
                         closedAt,
                         closedWithSolutions: closedWithSolutions === true ? 'yes' : 'no',
                         updatedBy: req.user.id,
+                    }, {
+                        transaction,
                     });
 
                     await Promise.all(
                         solutions.map(solution => town.addClosingSolution(solution.id, {
+                            transaction,
                             through: {
                                 peopleAffected: solution.peopleAffected,
                                 householdsAffected: solution.householdsAffected,
