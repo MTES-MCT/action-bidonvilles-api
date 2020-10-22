@@ -9,7 +9,7 @@ const controllers = require('#server/controllers')(models);
 const validators = require('#server/middlewares/validators');
 
 module.exports = (app) => {
-    app.use('/assets', express.static(path.resolve(__dirname, '../assets')));
+    app.use('/assets', express.static(path.resolve(__dirname, '../../assets')));
 
     app.post(
         '/signin',
