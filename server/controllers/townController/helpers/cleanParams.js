@@ -11,7 +11,7 @@ function trim(str) {
     return str.replace(/^\s*|\s*$/g, '');
 }
 
-module.exports = async function cleanParams(body) {
+module.exports = function cleanParams(body) {
     return {
         status: trim(body.status),
         closedAt: body.closed_at,
