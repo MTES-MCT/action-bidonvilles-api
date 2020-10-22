@@ -140,7 +140,7 @@ module.exports = (models) => {
             }
         },
 
-        async add(req, res) {
+        async create(req, res) {
             try {
                 let town;
                 await sequelize.transaction(async () => {
