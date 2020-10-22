@@ -219,7 +219,7 @@ module.exports = (models) => {
                 closedAt,
                 solutions,
                 closedWithSolutions,
-            } = await cleanParams(req.body);
+            } = cleanParams(req.body);
 
             const now = Date.now();
             const fieldErrors = {};
