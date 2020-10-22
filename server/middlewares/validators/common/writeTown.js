@@ -386,13 +386,6 @@ module.exports = mode => ([
             return value;
         })
         .isArray().bail().withMessage('Le champ "Origines" est invalide')
-        .custom((value, { req }) => {
-            if ((!Number.isInteger(req.body.population_total) || req.body.population_total <= 10) && value.length > 0) {
-                throw new Error('Le champ "Origines" ne peut être complété pour les sites de 10 personnes ou moins');
-            }
-
-            return true;
-        })
         .custom(async (value, { req }) => {
             let socialOrigins = [];
             if (value.length > 0) {
