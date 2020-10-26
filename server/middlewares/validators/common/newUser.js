@@ -24,7 +24,6 @@ module.exports = (additionalValidators = [], isAUserCreationCallback = (() => tr
         .trim()
         .notEmpty().withMessage('Vous devez préciser le courriel')
         .isEmail().withMessage('Ce courriel n\'est pas valide')
-        .normalizeEmail()
         .if(isAUserCreationCallback)
         .custom(async (value, { req }) => {
             let user = null;
