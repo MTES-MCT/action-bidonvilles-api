@@ -4,12 +4,16 @@
  * TOOLS
  * *********************************************************************************************** */
 
+const chai = require('chai');
 const sinon = require('sinon');
+const sinonChai = require('sinon-chai');
 const rewiremock = require('rewiremock/node');
 const { sequelize, dataTypes } = require('sequelize-test-helpers');
 
-const { expect } = require('chai');
 const { mockReq, mockRes } = require('sinon-express-mock');
+
+const { expect } = chai;
+chai.use(sinonChai);
 
 
 /* **************************************************************************************************
@@ -68,36 +72,35 @@ describe.only('townController.edit()', () => {
             },
 
             body: {
-                status: 'open',
                 priority: 1,
-                built_at: 625273200000,
+                built_at: new Date(625273200000),
                 declared_at: null,
                 latitude: 49.414964,
                 longitude: 2.817893,
-                city: 'Compiègne',
                 citycode: '60159',
                 address: 'Rue Roger Couttolenc 60200 Compiègne, 60, Oise, Hauts-de-France',
+                name: null,
                 detailed_address: null,
                 field_type: 1,
                 owner_type: 1,
                 owner: null,
                 census_status: null,
                 census_conducted_at: null,
-                census_conducted_by: '',
+                census_conducted_by: null,
                 population_total: null,
                 population_couples: null,
                 population_minors: null,
                 social_origins: [],
                 electricity_type: 1,
                 electricity_comments: null,
-                access_to_water: -1,
-                access_to_sanitary: -1,
-                sanitary_comments: '',
+                access_to_water: null,
+                access_to_sanitary: null,
+                sanitary_comments: null,
                 water_comments: null,
-                trash_evacuation: -1,
-                owner_complaint: -1,
+                trash_evacuation: null,
+                owner_complaint: null,
                 justice_rendered_at: null,
-                justice_rendered_by: '',
+                justice_rendered_by: null,
                 police_status: null,
                 police_requested_at: null,
                 police_granted_at: null,
@@ -177,21 +180,21 @@ describe.only('townController.edit()', () => {
             await edit(req, res);
             expect(mock.update).to.have.been.calledWithMatch(
                 {
-                    status: 'open',
                     priority: 1,
-                    builtAt: 625273200000,
+                    builtAt: new Date(625273200000),
                     declaredAt: null,
                     latitude: 49.414964,
                     longitude: 2.817893,
                     city: '60159',
                     address: 'Rue Roger Couttolenc 60200 Compiègne, 60, Oise, Hauts-de-France',
+                    name: null,
                     addressDetails: null,
                     fieldType: 1,
                     ownerType: 1,
                     owner: null,
                     censusStatus: null,
                     censusConductedAt: null,
-                    censusConductedBy: '',
+                    censusConductedBy: null,
                     populationTotal: null,
                     populationCouples: null,
                     populationMinors: null,
@@ -199,7 +202,7 @@ describe.only('townController.edit()', () => {
                     electricityComments: null,
                     accessToWater: null,
                     accessToSanitary: null,
-                    sanitaryComments: '',
+                    sanitaryComments: null,
                     waterComments: null,
                     trashEvacuation: null,
 
@@ -214,7 +217,6 @@ describe.only('townController.edit()', () => {
                     policeGrantedAt: mock.policeGrantedAt,
                     bailiff: mock.bailiff,
 
-                    closedAt: null,
                     updatedBy: reqArg.user.id,
                 },
             );
@@ -229,7 +231,7 @@ describe.only('townController.edit()', () => {
                     shantytown_id: reqArg.params.id,
                 },
             }).resolves(mock);
-            reqArg.body = { ...reqArg.body, access_to_sanitary: 1, sanitary_comments: 'test' };
+            reqArg.body = { ...reqArg.body, access_to_sanitary: true, sanitary_comments: 'test' };
             const req = mockReq(reqArg);
             const res = mockRes();
 
@@ -238,8 +240,31 @@ describe.only('townController.edit()', () => {
 
             expect(mock.update).to.have.been.calledWithMatch(
                 {
+                    priority: 1,
+                    builtAt: new Date(625273200000),
+                    declaredAt: null,
+                    latitude: 49.414964,
+                    longitude: 2.817893,
+                    city: '60159',
+                    address: 'Rue Roger Couttolenc 60200 Compiègne, 60, Oise, Hauts-de-France',
+                    name: null,
+                    addressDetails: null,
+                    fieldType: 1,
+                    ownerType: 1,
+                    owner: null,
+                    censusStatus: null,
+                    censusConductedAt: null,
+                    censusConductedBy: null,
+                    populationTotal: null,
+                    populationCouples: null,
+                    populationMinors: null,
+                    electricityType: 1,
+                    electricityComments: null,
+                    accessToWater: null,
                     sanitaryComments: 'test',
                     accessToSanitary: true,
+                    waterComments: null,
+                    trashEvacuation: null,
                 },
             );
         });

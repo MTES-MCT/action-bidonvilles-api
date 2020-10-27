@@ -46,7 +46,7 @@ module.exports = (message, date) => ({
                                     <table border="0" cellpadding="0" cellspacing="0">
                                         <tbody>
                                             <tr>
-                                                <td bgcolor="#dddddd">Date du messqge : ${dateToString(date)}<br/><br/></td>
+                                                <td bgcolor="#dddddd">Date du message : ${dateToString(date)}<br/><br/></td>
                                             </tr>
                                             <tr>
                                                 <td bgcolor="#dddddd">${message.last_name.toUpperCase()} ${message.first_name}<br/></td>

@@ -203,8 +203,8 @@ describe('app', () => {
             expect(middlewares.auth.checkPermissions).to.have.been.calledOnce;
         });
 
-        it('it should map to townController.add', () => {
-            expect(controllers.town.add).to.have.been.calledOnce;
+        it('it should map to townController.create', () => {
+            expect(controllers.town.create).to.have.been.calledOnce;
         });
     });
 

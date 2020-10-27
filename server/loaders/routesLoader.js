@@ -9,7 +9,7 @@ const controllers = require('#server/controllers')(models);
 const validators = require('#server/middlewares/validators');
 
 module.exports = (app) => {
-    app.use('/assets', express.static(path.resolve(__dirname, '../assets')));
+    app.use('/assets', express.static(path.resolve(__dirname, '../../assets')));
 
     app.post(
         '/signin',
@@ -267,7 +267,9 @@ module.exports = (app) => {
         (...args) => middlewares.auth.checkPermissions(['shantytown.create'], ...args),
         middlewares.charte.check,
         middlewares.appVersion.sync,
-        controllers.town.add,
+        validators.createTown,
+        middlewares.validation,
+        controllers.town.create,
     );
     app.post(
         '/towns/:id',
@@ -275,6 +277,8 @@ module.exports = (app) => {
         (...args) => middlewares.auth.checkPermissions(['shantytown.update'], ...args),
         middlewares.charte.check,
         middlewares.appVersion.sync,
+        validators.editTown,
+        middlewares.validation,
         controllers.town.edit,
     );
     app.post(
