@@ -542,12 +542,20 @@ module.exports = (database) => {
                 return [];
             }
 
-            where.push({
+            const clauseGroup = {
                 location: {
                     query: `${fromGeoLevelToTableName(level)}.code`,
                     value: user.organization.location[level].code,
                 },
-            });
+            };
+            where.push(clauseGroup);
+
+            if (level === 'city') {
+                clauseGroup.location_main_city = {
+                    query: `${fromGeoLevelToTableName(level)}.fk_main`,
+                    value: user.organization.location[level].code,
+                };
+            }
         }
 
         const whereClause = where.map((clauses, index) => {
