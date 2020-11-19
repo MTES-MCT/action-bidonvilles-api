@@ -1,20 +1,18 @@
 const { toString: dateToString } = require('#server/utils/date');
 const signature = require('#server/mails/signature');
+const { frontUrl } = require('#server/config');
 
 module.exports = (activatedUser, administrator) => ({
-    Subject: '[ resorption-bidonvilles ] - Votre demande d\'accès',
+    Subject: '[Résorption-bidonvilles] - Votre demande d’accès',
 
     TextPart: `Bonjour,
 
-    L'administrateur de votre territoire n'a pas donné suite à votre demande du ${dateToString(new Date(activatedUser.created_at * 1000))} d'accès à la plateforme Résorption Bidonvilles.
+    Vous avez effectué une demande d’accès à la plateforme Résorption-bidonvilles le ${dateToString(new Date(activatedUser.created_at * 1000))}.
+    L'administrateur local de votre territoire, ${administrator.first_name} ${administrator.last_name.toUpperCase()} (${administrator.organization.name}) n'a pas donné suite à votre demande.
+
     Vous pouvez le contacter par retour de ce mail pour de plus amples informations.
 
-    Cordialement,
-
-    ${administrator.last_name.toUpperCase()} ${administrator.first_name}
-    ${administrator.position} - ${administrator.organization.name}
-    ${administrator.role} de resorption-bidonvilles.com
-    -
+    Cordialement.
 
     ${signature.TextPart}`,
 
@@ -32,14 +30,12 @@ module.exports = (activatedUser, administrator) => ({
                             <td bgcolor="#ffffff">
                                 Bonjour,<br/>
                                 <br/>
-                                L'administrateur de votre territoire n'a pas donné suite à votre demande du ${dateToString(new Date(activatedUser.created_at * 1000))} d'accès à la plateforme Résorption Bidonvilles.<br/>
+                                Vous avez effectué une demande d’accès à la plateforme <em><a style="color: #000F8C; text-decoration: none;" href="${frontUrl}">Résorption-bidonvilles</a></em> le ${dateToString(new Date(activatedUser.created_at * 1000))}.<br/>
+                                L'administrateur local de votre territoire, ${administrator.first_name} ${administrator.last_name.toUpperCase()} (${administrator.organization.name}) n'a pas donné suite à votre demande.<br/>
+                                <br/>
                                 Vous pouvez le contacter par retour de ce mail pour de plus amples informations.<br/>
                                 <br/>
-                                Cordialement,<br/>
-                                <br/>
-                                ${administrator.last_name.toUpperCase()} ${administrator.first_name}<br/>
-                                ${administrator.position} - ${administrator.organization.name}<br/>
-                                ${administrator.role} de resorption-bidonvilles.com<br/>
+                                Cordialement.<br/>
                                 <br/>
                             </td>
                         </tr>
