@@ -5,17 +5,16 @@ const {
 } = require('#server/utils/mail');
 
 const MAIL_TEMPLATES = {};
-MAIL_TEMPLATES.new_user_confirmation = require('#server/mails/new_user_confirmation');
+MAIL_TEMPLATES.request_confirmation = require('#server/mails/access_request/user/access_request_confirmation');
 MAIL_TEMPLATES.new_user_alert = require('#server/mails/new_user_alert');
 MAIL_TEMPLATES.contact_message = require('#server/mails/contact_message');
 
 
-const sendEmailNewUserConfirmation = async (result) => {
-    await sendMail(result, MAIL_TEMPLATES.new_user_confirmation());
+const sendEmailNewUserConfirmation = async (user) => {
+    await sendMail(user, MAIL_TEMPLATES.request_confirmation(user, new Date()));
 };
 
-const sendEmailNewUserAlertToAdmins = async (result, models) => {
-    const user = await models.user.findOne(result.id, { extended: true });
+const sendEmailNewUserAlertToAdmins = async (user, models) => {
     const admins = await models.user.getAdminsFor(user);
     const mailTemplate = MAIL_TEMPLATES.new_user_alert(user, new Date());
 
@@ -60,9 +59,10 @@ module.exports = models => ({
             }
 
             try {
+                const user = await models.user.findOne(result.id, { extended: true });
                 await Promise.all([
-                    sendEmailNewUserConfirmation(result),
-                    sendEmailNewUserAlertToAdmins(result, models),
+                    sendEmailNewUserConfirmation(user),
+                    sendEmailNewUserAlertToAdmins(user, models),
                 ]);
             } catch (err) {
                 // ignore
