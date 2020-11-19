@@ -6,7 +6,7 @@ const {
 
 const MAIL_TEMPLATES = {};
 MAIL_TEMPLATES.request_confirmation = require('#server/mails/access_request/user/access_request_confirmation');
-MAIL_TEMPLATES.new_user_alert = require('#server/mails/new_user_alert');
+MAIL_TEMPLATES.request_notification = require('#server/mails/access_request/admin/new_request_notification');
 MAIL_TEMPLATES.contact_message = require('#server/mails/contact_message');
 
 
@@ -16,11 +16,11 @@ const sendEmailNewUserConfirmation = async (user) => {
 
 const sendEmailNewUserAlertToAdmins = async (user, models) => {
     const admins = await models.user.getAdminsFor(user);
-    const mailTemplate = MAIL_TEMPLATES.new_user_alert(user, new Date());
+    const mailTemplate = MAIL_TEMPLATES.request_notification(user, new Date());
 
     for (let i = 0; i < admins.length; i += 1) {
         // eslint-disable-next-line no-await-in-loop
-        await sendMail(admins[i], mailTemplate);
+        await sendMail(admins[i], mailTemplate, user);
     }
 };
 
