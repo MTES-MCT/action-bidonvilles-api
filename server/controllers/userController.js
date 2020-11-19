@@ -15,7 +15,7 @@ const permissionsDescription = require('#server/permissions_description');
 
 const MAIL_TEMPLATES = {};
 MAIL_TEMPLATES.access_granted = require('#server/mails/access_request/user/access_granted');
-MAIL_TEMPLATES.access_denied = require('#server/mails/access_denied');
+MAIL_TEMPLATES.access_denied = require('#server/mails/access_request/user/access_denied');
 MAIL_TEMPLATES.new_password = require('#server/mails/new_password');
 
 const { auth: authConfig } = require('#server/config');
