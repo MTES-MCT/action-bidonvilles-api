@@ -15,6 +15,9 @@ const config = {
         publicKey: 'MAILJET_API_PUBLIC_KEY',
         privateKey: 'MAILJET_API_PRIVATE_KEY',
     },
+    agenda: {
+        mongo_address: 'mongodb://root:demo@agenda_db'
+    },
 };
 config.backUrl = `http://localhost:${config.externalPort}`;
 
