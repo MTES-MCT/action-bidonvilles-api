@@ -14,7 +14,7 @@ const {
 const permissionsDescription = require('#server/permissions_description');
 
 const MAIL_TEMPLATES = {};
-MAIL_TEMPLATES.access_granted = require('#server/mails/access_granted');
+MAIL_TEMPLATES.access_granted = require('#server/mails/access_request/user/access_granted');
 MAIL_TEMPLATES.access_denied = require('#server/mails/access_denied');
 MAIL_TEMPLATES.new_password = require('#server/mails/new_password');
 
@@ -495,7 +495,7 @@ module.exports = models => ({
         try {
             // reload the user to take options into account (they might have changed above)
             user = await models.user.findOne(req.params.id, { extended: true }, req.user, 'activate');
-            await sendMail(user, MAIL_TEMPLATES.access_granted(user, req.user, activationLink, expiracyDate), req.user);
+            await sendMail(user, MAIL_TEMPLATES.access_granted(req.user, activationLink, expiracyDate), req.user);
         } catch (error) {
             return res.status(500).send({
                 error: {
