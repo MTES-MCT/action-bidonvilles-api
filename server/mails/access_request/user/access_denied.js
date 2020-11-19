@@ -1,5 +1,5 @@
 const { toString: dateToString } = require('#server/utils/date');
-const signature = require('./signature');
+const signature = require('#server/mails/signature');
 
 module.exports = (activatedUser, administrator) => ({
     Subject: '[ resorption-bidonvilles ] - Votre demande d\'accès',
