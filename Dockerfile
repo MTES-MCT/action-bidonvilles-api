@@ -1,7 +1,7 @@
 # ====
 # Development
 # ====
-FROM node:13.12 AS development
+FROM node:15.1 AS development
 
 RUN mkdir /home/node/app/ && chown node:node /home/node/app/
 
