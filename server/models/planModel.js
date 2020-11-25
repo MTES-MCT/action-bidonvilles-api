@@ -609,13 +609,15 @@ module.exports = (database) => {
             }), {});
         }
 
-        planShantytowns.forEach(({ fk_plan: planId, fk_shantytown: shantytownId }) => {
-            if (hashedPlans[planId].shantytowns === undefined) {
-                hashedPlans[planId].shantytowns = [];
-            }
+        planShantytowns
+            .filter(({ fk_shantytown: shantytownId }) => hashedShantytowns[shantytownId] !== undefined)
+            .forEach(({ fk_plan: planId, fk_shantytown: shantytownId }) => {
+                if (hashedPlans[planId].shantytowns === undefined) {
+                    hashedPlans[planId].shantytowns = [];
+                }
 
-            hashedPlans[planId].shantytowns.push(hashedShantytowns[shantytownId]);
-        });
+                hashedPlans[planId].shantytowns.push(hashedShantytowns[shantytownId]);
+            });
 
         // finances
         planFinances.forEach((finance) => {
