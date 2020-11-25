@@ -25,13 +25,13 @@ const sendEmailNewUserAlertToAdmins = async (result, models) => {
     }
 };
 
-const sendEmailNewContactMessageToAdmins = async (data, models) => {
+const sendEmailNewContactMessageToAdmins = async (data, models, contact) => {
     const admins = await models.user.getNationalAdmins();
     const mailTemplate = MAIL_TEMPLATES.contact_message(data, new Date());
 
     for (let i = 0; i < admins.length; i += 1) {
         // eslint-disable-next-line no-await-in-loop
-        await sendMail(admins[i], mailTemplate);
+        await sendMail(admins[i], mailTemplate, contact);
     }
 };
 
@@ -73,7 +73,11 @@ module.exports = models => ({
 
         // contact request
         try {
-            await sendEmailNewContactMessageToAdmins(req.body, models);
+            await sendEmailNewContactMessageToAdmins(req.body, models, {
+                email: req.body.email,
+                last_name: req.body.last_name,
+                first_name: req.body.first_name,
+            });
         } catch (err) {
             // ignore
         }
