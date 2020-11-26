@@ -40,7 +40,7 @@ module.exports = {
                     allowNull: false,
                 },
                 categories: {
-                    type: Sequelize.TEXT,
+                    type: Sequelize.ARRAY(Sequelize.TEXT) ,
                     allowNull: false,
                 },
                 name: {
@@ -142,16 +142,21 @@ module.exports = {
                 transaction,
             },
         ).then(() => parser(
-            fs.readFileSync(path.join(__dirname, '..', 'data', 'poi_26_11_2020.csv'), {encoding: 'utf8'})
+            fs.readFileSync(path.join(__dirname, '..', 'data', 'poi_solinum_26_11_2020.csv'), {encoding: 'utf8'})
         )).then((pois) => {
             const toBool = val => val === 'TRUE' ? true:false
 
             return queryInterface.bulkInsert(
                 'poi',
                 pois.map((poi) => {
-                    return {
-                        solinum_id: poi['Numéro'],
+                    const createdAtTime = (new Date(poi.createdAt)).getTime()
+                    const updatedAtTime = (new Date(poi['Mise à jour'])).getTime()
 
+                    const createdAt = isNaN(createdAtTime) ? null : createdAtTime / 1000
+                    const updatedAt = isNaN(updatedAtTime) ? null : updatedAtTime / 1000
+
+                    return {
+                        solinum_id: parseInt(poi['Numéro'], 10),
                         temporary_information: poi['Information temporaire'],
                         temporary_hours: poi['Horaire temporaire'],
                         temporary_hour_start: poi['Début Horaire temporaire'],
@@ -159,22 +164,21 @@ module.exports = {
                         asile: toBool(poi['asile']),
                         refugie: toBool(poi['refugie']),
                         family: toBool(poi['family']),
-                        age_min: poi['age_min'],
-                        age_max: poi['age_max'],
+                        age_min: poi['age_min'] ? parseInt(poi['age_min'], 10) : 0,
+                        age_max: poi['age_max'] ? parseInt(poi['age_max'], 10) : 99,
                         sexe: poi['Sexe'],
                         animals: poi['animals'],
                         rdv_required: toBool(poi['sur_rdv']),
                         price: poi['price'],
                         info: poi['conditions_other'],
                         language: poi['Langues'],
-
-                        created_at: null,
-                        updated_at: null,
-                        // Fix mistakes between Lat & Lng in the export
+                        created_at: createdAt,
+                        updated_at: updatedAt,
+                        // // Fix mistakes between Lat & Lng in the export
                         longitude: poi.Lat,
                         latitude: poi.Lng,
                         verified: toBool(poi['Vérifié']),
-                        categories: poi['Catégories'],
+                        categories: poi['Catégories'].split(',').map(text => text.trim()),
                         name: poi['Nom de la structure'],
                         address: poi['Adresse'],
                         city: poi['Ville'],
