@@ -6,9 +6,9 @@ module.exports = {
 
     up: (queryInterface, Sequelize) => queryInterface.sequelize.transaction(
         transaction => queryInterface.createTable(
-            'poi',
+            'pois',
             {
-                id: {
+                poi_id: {
                     type: Sequelize.INTEGER,
                     allowNull: false,
                     primaryKey: true,
@@ -16,13 +16,13 @@ module.exports = {
                 },
                 solinum_id: {
                     type: Sequelize.INTEGER,
-                    allowNull: true,
+                    allowNull: false,
                 },
-                created_at: {
+                solinum_created_at: {
                     type: Sequelize.INTEGER,
                     allowNull: true,
                 },
-                updated_at: {
+                solinum_updated_at: {
                     type: Sequelize.INTEGER,
                     allowNull: true,
                 },
@@ -40,11 +40,11 @@ module.exports = {
                     allowNull: false,
                 },
                 categories: {
-                    type: Sequelize.ARRAY(Sequelize.TEXT) ,
+                    type: Sequelize.ARRAY(Sequelize.TEXT),
                     allowNull: false,
                 },
                 name: {
-                    type: Sequelize.TEXT,
+                    type: Sequelize.STRING,
                     allowNull: false,
                 },
                 address: {
@@ -52,11 +52,11 @@ module.exports = {
                     allowNull: false,
                 },
                 city: {
-                    type: Sequelize.TEXT,
+                    type: Sequelize.STRING,
                     allowNull: false,
                 },
                 postal_code: {
-                    type: Sequelize.TEXT,
+                    type: Sequelize.STRING,
                     allowNull: false,
                 },
 
@@ -69,11 +69,11 @@ module.exports = {
                     allowNull: false,
                 },
                 phone: {
-                    type: Sequelize.TEXT,
+                    type: Sequelize.STRING,
                     allowNull: false,
                 },
                 email: {
-                    type: Sequelize.TEXT,
+                    type: Sequelize.STRING,
                     allowNull: false,
                 },
 
@@ -142,18 +142,18 @@ module.exports = {
                 transaction,
             },
         ).then(() => parser(
-            fs.readFileSync(path.join(__dirname, '..', 'data', 'poi_solinum_26_11_2020.csv'), {encoding: 'utf8'})
+            fs.readFileSync(path.join(__dirname, '..', 'data', 'poi_solinum_26_11_2020.csv'), { encoding: 'utf8' }),
         )).then((pois) => {
-            const toBool = val => val === 'TRUE' ? true:false
+            const toBool = val => val === 'TRUE';
 
             return queryInterface.bulkInsert(
-                'poi',
+                'pois',
                 pois.map((poi) => {
-                    const createdAtTime = (new Date(poi.createdAt)).getTime()
-                    const updatedAtTime = (new Date(poi['Mise à jour'])).getTime()
+                    const createdAtTime = (new Date(poi.createdAt)).getTime();
+                    const updatedAtTime = (new Date(poi['Mise à jour'])).getTime();
 
-                    const createdAt = isNaN(createdAtTime) ? null : createdAtTime / 1000
-                    const updatedAt = isNaN(updatedAtTime) ? null : updatedAtTime / 1000
+                    const createdAt = isNaN(createdAtTime) ? null : createdAtTime / 1000;
+                    const updatedAt = isNaN(updatedAtTime) ? null : updatedAtTime / 1000;
 
                     return {
                         solinum_id: parseInt(poi['Numéro'], 10),
@@ -172,8 +172,8 @@ module.exports = {
                         price: poi['price'],
                         info: poi['conditions_other'],
                         language: poi['Langues'],
-                        created_at: createdAt,
-                        updated_at: updatedAt,
+                        solinum_created_at: createdAt,
+                        solinum_updated_at: updatedAt,
                         // // Fix mistakes between Lat & Lng in the export
                         longitude: poi.Lat,
                         latitude: poi.Lng,
@@ -188,14 +188,12 @@ module.exports = {
                         phone: poi['Numéro de téléphone'],
                         email: poi['Email'],
                     };
-
                 }),
-                { transaction }
+                { transaction },
             );
-        })
+        }),
     ),
-    down: queryInterface => queryInterface.dropTable('poi')
+    down: queryInterface => queryInterface.dropTable('pois'),
 
 
 };
-
