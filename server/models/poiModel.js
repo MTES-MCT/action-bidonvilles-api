@@ -2,7 +2,7 @@ module.exports = database => ({
     findAll: () => database.query(
         `SELECT
             *
-        FROM poi
+        FROM pois
         WHERE 
             'Distribution Alimentaire'=ANY(categories) OR
             'Colis Alimentaire'=ANY(categories)`,

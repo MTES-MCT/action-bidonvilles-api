@@ -374,9 +374,9 @@ module.exports = (app) => {
         controllers.organization.getMembers,
     );
 
-    // poi
+    // pois
     app.get(
-        '/poi/',
+        '/pois',
         middlewares.auth.authenticate,
         middlewares.charte.check,
         middlewares.appVersion.sync,
