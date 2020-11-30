@@ -77,6 +77,7 @@ module.exports = (models) => {
             res.status(400).send({
                 error: error.details,
             });
+            return;
         }
 
         if (respond === true) {
