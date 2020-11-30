@@ -374,6 +374,15 @@ module.exports = (app) => {
         controllers.organization.getMembers,
     );
 
+    // pois
+    app.get(
+        '/pois',
+        middlewares.auth.authenticate,
+        middlewares.charte.check,
+        middlewares.appVersion.sync,
+        controllers.poi.findAll,
+    );
+
     // geo
     app.get(
         '/locations/search',
