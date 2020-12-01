@@ -893,6 +893,36 @@ module.exports = (models) => {
                     width: COLUMN_WIDTHS.SMALL,
                     sum: true,
                 },
+                populationMinors0To3: {
+                    title: '0 à 3 ans',
+                    data: ({ populationMinors0To3 }) => populationMinors0To3,
+                    width: COLUMN_WIDTHS.SMALL,
+                    sum: true,
+                },
+                populationMinors3To6: {
+                    title: '3 à 6 ans',
+                    data: ({ populationMinors3To6 }) => populationMinors3To6,
+                    width: COLUMN_WIDTHS.SMALL,
+                    sum: true,
+                },
+                populationMinors6To12: {
+                    title: '6 à 12 ans',
+                    data: ({ populationMinors6To12 }) => populationMinors6To12,
+                    width: COLUMN_WIDTHS.SMALL,
+                    sum: true,
+                },
+                populationMinors12To16: {
+                    title: '12 à 16 ans',
+                    data: ({ populationMinors12To16 }) => populationMinors12To16,
+                    width: COLUMN_WIDTHS.SMALL,
+                    sum: true,
+                },
+                populationMinors16To18: {
+                    title: '16 à 18 ans',
+                    data: ({ populationMinors16To18 }) => populationMinors16To18,
+                    width: COLUMN_WIDTHS.SMALL,
+                    sum: true,
+                },
                 socialOrigins: {
                     title: 'Origines',
                     data: ({ socialOrigins }) => (socialOrigins.length > 0 ? socialOrigins.map(({ label }) => label).join(';') : null),
@@ -1196,6 +1226,11 @@ module.exports = (models) => {
                     properties.populationTotal,
                     properties.populationCouples,
                     properties.populationMinors,
+                    properties.populationMinors0To3,
+                    properties.populationMinors3To6,
+                    properties.populationMinors6To12,
+                    properties.populationMinors12To16,
+                    properties.populationMinors16To18,
                     properties.socialOrigins,
                 ],
             });
