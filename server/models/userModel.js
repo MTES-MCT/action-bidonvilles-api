@@ -455,6 +455,23 @@ module.exports = (database) => {
         },
 
         /**
+         * Searches for a single user by access token
+         *
+         * @param {String}      email
+         * @param {UserFilters} [filters]
+         *
+         * @returns {User}
+         */
+        findOneByToken: async (email, filters = {}) => {
+            const users = await query(
+                [{ email: { value: [email.toUpperCase()], query: 'upper(users.email)' } }],
+                filters,
+            );
+
+            return users.length === 1 ? users[0] : null;
+        },
+
+        /**
          * Searches for the users members of an organization
          *
          * @param {Number}       organizationId

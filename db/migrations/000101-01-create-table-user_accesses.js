@@ -10,16 +10,20 @@ module.exports = {
                     primaryKey: true,
                     autoIncrement: true,
                 },
-                token: {
-                    type: Sequelize.STRING,
-                    allowNull: false,
-                },
                 fk_user: {
                     type: Sequelize.INTEGER,
                     allowNull: false,
                 },
                 sent_by: {
                     type: Sequelize.INTEGER,
+                    allowNull: false,
+                },
+                used_at: {
+                    type: Sequelize.DATE,
+                    allowNull: true,
+                },
+                expires_at: {
+                    type: Sequelize.DATE,
                     allowNull: false,
                 },
                 created_at: {
