@@ -215,7 +215,7 @@ module.exports = (models) => {
                         await triggerShantytownCreationAlert(town, req.user);
                     }
                 } catch (err) {
-                    console.log(`Error with shantytown close slack webhook : ${err.message}`);
+                    console.log(`Error with shantytown creation slack webhook : ${err.message}`);
                 }
 
                 return res.status(200).send({
