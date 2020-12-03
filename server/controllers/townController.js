@@ -211,7 +211,7 @@ module.exports = (models) => {
 
                 // Send a slack alert, if it fails, do nothing
                 try {
-                    if (slackConfig.new_shantytown) {
+                    if (slackConfig && slackConfig.new_shantytown) {
                         await triggerShantytownCreationAlert(town, req.user);
                     }
                 } catch (err) {
@@ -349,7 +349,7 @@ module.exports = (models) => {
 
                 // Send a slack alert, if it fails, do nothing
                 try {
-                    if (slackConfig.close_shantytown) {
+                    if (slackConfig && slackConfig.close_shantytown) {
                         const updatedTown = {
                             ...town.dataValues, status, closedAt, closedWithSolutions, updatedBy: req.user.id, solutions,
                         };
