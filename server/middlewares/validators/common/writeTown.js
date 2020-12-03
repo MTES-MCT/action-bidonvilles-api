@@ -381,11 +381,7 @@ module.exports = mode => ([
         .isInt().bail().withMessage('Le champ "Nombre de mineurs" est invalide')
         .isInt({ min: 0 }).withMessage('Le champ "Nombre de mineurs" ne peut pas être inférieur à 0')
         .custom((value, { req }) => {
-            if (!Number.isInteger(req.body.population_total)) {
-                return true;
-            }
-
-            if (value > req.body.population_total) {
+            if (Number.isInteger(req.body.population_total) && value > req.body.population_total) {
                 throw new Error('Le champ "Nombre de mineurs" ne peut pas être supérieur au champ "Nombre de personnes"');
             }
 
