@@ -10,6 +10,8 @@ const {
 const { fromTsToFormat: tsToString, toFormat: dateToString } = require('#server/utils/date');
 const { createExport } = require('#server/utils/excel');
 const { send: sendMail } = require('#server/utils/mail');
+const { triggerShantytownCloseAlert, triggerShantytownCreationAlert } = require('#server/utils/slack');
+const { slack: slackConfig } = require('#server/config');
 const COMMENT_DELETION_MAIL = require('#server/mails/comment_deletion.js');
 
 function fromGeoLevelToTableName(geoLevel) {
@@ -207,6 +209,15 @@ module.exports = (models) => {
                     }
                 });
 
+                // Send a slack alert, if it fails, do nothing
+                try {
+                    if (slackConfig.new_shantytown) {
+                        await triggerShantytownCreationAlert(town, req.user);
+                    }
+                } catch (err) {
+                    console.log(`Error with shantytown close slack webhook : ${err.message}`);
+                }
+
                 return res.status(200).send({
                     town,
                     plans: [],
@@ -335,6 +346,19 @@ module.exports = (models) => {
                         })),
                     );
                 });
+
+                // Send a slack alert, if it fails, do nothing
+                try {
+                    if (slackConfig.close_shantytown) {
+                        const updatedTown = {
+                            ...town.dataValues, status, closedAt, closedWithSolutions, updatedBy: req.user.id, solutions,
+                        };
+                        await triggerShantytownCloseAlert(updatedTown, req.user);
+                    }
+                } catch (err) {
+                    console.log(`Error with shantytown close slack webhook : ${err.message}`);
+                }
+
 
                 return res.status(200).send(town);
             } catch (e) {
