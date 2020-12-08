@@ -18,24 +18,93 @@ function generateSearch(table) {
         },
     };
 
+
+    if (table === 'cities') {
+        return `
+            SELECT
+                '${map[table].label}' AS "label",
+                '${map[table].type}' AS "type",
+                code,
+                name,
+                fk_departement AS "departement"
+            FROM
+                ${table}
+            WHERE
+                REPLACE(REPLACE(name, '-', ' '), 'Î', 'I') ILIKE REPLACE(?, '-', ' ')
+                ${table === 'cities' ? 'AND fk_main IS NULL' : ''}
+            ORDER BY
+                CASE
+                    WHEN REPLACE(name, '-', ' ') ILIKE REPLACE(?, '-', ' ') THEN 1
+                    ELSE 2
+                END,
+                name ASC
+            LIMIT 4`;
+    }
+
+    if (table === 'epci') {
+        return `
+            SELECT
+                '${map[table].label}' AS "label",
+                '${map[table].type}' AS "type",
+                code,
+                name,
+                fk_departement AS "departement"
+            FROM
+                ${table}
+            LEFT JOIN epci_to_departement ON epci.code = epci_to_departement.fk_epci    
+            WHERE
+                REPLACE(REPLACE(name, '-', ' '), 'Î', 'I') ILIKE REPLACE(?, '-', ' ')
+                ${table === 'cities' ? 'AND fk_main IS NULL' : ''}
+            ORDER BY
+                CASE
+                    WHEN REPLACE(name, '-', ' ') ILIKE REPLACE(?, '-', ' ') THEN 1
+                    ELSE 2
+                END,
+                name ASC
+            LIMIT 4`;
+    }
+
+    if (table === 'departements') {
+        return `
+            SELECT
+                '${map[table].label}' AS "label",
+                '${map[table].type}' AS "type",
+                code,
+                name,
+                code as "departement"
+            FROM
+                ${table}
+            WHERE
+                REPLACE(REPLACE(name, '-', ' '), 'Î', 'I') ILIKE REPLACE(?, '-', ' ')
+                ${table === 'cities' ? 'AND fk_main IS NULL' : ''}
+            ORDER BY
+                CASE
+                    WHEN REPLACE(name, '-', ' ') ILIKE REPLACE(?, '-', ' ') THEN 1
+                    ELSE 2
+                END,
+                name ASC
+            LIMIT 4`;
+    }
+
     return `
-    SELECT
-        '${map[table].label}' AS "label",
-        '${map[table].type}' AS "type",
-        code,
-        name
-    FROM
-        ${table}
-    WHERE
-        REPLACE(REPLACE(name, '-', ' '), 'Î', 'I') ILIKE REPLACE(?, '-', ' ')
-        ${table === 'cities' ? 'AND fk_main IS NULL' : ''}
-    ORDER BY
-        CASE
-            WHEN REPLACE(name, '-', ' ') ILIKE REPLACE(?, '-', ' ') THEN 1
-            ELSE 2
-        END,
-        name ASC
-    LIMIT 4`;
+        SELECT
+            '${map[table].label}' AS "label",
+            '${map[table].type}' AS "type",
+            code,
+            name,
+            Null as "departement"
+        FROM
+            ${table}
+        WHERE
+            REPLACE(REPLACE(name, '-', ' '), 'Î', 'I') ILIKE REPLACE(?, '-', ' ')
+            ${table === 'cities' ? 'AND fk_main IS NULL' : ''}
+        ORDER BY
+            CASE
+                WHEN REPLACE(name, '-', ' ') ILIKE REPLACE(?, '-', ' ') THEN 1
+                ELSE 2
+            END,
+            name ASC
+        LIMIT 4`;
 }
 
 module.exports = (database) => {
