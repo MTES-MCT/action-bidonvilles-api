@@ -7,6 +7,7 @@ const userService = require('#server/services/userService');
 
 const {
     generateAccessTokenFor, hashPassword, getAccountActivationLink, getPasswordResetLink,
+    getExpiracyDateForActivationTokenCreatedAt,
 } = require('#server/utils/auth');
 const {
     send: sendMail,
@@ -19,6 +20,7 @@ MAIL_TEMPLATES.access_denied = require('#server/mails/access_request/user/access
 MAIL_TEMPLATES.new_password = require('#server/mails/new_password');
 
 const { auth: authConfig } = require('#server/config');
+const { sequelize } = require('#db/models');
 
 function trim(str) {
     if (typeof str !== 'string') {
@@ -486,33 +488,43 @@ module.exports = models => ({
             }
         }
 
-        const { link: activationLink, expiracyDate } = getAccountActivationLink({
-            id: user.id,
-            email: user.email,
-            activatedBy: req.user.id,
-        });
-
         try {
             // reload the user to take options into account (they might have changed above)
-            user = await models.user.findOne(req.params.id, { extended: true }, req.user, 'activate');
-            await sendMail(user, MAIL_TEMPLATES.access_granted(req.user, activationLink, expiracyDate), req.user);
-        } catch (error) {
-            return res.status(500).send({
-                error: {
-                    user_message: 'Une erreur est survenue lors de l\'envoi du mail',
-                    developer_message: error.message,
-                },
-            });
-        }
+            await sequelize.transaction(async (transaction) => {
+                user = await models.user.findOne(
+                    req.params.id,
+                    { extended: true },
+                    req.user,
+                    'activate',
+                );
 
-        try {
-            await models.user.update(req.params.id, {
-                last_activation_link_sent_on: new Date(),
+                await models.user.update(
+                    req.params.id,
+                    {
+                        last_activation_link_sent_on: new Date(),
+                    },
+                    transaction,
+                );
+
+                const now = Date.now();
+                const expiresAt = getExpiracyDateForActivationTokenCreatedAt(now);
+                const userAccessId = await models.userAccess.create({
+                    fk_user: user.id,
+                    sent_by: req.user.id,
+                    created_at: now,
+                    expires_at: expiresAt,
+                }, transaction);
+
+                const { link: activationLink } = getAccountActivationLink({
+                    id: userAccessId,
+                });
+
+                await sendMail(user, MAIL_TEMPLATES.access_granted(req.user, activationLink, expiresAt), req.user);
             });
         } catch (error) {
             return res.status(500).send({
                 error: {
-                    user_message: 'Une erreur est survenue lors de l\'écriture en base de données',
+                    user_message: 'Une erreur est survenue lors de l\'envoi du lien d\'activation',
                     developer_message: error.message,
                 },
             });
