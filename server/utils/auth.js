@@ -73,6 +73,17 @@ module.exports = {
     },
 
     /**
+     * Calculates the timestamp of expiration of an activation token created at a given date
+     *
+     * @param {Number} date Creation timestamp of the activation token (in milliseconds)
+     *
+     * @returns {Number} The timestamp of expiration (in milliseconds)
+     */
+    getExpiracyDateForActivationTokenCreatedAt(date) {
+        return date + (parseInt(activationTokenExpiresIn, 10) * 60 * 60 * 1000);
+    },
+
+    /**
      * Generates a password-reset link
      *
      * @param {User} user

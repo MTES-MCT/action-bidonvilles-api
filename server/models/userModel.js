@@ -522,7 +522,7 @@ module.exports = (database) => {
             return query(where, filters);
         },
 
-        update: async (userId, values) => {
+        update: async (userId, values, transaction = undefined) => {
             if (userId === undefined) {
                 throw new Error('The user id is missing');
             }
@@ -576,6 +576,7 @@ module.exports = (database) => {
                     replacements: Object.assign(replacements, {
                         userId,
                     }),
+                    transaction,
                 },
             );
 
