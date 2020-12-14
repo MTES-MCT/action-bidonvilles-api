@@ -140,6 +140,11 @@ module.exports = function (sequelize, DataTypes) {
             allowNull: true,
             field: 'population_minors_16_18',
         },
+        minorsInSchool: {
+            type: DataTypes.INTEGER,
+            allowNull: true,
+            field: 'minors_in_school',
+        },
         electricityType: {
             type: DataTypes.INTEGER,
             allowNull: false,

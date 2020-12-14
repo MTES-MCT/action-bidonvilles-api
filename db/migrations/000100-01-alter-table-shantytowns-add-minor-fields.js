@@ -34,6 +34,7 @@ module.exports = {
                 ...addColumn('population_minors_6_12'),
                 ...addColumn('population_minors_12_16'),
                 ...addColumn('population_minors_16_18'),
+                ...addColumn('minors_in_school'),
             ]);
         },
     ),
@@ -61,6 +62,7 @@ module.exports = {
                 ...removeColumn('population_minors_6_12'),
                 ...removeColumn('population_minors_12_16'),
                 ...removeColumn('population_minors_16_18'),
+                ...removeColumn('minors_in_school'),
             ]);
         },
     ),
