@@ -115,6 +115,36 @@ module.exports = function (sequelize, DataTypes) {
             allowNull: true,
             field: 'population_minors',
         },
+        populationMinors0To3: {
+            type: DataTypes.INTEGER,
+            allowNull: true,
+            field: 'population_minors_0_3',
+        },
+        populationMinors3To6: {
+            type: DataTypes.INTEGER,
+            allowNull: true,
+            field: 'population_minors_3_6',
+        },
+        populationMinors6To12: {
+            type: DataTypes.INTEGER,
+            allowNull: true,
+            field: 'population_minors_6_12',
+        },
+        populationMinors12To16: {
+            type: DataTypes.INTEGER,
+            allowNull: true,
+            field: 'population_minors_12_16',
+        },
+        populationMinors16To18: {
+            type: DataTypes.INTEGER,
+            allowNull: true,
+            field: 'population_minors_16_18',
+        },
+        minorsInSchool: {
+            type: DataTypes.INTEGER,
+            allowNull: true,
+            field: 'minors_in_school',
+        },
         electricityType: {
             type: DataTypes.INTEGER,
             allowNull: false,

@@ -354,24 +354,70 @@ module.exports = mode => ([
     /* **********************************************************************************************
      * Nombre de mineurs
      ********************************************************************************************* */
+    // Tranches d'âge
+    ...[
+        { min: 0, max: 3 },
+        { min: 3, max: 6 },
+        { min: 6, max: 12 },
+        { min: 12, max: 16 },
+        { min: 16, max: 18 },
+    ]
+        .reduce((acc, { min, max }) => [
+            ...acc,
+            body(`population_minors_${min}_${max}`)
+                .optional({ nullable: true })
+                .toInt()
+                .isInt().bail().withMessage(`Le champ "Nombre de mineurs entre ${min} et ${max} ans" est invalide`)
+                .isInt({ min: 0 }).withMessage(`Le champ "Nombre de mineurs entre ${min} et ${max} ans" ne peut pas être inférieur à 0`),
+
+            body(`population_minors_${min}_${max}`)
+                .customSanitizer(value => (Number.isInteger(value) ? value : null)),
+        ], []),
+
+    // Total
     body('population_minors')
         .optional({ nullable: true })
         .toInt()
         .isInt().bail().withMessage('Le champ "Nombre de mineurs" est invalide')
         .isInt({ min: 0 }).withMessage('Le champ "Nombre de mineurs" ne peut pas être inférieur à 0')
         .custom((value, { req }) => {
-            if (!Number.isInteger(req.body.population_total)) {
-                return true;
+            if (Number.isInteger(req.body.population_total) && value > req.body.population_total) {
+                throw new Error('Le champ "Nombre de mineurs" ne peut pas être supérieur au champ "Nombre de personnes"');
             }
 
-            if (value > req.body.population_total) {
-                throw new Error('Le champ "Nombre de mineurs" ne peut pas être supérieur au champ "Nombre de personnes"');
+            const detailedMinorsTotal = ['0_3', '3_6', '6_12', '12_16', '16_18'].reduce((total, ages) => total + (req.body[`population_minors_${ages}`] || 0), 0);
+            if (detailedMinorsTotal > value) {
+                throw new Error('La somme du nombre de mineurs par tranche d\'âge est supérieure à la valeur du champ "Nombre de mineurs"');
             }
 
             return true;
         }),
 
     body('population_minors')
+        .customSanitizer(value => (Number.isInteger(value) ? value : null)),
+
+    /* **********************************************************************************************
+     * Nombre d'enfants inscrits dans un établissement scolaire
+     ********************************************************************************************* */
+
+    body('minors_in_school')
+        .optional({ nullable: true })
+        .toInt()
+        .isInt().bail().withMessage('Le champ "Nombre d\'enfants inscrits dans un établissement scolaire" est invalide')
+        .isInt({ min: 0 }).withMessage('Le champ "Nombre d\'enfants inscrits dans un établissement scolaire" ne peut pas être inférieur à 0')
+        .custom((value, { req }) => {
+            if (Number.isInteger(req.body.population_total) && value > req.body.population_total) {
+                throw new Error('Le champ "Nombre d\'enfants inscrits dans un établissement scolaire" ne peut pas être supérieur au champ "Nombre de personnes"');
+            }
+
+            if (Number.isInteger(req.body.population_minors) && value > req.body.population_minors) {
+                throw new Error('Le champ "Nombre d\'enfants inscrits dans un établissement scolaire" ne peut pas être supérieur au champ "Nombre de mineurs"');
+            }
+
+            return true;
+        }),
+
+    body('minors_in_school')
         .customSanitizer(value => (Number.isInteger(value) ? value : null)),
 
     /* **********************************************************************************************
