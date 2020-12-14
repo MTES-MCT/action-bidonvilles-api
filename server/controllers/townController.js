@@ -160,6 +160,7 @@ module.exports = (models) => {
                         populationMinors6To12: req.body.population_minors_6_12,
                         populationMinors12To16: req.body.population_minors_12_16,
                         populationMinors16To18: req.body.population_minors_16_18,
+                        minorsInSchool: req.body.minors_in_school,
                         electricityType: req.body.electricity_type,
                         electricityComments: req.body.electricity_comments,
                         accessToSanitary: req.body.access_to_sanitary,
