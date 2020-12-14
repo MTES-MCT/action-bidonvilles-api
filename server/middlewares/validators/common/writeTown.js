@@ -397,6 +397,30 @@ module.exports = mode => ([
         .customSanitizer(value => (Number.isInteger(value) ? value : null)),
 
     /* **********************************************************************************************
+     * Nombre d'enfants inscrits dans un établissement scolaire
+     ********************************************************************************************* */
+
+    body('minors_in_school')
+        .optional({ nullable: true })
+        .toInt()
+        .isInt().bail().withMessage('Le champ "Nombre d\'enfants inscrits dans un établissement scolaire" est invalide')
+        .isInt({ min: 0 }).withMessage('Le champ "Nombre d\'enfants inscrits dans un établissement scolaire" ne peut pas être inférieur à 0')
+        .custom((value, { req }) => {
+            if (Number.isInteger(req.body.population_total) && value > req.body.population_total) {
+                throw new Error('Le champ "Nombre d\'enfants inscrits dans un établissement scolaire" ne peut pas être supérieur au champ "Nombre de personnes"');
+            }
+
+            if (Number.isInteger(req.body.population_minors) && value > req.body.population_minors) {
+                throw new Error('Le champ "Nombre d\'enfants inscrits dans un établissement scolaire" ne peut pas être supérieur au champ "Nombre de mineurs"');
+            }
+
+            return true;
+        }),
+
+    body('minors_in_school')
+        .customSanitizer(value => (Number.isInteger(value) ? value : null)),
+
+    /* **********************************************************************************************
      * Origines
      ********************************************************************************************* */
     body('social_origins')
