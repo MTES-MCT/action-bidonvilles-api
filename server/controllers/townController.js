@@ -924,6 +924,12 @@ module.exports = (models) => {
                     width: COLUMN_WIDTHS.SMALL,
                     sum: true,
                 },
+                minorsInSchool: {
+                    title: 'Enfants inscrits dans un établissement scolaire',
+                    data: ({ minorsInSchool }) => minorsInSchool,
+                    width: COLUMN_WIDTHS.SMALL,
+                    sum: true,
+                },
                 socialOrigins: {
                     title: 'Origines',
                     data: ({ socialOrigins }) => (socialOrigins.length > 0 ? socialOrigins.map(({ label }) => label).join(';') : null),
@@ -1232,6 +1238,7 @@ module.exports = (models) => {
                     properties.populationMinors6To12,
                     properties.populationMinors12To16,
                     properties.populationMinors16To18,
+                    properties.minorsInSchool,
                     properties.socialOrigins,
                 ],
             });
