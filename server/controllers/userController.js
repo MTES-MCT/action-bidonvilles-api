@@ -367,7 +367,13 @@ module.exports = models => ({
             });
         }
 
-        const user = await models.user.findOne(decoded.userId);
+        let user;
+        if (decoded.userId !== undefined) {
+            user = await models.user.findOne(decoded.userId);
+        } else {
+            user = await models.user.findOneByAccessId(decoded.id);
+        }
+
         if (user === null) {
             return res.status(400).send({
                 error: {
@@ -621,7 +627,13 @@ module.exports = models => ({
             });
         }
 
-        const user = await models.user.findOne(decoded.userId, { auth: true });
+        let user;
+        if (decoded.userId !== undefined) {
+            user = await models.user.findOne(decoded.userId, { auth: true });
+        } else {
+            user = await models.user.findOneByAccessId(decoded.id, { auth: true });
+        }
+
         if (user === null) {
             return res.status(400).send({
                 error: {
@@ -663,12 +675,22 @@ module.exports = models => ({
         }
 
         try {
-            await models.organization.activate(user.organization.id);
-            await models.user.update(user.id, {
-                password: hashPassword(req.body.password, user.salt),
-                fk_status: 'active',
-                activated_by: decoded.activatedBy,
-                activated_on: new Date(),
+            sequelize.transaction(async (transaction) => {
+                const now = new Date();
+
+                await models.organization.activate(user.organization.id, transaction);
+                await models.user.update(user.id, {
+                    password: hashPassword(req.body.password, user.salt),
+                    fk_status: 'active',
+                    activated_by: decoded.activatedBy || null,
+                    activated_on: now,
+                }, transaction);
+
+                if (decoded.id !== undefined) {
+                    await models.userAccess.update(decoded.id, {
+                        used_at: now,
+                    }, transaction);
+                }
             });
         } catch (error) {
             return res.status(500).send({

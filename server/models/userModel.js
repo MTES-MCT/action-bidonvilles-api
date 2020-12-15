@@ -264,6 +264,8 @@ module.exports = (database) => {
             FROM
                 users
             LEFT JOIN
+                last_user_accesses ON last_user_accesses.fk_user = users.user_id
+            LEFT JOIN
                 roles_admin ON users.fk_role = roles_admin.role_id
             LEFT JOIN
                 localized_organizations AS organizations ON users.fk_organization = organizations.organization_id
@@ -455,16 +457,23 @@ module.exports = (database) => {
         },
 
         /**
-         * Searches for a single user by access token
+         * Searches for a single user by access id
          *
-         * @param {String}      email
+         * @param {Number}      userAccessId
          * @param {UserFilters} [filters]
          *
          * @returns {User}
          */
-        findOneByToken: async (email, filters = {}) => {
+        findOneByAccessId: async (userAccessId, filters = {}) => {
             const users = await query(
-                [{ email: { value: [email.toUpperCase()], query: 'upper(users.email)' } }],
+                [
+                    {
+                        userAccessId: {
+                            query: 'last_user_accesses.user_access_id',
+                            value: [userAccessId],
+                        },
+                    },
+                ],
                 filters,
             );
 

@@ -26,4 +26,19 @@ module.exports = database => ({
 
         return result[0][0].id;
     },
+
+    update(user_access_id, { used_at }, transaction = undefined) {
+        return database.query(
+            `UPDATE user_accesses
+            SET used_at = :used_at
+            WHERE user_access_id = :user_access_id`,
+            {
+                replacements: {
+                    user_access_id,
+                    used_at,
+                },
+                transaction,
+            },
+        );
+    },
 });
