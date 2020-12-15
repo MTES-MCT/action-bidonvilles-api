@@ -467,10 +467,10 @@ module.exports = models => ({
             });
         }
 
-        if (user.activated_on !== null) {
+        if (user.status !== 'new') {
             return res.status(400).send({
                 error: {
-                    user_message: 'L\'utilisateur concerné a déjà été activé',
+                    user_message: 'L\'utilisateur concerné n\'a pas de demande d\'accès en attente',
                     developer_message: null,
                 },
             });
@@ -502,14 +502,6 @@ module.exports = models => ({
                     { extended: true },
                     req.user,
                     'activate',
-                );
-
-                await models.user.update(
-                    req.params.id,
-                    {
-                        last_activation_link_sent_on: new Date(),
-                    },
-                    transaction,
                 );
 
                 const now = Date.now();
@@ -561,20 +553,10 @@ module.exports = models => ({
             });
         }
 
-        if (user.activated_on !== null) {
+        if (user.status !== 'new') {
             return res.status(400).send({
                 error: {
-                    user_message: 'L\'utilisateur concerné a déjà été activé',
-                    developer_message: null,
-                },
-
-            });
-        }
-
-        if (user.last_activation_link_sent_on !== null) {
-            return res.status(400).send({
-                error: {
-                    user_message: 'La demande d\'accès a déjà été acceptée',
+                    user_message: 'L\'utilisateur concerné n\'a pas de demande d\'accès en attente',
                     developer_message: null,
                 },
             });
@@ -687,10 +669,7 @@ module.exports = models => ({
                 await models.user.update(user.id, {
                     password: hashPassword(req.body.password, user.salt),
                     fk_status: 'active',
-                    activated_by: decoded.activatedBy || null,
-                    activated_on: now,
                 }, transaction);
-
                 await models.userAccess.update(userAccessId, {
                     sent_by: (user.user_access.sent_by === null && decoded.activatedBy) || undefined,
                     used_at: now,
