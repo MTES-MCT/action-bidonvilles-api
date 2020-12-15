@@ -49,15 +49,15 @@ module.exports = database => ({
 
         const rows = await database.query(
             `SELECT
-                EXTRACT(MONTH FROM users.activated_on) AS month,
+                EXTRACT(MONTH FROM ua.used_at) AS month,
                 COUNT(*) AS total
-            FROM users
+            FROM user_accesses ua
             WHERE
-                users.activated_on IS NOT NULL
+                ua.used_at IS NOT NULL
                 AND
-                EXTRACT(EPOCH FROM users.activated_on) >= :limit
-            GROUP BY EXTRACT(MONTH FROM users.activated_on)
-            ORDER BY month ASC`,
+                EXTRACT(EPOCH FROM ua.used_at) >= 10000
+            GROUP BY EXTRACT(MONTH FROM ua.used_at)
+            ORDER BY month asc`,
             {
                 type: database.QueryTypes.SELECT,
                 replacements: {
