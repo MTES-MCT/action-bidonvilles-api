@@ -678,6 +678,11 @@ module.exports = models => ({
             sequelize.transaction(async (transaction) => {
                 const now = new Date();
 
+                let userAccessId = decoded.id;
+                if (decoded.id === undefined) {
+                    userAccessId = user.user_access.id;
+                }
+
                 await models.organization.activate(user.organization.id, transaction);
                 await models.user.update(user.id, {
                     password: hashPassword(req.body.password, user.salt),
@@ -686,11 +691,10 @@ module.exports = models => ({
                     activated_on: now,
                 }, transaction);
 
-                if (decoded.id !== undefined) {
-                    await models.userAccess.update(decoded.id, {
-                        used_at: now,
-                    }, transaction);
-                }
+                await models.userAccess.update(userAccessId, {
+                    sent_by: (user.user_access.sent_by === null && decoded.activatedBy) || undefined,
+                    used_at: now,
+                }, transaction);
             });
         } catch (error) {
             return res.status(500).send({

@@ -37,6 +37,22 @@ function serializeUser(user, latestCharte, filters, permissionMap) {
         status: user.status,
         activated_on: user.activated_on ? user.activated_on.getTime() / 1000 : null,
         created_at: user.created_at.getTime() / 1000,
+        user_access: user.user_access_id !== null ? {
+            id: user.user_access_id,
+            sent_by: user.activator_id !== null ? {
+                id: user.activator_id,
+                first_name: user.activator_first_name,
+                last_name: user.activator_last_name,
+                position: user.activator_position,
+                organization: {
+                    id: user.activator_organization_id,
+                    name: user.activator_organization_name,
+                },
+            } : null,
+            used_at: user.user_access_used_at,
+            expires_at: user.user_access_expires_at,
+            created_at: user.user_access_created_at,
+        } : null,
         organization: {
             id: user.organization_id,
             name: user.organization_name,
@@ -255,6 +271,10 @@ module.exports = (database) => {
                 organization_categories.uid AS organization_category_id,
                 organization_categories.name_singular AS organization_category_name_singular,
                 organization_categories.name_plural AS organization_category_name_plural,
+                last_user_accesses.user_access_id,
+                last_user_accesses.used_at AS user_access_used_at,
+                last_user_accesses.expires_at AS user_access_expires_at,
+                last_user_accesses.created_at AS user_access_created_at,
                 activator.user_id AS activator_id,
                 activator.first_name AS activator_first_name,
                 activator.last_name AS activator_last_name,
@@ -274,7 +294,7 @@ module.exports = (database) => {
             LEFT JOIN
                 organization_categories ON organization_types.fk_category = organization_categories.uid
             LEFT JOIN
-                users AS activator ON users.created_by = activator.user_id
+                users AS activator ON last_user_accesses.sent_by = activator.user_id
             LEFT JOIN
                 organizations AS activator_organization ON activator.fk_organization = activator_organization.organization_id
             LEFT JOIN
