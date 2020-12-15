@@ -180,11 +180,12 @@ module.exports = database => ({
         },
     ),
 
-    activate(organizationId) {
+    activate(organizationId, transaction = undefined) {
         return database.query('UPDATE organizations SET active = TRUE WHERE organization_id = :organizationId', {
             replacements: {
                 organizationId,
             },
+            transaction,
         });
     },
 
