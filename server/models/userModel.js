@@ -38,6 +38,7 @@ function serializeUser(user, latestCharte, filters, permissionMap) {
             id: user.user_access_id,
             sent_by: user.activator_id !== null ? {
                 id: user.activator_id,
+                email: user.activator_email,
                 first_name: user.activator_first_name,
                 last_name: user.activator_last_name,
                 position: user.activator_position,
@@ -255,6 +256,7 @@ module.exports = (database) => {
                 last_user_accesses.expires_at AS user_access_expires_at,
                 last_user_accesses.created_at AS user_access_created_at,
                 activator.user_id AS activator_id,
+                activator.email AS activator_email,
                 activator.first_name AS activator_first_name,
                 activator.last_name AS activator_last_name,
                 activator.position AS activator_position,
