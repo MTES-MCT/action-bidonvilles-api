@@ -55,32 +55,34 @@ module.exports = {
     /**
      * Generates an account activation link
      *
-     * @param {User} user
+     * @param {Number} userAccessId
      *
      * @returns {string}
      */
-    getAccountActivationLink(user) {
-        if (!user) {
-            throw new Error('The user is mandatory to generate an account activation link');
-        }
+    getAccountActivationLink(userAccessId) {
+        const token = jwt.sign(
+            {
+                type: 'account_validation',
+                id: userAccessId,
+            },
+            authConfig.secret,
+            {
+                expiresIn: authConfig.expiresIn,
+            },
+        );
 
-        const token = generateAccessTokenFor(user, 'account_validation', activationTokenExpiresIn);
-
-        return {
-            link: `${frontUrl}/activer-mon-compte/${encodeURIComponent(token)}`,
-            expiracyDate: new Date(Date.now() + (parseInt(activationTokenExpiresIn, 10) * 60 * 60 * 1000)),
-        };
+        return `${frontUrl}/activer-mon-compte/${encodeURIComponent(token)}`;
     },
 
     /**
      * Calculates the timestamp of expiration of an activation token created at a given date
      *
-     * @param {Number} date Creation timestamp of the activation token (in milliseconds)
+     * @param {Date} date Creation date of the activation token
      *
-     * @returns {Number} The timestamp of expiration (in milliseconds)
+     * @returns {Date} The date of expiration
      */
     getExpiracyDateForActivationTokenCreatedAt(date) {
-        return date + (parseInt(activationTokenExpiresIn, 10) * 60 * 60 * 1000);
+        return new Date(date.getTime() + (parseInt(activationTokenExpiresIn, 10) * 60 * 60 * 1000));
     },
 
     /**
