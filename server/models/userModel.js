@@ -47,9 +47,9 @@ function serializeUser(user, latestCharte, filters, permissionMap) {
                     name: user.activator_organization_name,
                 },
             } : null,
-            used_at: user.user_access_used_at,
-            expires_at: user.user_access_expires_at,
-            created_at: user.user_access_created_at,
+            used_at: user.user_access_used_at ? user.user_access_used_at.getTime() / 1000 : null,
+            expires_at: user.user_access_expires_at.getTime() / 1000,
+            created_at: user.user_access_created_at.getTime() / 1000,
         } : null,
         organization: {
             id: user.organization_id,
