@@ -6,7 +6,7 @@ module.exports = database => ({
             `INSERT INTO user_accesses(
                 fk_user,
                 sent_by,
-                expires_at
+                expires_at,
                 created_at
             ) VALUES (
                 :fk_user,
