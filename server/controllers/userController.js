@@ -6,13 +6,14 @@ const validate = require('#server/controllers/userController/helpers/validate');
 const userService = require('#server/services/userService');
 
 const {
-    generateAccessTokenFor, hashPassword, getAccountActivationLink, getPasswordResetLink,
+    generateAccessTokenFor, hashPassword, getPasswordResetLink,
     getExpiracyDateForActivationTokenCreatedAt,
 } = require('#server/utils/auth');
 const {
     send: sendMail,
 } = require('#server/utils/mail');
 const permissionsDescription = require('#server/permissions_description');
+const accessRequestService = require('#server/services/accessRequest/accessRequestService');
 
 const MAIL_TEMPLATES = {};
 MAIL_TEMPLATES.access_granted = require('#server/mails/access_request/user/access_granted');
@@ -504,7 +505,7 @@ module.exports = models => ({
                     'activate',
                 );
 
-                const now = Date.now();
+                const now = new Date();
                 const expiresAt = getExpiracyDateForActivationTokenCreatedAt(now);
                 const userAccessId = await models.userAccess.create({
                     fk_user: user.id,
@@ -513,11 +514,14 @@ module.exports = models => ({
                     expires_at: expiresAt,
                 }, transaction);
 
-                const { link: activationLink } = getAccountActivationLink({
-                    id: userAccessId,
-                });
-
-                await sendMail(user, MAIL_TEMPLATES.access_granted(req.user, activationLink, expiresAt), req.user);
+                accessRequestService.resetRequestsForUser(user);
+                await accessRequestService.handleAccessRequestApproved(Object.assign({}, user, {
+                    user_access: {
+                        id: userAccessId,
+                        expires_at: expiresAt.getTime() / 1000,
+                        sent_by: req.user,
+                    },
+                }));
             });
         } catch (error) {
             return res.status(500).send({
@@ -563,7 +567,7 @@ module.exports = models => ({
         }
 
         try {
-            await sendMail(user, MAIL_TEMPLATES.access_denied(user, req.user), req.user);
+            await accessRequestService.handleAccessRequestDenied(user, req.user);
         } catch (error) {
             return res.status(500).send({
                 error: {
@@ -674,6 +678,10 @@ module.exports = models => ({
                     sent_by: (user.user_access.sent_by === null && decoded.activatedBy) || undefined,
                     used_at: now,
                 }, transaction);
+
+                if (user.user_access.sent_by !== null) {
+                    await accessRequestService.handleAccessActivated(user);
+                }
             });
         } catch (error) {
             return res.status(500).send({

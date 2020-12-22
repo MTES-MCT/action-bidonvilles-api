@@ -3,34 +3,40 @@ const mailService = require('#server/services/mailService');
 module.exports = {
     toAdmin: {
         newRequestNotification(admins, user) {
-            admins.forEach(admin => mailService.send(
-                'access_request/admin/new_request_notification',
-                admin,
-                user,
-                [user],
-            ));
+            return Promise.all(
+                admins.map(admin => mailService.send(
+                    'access_request/admin/new_request_notification',
+                    admin,
+                    user,
+                    [user],
+                )),
+            );
         },
 
         firstRequestPendingNotification(admins, user) {
-            admins.forEach(admin => mailService.send(
-                'access_request/admin/request_pending_reminder_1',
-                admin,
-                user,
-                [user],
-            ));
+            return Promise.all(
+                admins.map(admin => mailService.send(
+                    'access_request/admin/request_pending_reminder_1',
+                    admin,
+                    user,
+                    [user],
+                )),
+            );
         },
 
         secondRequestPendingNotification(admins, user) {
-            admins.forEach(admin => mailService.send(
-                'access_request/admin/request_pending_reminder_2',
-                admin,
-                user,
-                [user],
-            ));
+            return Promise.all(
+                admins.map(admin => mailService.send(
+                    'access_request/admin/request_pending_reminder_2',
+                    admin,
+                    user,
+                    [user],
+                )),
+            );
         },
 
         accessExpired(admin, user, submitDate) {
-            mailService.send(
+            return mailService.send(
                 'access_request/admin/access_expired',
                 admin,
                 user,
@@ -39,7 +45,7 @@ module.exports = {
         },
 
         accessActivated(admin, user) {
-            mailService.send(
+            return mailService.send(
                 'access_request/admin/access_activated',
                 admin,
                 user,
@@ -50,7 +56,7 @@ module.exports = {
 
     toUser: {
         newRequestConfirmation(user) {
-            mailService.send(
+            return mailService.send(
                 'access_request/user/access_request_confirmation',
                 user,
                 null,
@@ -59,7 +65,7 @@ module.exports = {
         },
 
         accessDenied(user, admin) {
-            mailService.send(
+            return mailService.send(
                 'access_request/user/access_denied',
                 user,
                 admin,
@@ -68,7 +74,7 @@ module.exports = {
         },
 
         accessGranted(user, admin, activationLink, expiracyDate) {
-            mailService.send(
+            return mailService.send(
                 'access_request/user/access_granted',
                 user,
                 admin,
@@ -76,20 +82,20 @@ module.exports = {
             );
         },
 
-        accessPending(user, activationLink, expiracyDate) {
-            mailService.send(
+        accessPending(user, admin, activationLink, expiracyDate) {
+            return mailService.send(
                 'access_request/user/access_pending',
                 user,
-                null,
+                admin,
                 [activationLink, expiracyDate],
             );
         },
 
-        accessExpired(user, expiracyDate) {
-            mailService.send(
+        accessExpired(user, admin, expiracyDate) {
+            return mailService.send(
                 'access_request/user/access_expired',
                 user,
-                null,
+                admin,
                 [expiracyDate],
             );
         },

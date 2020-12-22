@@ -1,21 +1,38 @@
 const { sequelize } = require('#db/models/index');
 const { user: userModel } = require('#server/models/index')(sequelize);
+const { getAccountActivationLink } = require('#server/utils/auth');
 
 const sendEmail = require('./mailer');
 const { scheduleEvent, cancelEvent } = require('./scheduler');
 
 function isAccessRequestPending(user) {
-    return user.status === 'new' && user.last_activation_link_sent_on === null;
+    return user.status === 'new' && user.user_access === null;
+}
+
+function isAccessPending(user) {
+    return user.status === 'new' && user.user_access !== null;
+}
+
+function isAccessExpired(user) {
+    const now = new Date();
+    return user.status === 'new' && user.user_access !== null && user.user_access.expires_at < now;
 }
 
 module.exports = {
     /**
+     * Resets all scheduled events for a given user
      *
+     * @param {User} user
+     *
+     * @returns {undefined}
      */
     async resetRequestsForUser(user) {
-        cancelEvent.accessRequestIsPending(user);
-        cancelEvent.accessPending(user);
-        cancelEvent.accessExpired(user);
+        cancelEvent.accessRequestIsPending(user.id);
+
+        if (user.user_access !== null) {
+            cancelEvent.accessPending(user.user_access.id);
+            cancelEvent.accessExpired(user.user_access.id);
+        }
     },
 
     /**
@@ -24,11 +41,13 @@ module.exports = {
      * @param {User} user
      */
     async handleNewAccessRequest(user) {
-        const admins = await userModel.getAdminsFor(user.id);
+        const admins = await userModel.getAdminsFor(user);
 
         // notify user and admin
-        sendEmail.toUser.newRequestConfirmation(user);
-        sendEmail.toAdmin.newRequestNotification(admins, user);
+        await Promise.all([
+            sendEmail.toUser.newRequestConfirmation(user),
+            sendEmail.toAdmin.newRequestNotification(admins, user),
+        ]);
 
         // schedule events
         scheduleEvent.accessRequestIsPending(user.id);
@@ -42,18 +61,20 @@ module.exports = {
      */
     async handleAccessRequestPending(firstNotification, userId) {
         // fetch data
-        const user = await userModel.findOne(userId);
+        const user = await userModel.findOne(userId, {
+            extended: true,
+        });
         if (user === null || !isAccessRequestPending(user)) {
             return;
         }
 
-        const admins = await userModel.getAdminsFor(user.id);
+        const admins = await userModel.getAdminsFor(user);
 
         // notify admin
         if (firstNotification === true) {
-            sendEmail.toAdmin.firstRequestPendingNotification(admins, user);
+            await sendEmail.toAdmin.firstRequestPendingNotification(admins, user);
         } else {
-            sendEmail.toAdmin.secondRequestPendingNotification(admins, user);
+            await sendEmail.toAdmin.secondRequestPendingNotification(admins, user);
         }
     },
 
@@ -63,9 +84,9 @@ module.exports = {
      * @param {User} user
      * @param {User} admin
      */
-    handleAccessRequestDenied(user, admin) {
+    async handleAccessRequestDenied(user, admin) {
         // notify user
-        sendEmail.toUser.accessDenied(user, admin);
+        await sendEmail.toUser.accessDenied(user, admin);
 
         // cancel scheduled events
         cancelEvent.accessRequestIsPending(user.id);
@@ -74,36 +95,42 @@ module.exports = {
     /**
      * Handle access request approved
      *
-     * @param {User}   user
-     * @param {User}   admin
-     * @param {String} activationLink
-     * @param {Number} expiracyDate   Timestamp in seconds
-     * @param {Number} accessId
+     * @param {User} user
      */
-    async handleAccessRequestApproved(user, admin, activationLink, expiracyDate, accessId) {
+    async handleAccessRequestApproved(user) {
         // notify user
-        sendEmail.toUser.accessGranted(user, admin, activationLink, expiracyDate);
+        await sendEmail.toUser.accessGranted(
+            user,
+            user.user_access.sent_by,
+            getAccountActivationLink(user.user_access.id),
+            new Date(user.user_access.expires_at * 1000),
+        );
 
         // schedule new events
         cancelEvent.accessRequestIsPending(user.id);
-        scheduleEvent.accessPending(accessId);
-        scheduleEvent.accessExpired(accessId);
+        scheduleEvent.accessPending(user.user_access.id);
+        scheduleEvent.accessExpired(user.user_access.id);
     },
 
     /**
      * Handle access is pending
      *
-     * @param {Number} accessId
+     * @param {Number} accessId
      */
     async handleAccessPending(accessId) {
         // fetch data
-        const user = await userModel.findOneByAccess(accessId);
-        if (user === null) {
+        const user = await userModel.findOneByAccessId(accessId);
+        if (user === null || !isAccessPending(user)) {
             return;
         }
 
         // notify the user
-        sendEmail.toUser.accessPending(user);
+        await sendEmail.toUser.accessPending(
+            user,
+            user.user_access.sent_by,
+            getAccountActivationLink(user.user_access.id),
+            new Date(user.user_access.expires_at * 1000),
+        );
     },
 
     /**
@@ -113,19 +140,24 @@ module.exports = {
      */
     async handleAccessExpired(accessId) {
         // fetch data
-        const user = await userModel.findOneByAccess(accessId);
-        if (user === null || (Date.now() / 1000) < expiracyDate) {
-            return;
-        }
-
-        const admin = await userModel.findOne(adminId);
-        if (admin === null) {
+        const user = await userModel.findOneByAccessId(accessId);
+        if (user === null || !isAccessExpired(user)) {
             return;
         }
 
         // notify the user and the admin
-        sendEmail.toUser.accessExpired(user, expiracyDate);
-        sendEmail.toAdmin.accessExpired(admin, user, submitDate);
+        await Promise.all([
+            sendEmail.toUser.accessExpired(
+                user,
+                user.user_access.sent_by,
+                new Date(user.user_access.expires_at * 1000),
+            ),
+            sendEmail.toAdmin.accessExpired(
+                user.user_access.sent_by,
+                user,
+                new Date(user.user_access.created_at * 1000),
+            ),
+        ]);
     },
 
     /**
@@ -134,9 +166,9 @@ module.exports = {
      * @param {User} user
      */
     async handleAccessActivated(user) {
-        sendEmail.toAdmin.accessActivated(admin, user);
+        await sendEmail.toAdmin.accessActivated(user.user_access.sent_by, user);
 
-        cancelEvent.accessPending(user.id, activationLink, expiracyDate);
-        cancelEvent.accessExpired(user.id, admin.id, user.last_activation_link_sent_on, expiracyDate);
+        cancelEvent.accessPending(user.user_access.id);
+        cancelEvent.accessExpired(user.user_access.id);
     },
 };

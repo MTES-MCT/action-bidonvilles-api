@@ -3,11 +3,33 @@ const accessRequestService = require('#server/services/accessRequest/accessReque
 module.exports = (agenda) => {
     agenda.define(
         'access_request_pending_1st',
-        // accessRequestService.handlePendingAccessRequest.bind(this, true),
+        (job) => {
+            const { userId } = job.attrs.data;
+            accessRequestService.handleAccessRequestPending(true, parseInt(userId, 10));
+        },
     );
 
     agenda.define(
         'access_request_pending_2nd',
-        // accessRequestService.handlePendingAccessRequest.bind(this, false),
+        (job) => {
+            const { userId } = job.attrs.data;
+            accessRequestService.handleAccessRequestPending(false, parseInt(userId, 10));
+        },
+    );
+
+    agenda.define(
+        'access_is_pending',
+        (job) => {
+            const { accessId } = job.attrs.data;
+            accessRequestService.handleAccessPending(parseInt(accessId, 10));
+        },
+    );
+
+    agenda.define(
+        'access_is_expired',
+        (job) => {
+            const { accessId } = job.attrs.data;
+            accessRequestService.handleAccessExpired(parseInt(accessId, 10));
+        },
     );
 };
