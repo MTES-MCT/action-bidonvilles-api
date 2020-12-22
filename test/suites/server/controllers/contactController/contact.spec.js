@@ -53,6 +53,9 @@ const mockModels = {
     '#server/utils/mail': {
         send: emailStub,
     },
+    '#server/services/accessRequest/accessRequestService': {
+
+    },
 };
 
 
@@ -139,6 +142,10 @@ describe.only('contactController.contact()', () => {
         it('Should should handle an access request for a public_establishment', async () => {
             const createUserStub = sinon.stub();
             createUserStub.returns({});
+
+            const accessRequestStub = sinon.stub({
+                handleNewAccessRequest: () => {},
+            });
             const controller = rewiremock.proxy('#server/controllers/contactController', {
                 // Fake userService db models calls
                 '#server/models/userModel': module.exports = () => ({
@@ -154,6 +161,7 @@ describe.only('contactController.contact()', () => {
                     findOneById: () => ({ fk_type: 12 }),
                 }),
                 '#server/services/createUser': module.exports = createUserStub,
+                '#server/services/accessRequest/accessRequestService': module.exports = accessRequestStub,
             })(controllerMockModels);
 
             req.body = {
@@ -192,12 +200,17 @@ describe.only('contactController.contact()', () => {
                 access_request_message: "ceci est une demande d'acces",
                 created_by: null,
             });
+            expect(accessRequestStub.handleNewAccessRequest).to.have.been.calledWith(user);
             expect(res.status).to.have.been.calledOnceWith(200);
         });
 
         it('Should should handle an access request for a territorial_collectivity', async () => {
             const createUserStub = sinon.stub();
             createUserStub.returns({});
+
+            const accessRequestStub = sinon.stub({
+                handleNewAccessRequest: () => {},
+            });
             const controller = rewiremock.proxy('#server/controllers/contactController', {
                 // Fake userService db models calls
                 '#server/models/userModel': module.exports = () => ({
@@ -211,6 +224,7 @@ describe.only('contactController.contact()', () => {
                     findOneByLocation: () => ({ fk_category: 'territorial_collectivity' }),
                 }),
                 '#server/services/createUser': module.exports = createUserStub,
+                '#server/services/accessRequest/accessRequestService': module.exports = accessRequestStub,
             })(controllerMockModels);
 
             req.body = {
@@ -253,12 +267,17 @@ describe.only('contactController.contact()', () => {
                 access_request_message: "ceci est une demande d'acces",
                 created_by: null,
             });
+            expect(accessRequestStub.handleNewAccessRequest).to.have.been.calledWith(user);
             expect(res.status).to.have.been.calledOnceWith(200);
         });
 
         it('Should should handle an access request for a administration', async () => {
             const createUserStub = sinon.stub();
             createUserStub.returns({});
+
+            const accessRequestStub = sinon.stub({
+                handleNewAccessRequest: () => {},
+            });
             const controller = rewiremock.proxy('#server/controllers/contactController', {
                 // Fake userService db models calls
                 '#server/models/userModel': module.exports = () => ({
@@ -271,6 +290,7 @@ describe.only('contactController.contact()', () => {
                     findOneById: () => ({ fk_category: 'administration' }),
                 }),
                 '#server/services/createUser': module.exports = createUserStub,
+                '#server/services/accessRequest/accessRequestService': module.exports = accessRequestStub,
             })(controllerMockModels);
 
             req.body = {
@@ -293,7 +313,6 @@ describe.only('contactController.contact()', () => {
             await controller.contact(req, res);
 
             // It should send a message to all admins and ensure that it returns a 200
-            expect(res.status).to.have.been.calledOnceWith(200);
             expect(createUserStub).to.have.been.calledOnceWith({
                 last_name: 'destrem',
                 first_name: 'gael',
@@ -307,11 +326,17 @@ describe.only('contactController.contact()', () => {
                 access_request_message: "ceci est une demande d'acces",
                 created_by: null,
             });
+            expect(accessRequestStub.handleNewAccessRequest).to.have.been.calledWith(user);
+            expect(res.status).to.have.been.calledOnceWith(200);
         });
 
         it('Should should handle an access request for an existing association', async () => {
             const createUserStub = sinon.stub();
             createUserStub.returns({});
+
+            const accessRequestStub = sinon.stub({
+                handleNewAccessRequest: () => {},
+            });
             const controller = rewiremock.proxy('#server/controllers/contactController', {
                 // Fake userService db models calls
                 '#server/models/userModel': module.exports = () => ({
@@ -327,6 +352,7 @@ describe.only('contactController.contact()', () => {
                     findOne: () => 'something',
                 }),
                 '#server/services/createUser': module.exports = createUserStub,
+                '#server/services/accessRequest/accessRequestService': module.exports = accessRequestStub,
             })(controllerMockModels);
 
             req.body = {
@@ -353,7 +379,6 @@ describe.only('contactController.contact()', () => {
             await controller.contact(req, res);
 
             // It should send a message to all admins and ensure that it returns a 200
-            expect(res.status).to.have.been.calledOnceWith(200);
             expect(createUserStub).to.have.been.calledOnceWith({
                 last_name: 'destrem',
                 first_name: 'gael',
@@ -367,11 +392,17 @@ describe.only('contactController.contact()', () => {
                 access_request_message: "ceci est une demande d'acces",
                 created_by: null,
             });
+            expect(accessRequestStub.handleNewAccessRequest).to.have.been.calledWith(user);
+            expect(res.status).to.have.been.calledOnceWith(200);
         });
 
         it('Should should handle an access request for a new association', async () => {
             const createUserStub = sinon.stub();
             createUserStub.returns({});
+
+            const accessRequestStub = sinon.stub({
+                handleNewAccessRequest: () => {},
+            });
             const controller = rewiremock.proxy('#server/controllers/contactController', {
                 // Fake userService db models calls
                 '#server/models/userModel': module.exports = () => ({
@@ -387,6 +418,7 @@ describe.only('contactController.contact()', () => {
                     findOne: () => 'something',
                 }),
                 '#server/services/createUser': module.exports = createUserStub,
+                '#server/services/accessRequest/accessRequestService': module.exports = accessRequestStub,
             })(controllerMockModels);
 
             req.body = {
@@ -412,7 +444,6 @@ describe.only('contactController.contact()', () => {
             await controller.contact(req, res);
 
             // It should send a message to all admins and ensure that it returns a 200
-            expect(res.status).to.have.been.calledOnceWith(200);
             expect(createUserStub).to.have.been.calledOnceWith({
                 last_name: 'destrem',
                 first_name: 'gael',
@@ -426,6 +457,8 @@ describe.only('contactController.contact()', () => {
                 access_request_message: "ceci est une demande d'acces",
                 created_by: null,
             });
+            expect(accessRequestStub.handleNewAccessRequest).to.have.been.calledWith(user);
+            expect(res.status).to.have.been.calledOnceWith(200);
         });
     });
 });
