@@ -34,7 +34,7 @@ module.exports = user => ({
                                     <br/>
                                     À présent, cette personne fait partie de la communauté des utilisateurs de la plateforme d’information, de partage et de pilotage des acteurs de la résorption des bidonvilles. N’hésitez pas à l’accompagner dans la prise en main de l’outil ou à inciter son utilisation.<br/>
                                     <br/>
-                                    Nous sommes également à votre disposition pour organiser un temps d’échange avec les utilisateurs de votre territoire. Contacter Laure : <a style="color: #000F8C; text-decoration: none;" href="mailto:laure.dubuc@dihal.gouv.fr">mailto:laure.dubuc@dihal.gouv.fr</a> ou 01 40 81 31 54.<br/>
+                                    Nous sommes également à votre disposition pour organiser un temps d’échange avec les utilisateurs de votre territoire. Contacter Laure : <a style="color: #000F8C; text-decoration: none;" href="mailto:laure.dubuc@dihal.gouv.fr">laure.dubuc@dihal.gouv.fr</a> ou 01 40 81 31 54.<br/>
                                     <br/>
                                     Cordialement.
                                     <br/>
