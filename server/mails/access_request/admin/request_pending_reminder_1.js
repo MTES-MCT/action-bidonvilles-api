@@ -53,7 +53,7 @@ module.exports = (user) => {
                                         Une demande d’accès à la plateforme <em><a style="color: #000F8C; text-decoration: none;" href="${frontUrl}">Résorption-bidonvilles</a></em> est en attente depuis 3 jours. Nous vous rappelons qu’il est important d’y répondre rapidement.<br/>
                                         Pour ouvrir et paramétrer l'accès, <a href="${frontUrl}/nouvel-utilisateur/${user.id}">rendez-vous sur l'onglet administration de la plateforme</a>.<br/>
                                         <br/>
-                                        Si vous souhaitez des informations complémentaires sur les droits d’accès à la plateforme, contactez Laure par mail ou téléphone : <a style="color: #000F8C; text-decoration: none;" href="mailto:laure.dubuc@dihal.gouv.fr">mailto:laure.dubuc@dihal.gouv.fr</a> ou 01 40 81 31 54.<br/>
+                                        Si vous souhaitez des informations complémentaires sur les droits d’accès à la plateforme, contactez Laure par mail ou téléphone : <a style="color: #000F8C; text-decoration: none;" href="mailto:laure.dubuc@dihal.gouv.fr">laure.dubuc@dihal.gouv.fr</a> ou 01 40 81 31 54.<br/>
                                         <br/>
                                         Merci.<br/>
                                         <br/>
