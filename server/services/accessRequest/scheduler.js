@@ -2,48 +2,52 @@ const agenda = require('#server/loaders/agendaLoader')();
 
 module.exports = {
     scheduleEvent: {
-        accessRequestIsPending(userId) {
-            agenda.schedule('in 30 seconds', 'access_request_pending_1st', {
-                userId,
-            });
+        async accessRequestIsPending(userId) {
+            await Promise.all([
+                agenda.schedule('in 3 days', 'access_request_pending_1st', {
+                    userId,
+                }),
 
-            agenda.schedule('in 1 minute', 'access_request_pending_2nd', {
-                userId,
-            });
+                agenda.schedule('in 10 days', 'access_request_pending_2nd', {
+                    userId,
+                }),
+            ]);
         },
 
-        accessPending(accessId) {
-            agenda.schedule('in 1 minute', 'access_is_pending', {
+        async accessPending(accessId) {
+            await agenda.schedule('in 5 days', 'access_is_pending', {
                 accessId,
             });
         },
 
-        accessExpired(accessId) {
-            agenda.schedule('in 2 minutes', 'access_is_expired', {
+        async accessExpired(accessId) {
+            await agenda.schedule('in 8 days', 'access_is_expired', {
                 accessId,
             });
         },
     },
 
     cancelEvent: {
-        accessRequestIsPending(userId) {
-            agenda.cancel({
-                name: 'access_request_pending_1st',
-                attrs: {
-                    userId,
-                },
-            });
+        async accessRequestIsPending(userId) {
+            await Promise.all([
+                agenda.cancel({
+                    name: 'access_request_pending_1st',
+                    attrs: {
+                        userId,
+                    },
+                }),
 
-            agenda.cancel({
-                name: 'access_request_pending_2nd',
-                attrs: {
-                    userId,
-                },
-            });
+                agenda.cancel({
+                    name: 'access_request_pending_2nd',
+                    attrs: {
+                        userId,
+                    },
+                }),
+            ]);
         },
 
-        accessPending(accessId) {
-            agenda.cancel({
+        async accessPending(accessId) {
+            await agenda.cancel({
                 name: 'access_is_pending',
                 attrs: {
                     accessId,
@@ -51,8 +55,8 @@ module.exports = {
             });
         },
 
-        accessExpired(accessId) {
-            agenda.cancel({
+        async accessExpired(accessId) {
+            await agenda.cancel({
                 name: 'access_is_expired',
                 attrs: {
                     accessId,

@@ -32,8 +32,6 @@ services:
         image: mongo:latest
         container_name: rb_agenda_db
         restart: always
-        ports:
-            - '1238:8081'
         volumes:
             - ./agenda-data:/data/db
         environment:
