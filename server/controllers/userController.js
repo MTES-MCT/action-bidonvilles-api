@@ -514,14 +514,15 @@ module.exports = models => ({
                     expires_at: expiresAt,
                 }, transaction);
 
-                accessRequestService.resetRequestsForUser(user);
-                await accessRequestService.handleAccessRequestApproved(Object.assign({}, user, {
+                await accessRequestService.resetRequestsForUser(user);
+                await accessRequestService.handleAccessRequestApproved({
+                    ...user,
                     user_access: {
                         id: userAccessId,
                         expires_at: expiresAt.getTime() / 1000,
                         sent_by: req.user,
                     },
-                }));
+                });
             });
         } catch (error) {
             return res.status(500).send({
@@ -661,7 +662,7 @@ module.exports = models => ({
         }
 
         try {
-            sequelize.transaction(async (transaction) => {
+            await sequelize.transaction(async (transaction) => {
                 const now = new Date();
 
                 let userAccessId = decoded.id;

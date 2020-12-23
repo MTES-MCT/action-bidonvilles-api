@@ -27,11 +27,13 @@ module.exports = {
      * @returns {undefined}
      */
     async resetRequestsForUser(user) {
-        cancelEvent.accessRequestIsPending(user.id);
+        await cancelEvent.accessRequestIsPending(user.id);
 
         if (user.user_access !== null) {
-            cancelEvent.accessPending(user.user_access.id);
-            cancelEvent.accessExpired(user.user_access.id);
+            await Promise.all([
+                cancelEvent.accessPending(user.user_access.id),
+                cancelEvent.accessExpired(user.user_access.id),
+            ]);
         }
     },
 
@@ -50,7 +52,7 @@ module.exports = {
         ]);
 
         // schedule events
-        scheduleEvent.accessRequestIsPending(user.id);
+        await scheduleEvent.accessRequestIsPending(user.id);
     },
 
     /**
@@ -89,7 +91,7 @@ module.exports = {
         await sendEmail.toUser.accessDenied(user, admin);
 
         // cancel scheduled events
-        cancelEvent.accessRequestIsPending(user.id);
+        await cancelEvent.accessRequestIsPending(user.id);
     },
 
     /**
@@ -107,9 +109,11 @@ module.exports = {
         );
 
         // schedule new events
-        cancelEvent.accessRequestIsPending(user.id);
-        scheduleEvent.accessPending(user.user_access.id);
-        scheduleEvent.accessExpired(user.user_access.id);
+        await Promise.all([
+            cancelEvent.accessRequestIsPending(user.id),
+            scheduleEvent.accessPending(user.user_access.id),
+            scheduleEvent.accessExpired(user.user_access.id),
+        ]);
     },
 
     /**
@@ -168,7 +172,9 @@ module.exports = {
     async handleAccessActivated(user) {
         await sendEmail.toAdmin.accessActivated(user.user_access.sent_by, user);
 
-        cancelEvent.accessPending(user.user_access.id);
-        cancelEvent.accessExpired(user.user_access.id);
+        await Promise.all([
+            cancelEvent.accessPending(user.user_access.id),
+            cancelEvent.accessExpired(user.user_access.id),
+        ]);
     },
 };

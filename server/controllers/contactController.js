@@ -44,7 +44,7 @@ module.exports = models => ({
 
             try {
                 const user = await models.user.findOne(result.id, { extended: true });
-                accessRequestService.handleNewAccessRequest(user);
+                await accessRequestService.handleNewAccessRequest(user);
             } catch (err) {
                 // ignore
             }
