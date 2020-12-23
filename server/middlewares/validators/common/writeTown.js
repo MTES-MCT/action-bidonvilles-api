@@ -72,12 +72,17 @@ module.exports = mode => ([
             }
 
             const permission = req.user.permissions.shantytown[mode];
-            if (permission.geographic_level === 'nation') {
-                return true;
+            let geographicLevel = permission.geographic_level;
+            if (permission.geographic_level === 'local') {
+                if (['city', 'epci'].indexOf(req.user.organization.location.type) !== -1) {
+                    geographicLevel = 'departement';
+                } else {
+                    geographicLevel = req.user.organization.location.type;
+                }
             }
 
             const wording = mode === 'create' ? 'déclarer' : 'modifier';
-            switch (req.user.organization.location.type) {
+            switch (geographicLevel) {
                 case 'nation':
                     return true;
 
@@ -85,15 +90,17 @@ module.exports = mode => ([
                 case 'departement':
                 case 'epci':
                 case 'city':
-                    if (req.user.organization.location[req.user.organization.location.type].code !== req.body.city[req.user.organization.location.type].code) {
+                    if (req.user.organization.location[geographicLevel] === null
+                        || req.body.city[geographicLevel].code !== req.user.organization.location[geographicLevel].code) {
                         throw new Error(`Vous n'avez pas le droit de ${wording} un site sur ce territoire`);
                     }
-
-                    return true;
+                    break;
 
                 default:
                     throw new Error(`Imposible de valider que vous disposez des droits suffisants pour ${wording} un site`);
             }
+
+            return true;
         })
         // coordonnées GPS
         .custom((value, { req }) => {
