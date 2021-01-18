@@ -104,6 +104,11 @@ module.exports = (app) => {
         controllers.contact.contact,
     );
     app.post(
+        '/invite',
+        middlewares.validation,
+        controllers.invite.invite,
+    );
+    app.post(
         '/users/:id/sendActivationLink',
         middlewares.auth.authenticate,
         (...args) => middlewares.auth.checkPermissions(['user.activate'], ...args),
