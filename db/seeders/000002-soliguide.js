@@ -11,7 +11,7 @@ module.exports = {
                 transaction,
             },
         ).then(() => parser(
-            fs.readFileSync(path.join(__dirname, '..', 'data', 'poi_solinum_26_11_2020.csv'), { encoding: 'utf8' }),
+            fs.readFileSync(path.join(__dirname, '..', 'data', 'poi_solinum_14_01_2021.csv'), { encoding: 'utf8' }),
         )).then((pois) => {
             const toBool = val => val === 'TRUE';
 
