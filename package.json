@@ -12,6 +12,7 @@
     "private": true,
     "dependencies": {
         "@slack/webhook": "^5.0.3",
+        "agenda": "^3.1.0",
         "body-parser": "^1.18.3",
         "cors": "^2.8.5",
         "escape-html": "^1.0.3",
@@ -74,7 +75,7 @@
         "db:reset": "sequelize db:migrate:undo:all && sequelize db:migrate && sequelize db:seed:all",
         "start": "forever start server/index.js",
         "dev": "nodemon server/index.js",
-        "test": "mocha --recursive --require ./test/bootstrap.js --bail",
+        "test": "yarn mocha --recursive --require ./test/bootstrap.js --bail",
         "test:unit": "yarn test --invert --grep '.*server/models.*'",
         "test:integration": "yarn test --grep '.*server/models.*'"
     },

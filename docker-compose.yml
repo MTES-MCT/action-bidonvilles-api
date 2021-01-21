@@ -2,6 +2,9 @@ version: '3.7'
 
 services:
     api:
+        depends_on:
+            - database
+            - agenda_db
         build:
             context: .
             target: development
@@ -24,6 +27,16 @@ services:
         environment:
             - POSTGRES_DB=resorption_bidonvilles
             - POSTGRES_PASSWORD=resorption_bidonvilles
+
+    agenda_db:
+        image: mongo:latest
+        container_name: rb_agenda_db
+        restart: always
+        volumes:
+            - ./agenda-data:/data/db
+        environment:
+            MONGO_INITDB_ROOT_USERNAME: root
+            MONGO_INITDB_ROOT_PASSWORD: demo
 
 volumes:
     api_node_modules:

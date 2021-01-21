@@ -1,5 +1,4 @@
 const permissionsDescription = require('#server/permissions_description');
-const { activationTokenExpiresIn } = require('#server/config');
 const { getPermissionsFor } = require('#server/utils/permission');
 
 /**
@@ -33,10 +32,25 @@ function serializeUser(user, latestCharte, filters, permissionMap) {
         email: user.email,
         phone: user.phone,
         position: user.position,
-        last_activation_link_sent_on: user.last_activation_link_sent_on ? user.last_activation_link_sent_on.getTime() / 1000 : null,
         status: user.status,
-        activated_on: user.activated_on ? user.activated_on.getTime() / 1000 : null,
         created_at: user.created_at.getTime() / 1000,
+        user_access: user.user_access_id !== null ? {
+            id: user.user_access_id,
+            sent_by: user.activator_id !== null ? {
+                id: user.activator_id,
+                email: user.activator_email,
+                first_name: user.activator_first_name,
+                last_name: user.activator_last_name,
+                position: user.activator_position,
+                organization: {
+                    id: user.activator_organization_id,
+                    name: user.activator_organization_name,
+                },
+            } : null,
+            used_at: user.user_access_used_at ? user.user_access_used_at.getTime() / 1000 : null,
+            expires_at: user.user_access_expires_at.getTime() / 1000,
+            created_at: user.user_access_created_at.getTime() / 1000,
+        } : null,
         organization: {
             id: user.organization_id,
             name: user.organization_name,
@@ -75,28 +89,12 @@ function serializeUser(user, latestCharte, filters, permissionMap) {
                 } : null,
             },
         },
-        activated_by: {
-            id: user.activator_id,
-            first_name: user.activator_first_name,
-            last_name: user.activator_last_name,
-            position: user.activator_position,
-            organization: {
-                id: user.activator_organization_id,
-                name: user.activator_organization_name,
-            },
-        },
         charte_engagement_a_jour: latestCharte === null || user.charte_engagement_signee === latestCharte || user.role !== 'national_admin',
         is_admin: user.is_admin,
         role: user.role_name || user.organization_type_role_name,
         role_id: user.role || user.organization_type_role,
         is_superuser: user.role === 'national_admin',
     };
-
-    if (serialized.last_activation_link_sent_on !== null) {
-        serialized.activation_link_expires_on = serialized.last_activation_link_sent_on + (parseInt(activationTokenExpiresIn, 10) * 3600);
-    } else {
-        serialized.activation_link_expires_on = null;
-    }
 
     if (filters.auth === true) {
         Object.assign(serialized, {
@@ -217,10 +215,8 @@ module.exports = (database) => {
                 users.position,
                 users.password,
                 users.salt,
-                users.last_activation_link_sent_on,
                 users.access_request_message,
                 users.fk_status AS status,
-                users.activated_on,
                 users.default_export,
                 users.created_at,
                 users.last_version,
@@ -255,7 +251,12 @@ module.exports = (database) => {
                 organization_categories.uid AS organization_category_id,
                 organization_categories.name_singular AS organization_category_name_singular,
                 organization_categories.name_plural AS organization_category_name_plural,
+                last_user_accesses.user_access_id,
+                last_user_accesses.used_at AS user_access_used_at,
+                last_user_accesses.expires_at AS user_access_expires_at,
+                last_user_accesses.created_at AS user_access_created_at,
                 activator.user_id AS activator_id,
+                activator.email AS activator_email,
                 activator.first_name AS activator_first_name,
                 activator.last_name AS activator_last_name,
                 activator.position AS activator_position,
@@ -263,6 +264,8 @@ module.exports = (database) => {
                 activator_organization.name AS activator_organization_name
             FROM
                 users
+            LEFT JOIN
+                last_user_accesses ON last_user_accesses.fk_user = users.user_id
             LEFT JOIN
                 roles_admin ON users.fk_role = roles_admin.role_id
             LEFT JOIN
@@ -272,16 +275,25 @@ module.exports = (database) => {
             LEFT JOIN
                 organization_categories ON organization_types.fk_category = organization_categories.uid
             LEFT JOIN
-                users AS activator ON users.created_by = activator.user_id
+                users AS activator ON last_user_accesses.sent_by = activator.user_id
             LEFT JOIN
                 organizations AS activator_organization ON activator.fk_organization = activator_organization.organization_id
             LEFT JOIN
                 roles_regular ON organization_types.fk_role = roles_regular.role_id
             ${where.length > 0 ? `WHERE ${whereClause}` : ''}
             ORDER BY
-                CASE WHEN users.activated_on IS NULL THEN 0 ELSE 1 END ASC,
-                CASE WHEN users.last_activation_link_sent_on IS NULL THEN 0 ELSE 1 END ASC,
-                CASE WHEN users.activated_on IS NULL THEN users.created_at ELSE NULL END DESC,
+                CASE
+                    WHEN
+                        users.fk_status = 'new' AND last_user_accesses.user_access_id IS NULL
+                        THEN 10000000 + extract(epoch from users.created_at)::int
+                    WHEN users.fk_status = 'new' AND last_user_accesses.expires_at < NOW()::date
+                        THEN extract(epoch from last_user_accesses.created_at)::int
+                    WHEN users.fk_status = 'new' AND last_user_accesses.expires_at > NOW()::date
+                        THEN extract(epoch from last_user_accesses.created_at)::int - 10000000
+                    WHEN users.fk_role IS NULL THEN 3
+                    WHEN users.fk_role = 'local_admin' THEN 2
+                    ELSE 1
+                END DESC,
                 upper(users.last_name) ASC,
                 upper(users.first_name) ASC`,
             {
@@ -455,6 +467,30 @@ module.exports = (database) => {
         },
 
         /**
+         * Searches for a single user by access id
+         *
+         * @param {Number}      userAccessId
+         * @param {UserFilters} [filters]
+         *
+         * @returns {User}
+         */
+        findOneByAccessId: async (userAccessId, filters = {}) => {
+            const users = await query(
+                [
+                    {
+                        userAccessId: {
+                            query: 'last_user_accesses.user_access_id',
+                            value: [userAccessId],
+                        },
+                    },
+                ],
+                filters,
+            );
+
+            return users.length === 1 ? users[0] : null;
+        },
+
+        /**
          * Searches for the users members of an organization
          *
          * @param {Number}       organizationId
@@ -505,14 +541,14 @@ module.exports = (database) => {
             return query(where, filters);
         },
 
-        update: async (userId, values) => {
+        update: async (userId, values, transaction = undefined) => {
             if (userId === undefined) {
                 throw new Error('The user id is missing');
             }
 
             const allowedProperties = [
-                'first_name', 'last_name', 'position', 'phone', 'password', 'defaultExport', 'fk_status', 'last_activation_link_sent_on',
-                'activated_by', 'activated_on', 'last_version', 'last_changelog', 'charte_engagement_signee',
+                'first_name', 'last_name', 'position', 'phone', 'password', 'defaultExport', 'fk_status',
+                'last_version', 'last_changelog', 'charte_engagement_signee',
             ];
             const propertiesToColumns = {
                 first_name: 'first_name',
@@ -522,9 +558,6 @@ module.exports = (database) => {
                 password: 'password',
                 defaultExport: 'default_export',
                 fk_status: 'fk_status',
-                last_activation_link_sent_on: 'last_activation_link_sent_on',
-                activated_by: 'activated_by',
-                activated_on: 'activated_on',
                 last_version: 'last_version',
                 last_changelog: 'last_changelog',
                 charte_engagement_signee: 'charte_engagement_signee',
@@ -559,6 +592,7 @@ module.exports = (database) => {
                     replacements: Object.assign(replacements, {
                         userId,
                     }),
+                    transaction,
                 },
             );
 

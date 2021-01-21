@@ -6,19 +6,22 @@ const validate = require('#server/controllers/userController/helpers/validate');
 const userService = require('#server/services/userService');
 
 const {
-    generateAccessTokenFor, hashPassword, getAccountActivationLink, getPasswordResetLink,
+    generateAccessTokenFor, hashPassword, getPasswordResetLink,
+    getExpiracyDateForActivationTokenCreatedAt,
 } = require('#server/utils/auth');
 const {
     send: sendMail,
 } = require('#server/utils/mail');
 const permissionsDescription = require('#server/permissions_description');
+const accessRequestService = require('#server/services/accessRequest/accessRequestService');
 
 const MAIL_TEMPLATES = {};
-MAIL_TEMPLATES.access_granted = require('#server/mails/access_granted');
-MAIL_TEMPLATES.access_denied = require('#server/mails/access_denied');
+MAIL_TEMPLATES.access_granted = require('#server/mails/access_request/user/access_granted');
+MAIL_TEMPLATES.access_denied = require('#server/mails/access_request/user/access_denied');
 MAIL_TEMPLATES.new_password = require('#server/mails/new_password');
 
 const { auth: authConfig } = require('#server/config');
+const { sequelize } = require('#db/models');
 
 function trim(str) {
     if (typeof str !== 'string') {
@@ -365,7 +368,13 @@ module.exports = models => ({
             });
         }
 
-        const user = await models.user.findOne(decoded.userId);
+        let user;
+        if (decoded.userId !== undefined) {
+            user = await models.user.findOne(decoded.userId);
+        } else {
+            user = await models.user.findOneByAccessId(decoded.id);
+        }
+
         if (user === null) {
             return res.status(400).send({
                 error: {
@@ -459,10 +468,10 @@ module.exports = models => ({
             });
         }
 
-        if (user.activated_on !== null) {
+        if (user.status !== 'new') {
             return res.status(400).send({
                 error: {
-                    user_message: 'L\'utilisateur concerné a déjà été activé',
+                    user_message: 'L\'utilisateur concerné n\'a pas de demande d\'accès en attente',
                     developer_message: null,
                 },
             });
@@ -486,33 +495,39 @@ module.exports = models => ({
             }
         }
 
-        const { link: activationLink, expiracyDate } = getAccountActivationLink({
-            id: user.id,
-            email: user.email,
-            activatedBy: req.user.id,
-        });
-
         try {
             // reload the user to take options into account (they might have changed above)
-            user = await models.user.findOne(req.params.id, { extended: true }, req.user, 'activate');
-            await sendMail(user, MAIL_TEMPLATES.access_granted(user, req.user, activationLink, expiracyDate), req.user);
-        } catch (error) {
-            return res.status(500).send({
-                error: {
-                    user_message: 'Une erreur est survenue lors de l\'envoi du mail',
-                    developer_message: error.message,
-                },
-            });
-        }
+            await sequelize.transaction(async (transaction) => {
+                user = await models.user.findOne(
+                    req.params.id,
+                    { extended: true },
+                    req.user,
+                    'activate',
+                );
 
-        try {
-            await models.user.update(req.params.id, {
-                last_activation_link_sent_on: new Date(),
+                const now = new Date();
+                const expiresAt = getExpiracyDateForActivationTokenCreatedAt(now);
+                const userAccessId = await models.userAccess.create({
+                    fk_user: user.id,
+                    sent_by: req.user.id,
+                    created_at: now,
+                    expires_at: expiresAt,
+                }, transaction);
+
+                await accessRequestService.resetRequestsForUser(user);
+                await accessRequestService.handleAccessRequestApproved({
+                    ...user,
+                    user_access: {
+                        id: userAccessId,
+                        expires_at: expiresAt.getTime() / 1000,
+                        sent_by: req.user,
+                    },
+                });
             });
         } catch (error) {
             return res.status(500).send({
                 error: {
-                    user_message: 'Une erreur est survenue lors de l\'écriture en base de données',
+                    user_message: 'Une erreur est survenue lors de l\'envoi du lien d\'activation',
                     developer_message: error.message,
                 },
             });
@@ -543,27 +558,17 @@ module.exports = models => ({
             });
         }
 
-        if (user.activated_on !== null) {
+        if (user.status !== 'new') {
             return res.status(400).send({
                 error: {
-                    user_message: 'L\'utilisateur concerné a déjà été activé',
-                    developer_message: null,
-                },
-
-            });
-        }
-
-        if (user.last_activation_link_sent_on !== null) {
-            return res.status(400).send({
-                error: {
-                    user_message: 'La demande d\'accès a déjà été acceptée',
+                    user_message: 'L\'utilisateur concerné n\'a pas de demande d\'accès en attente',
                     developer_message: null,
                 },
             });
         }
 
         try {
-            await sendMail(user, MAIL_TEMPLATES.access_denied(user, req.user), req.user);
+            await accessRequestService.handleAccessRequestDenied(user, req.user);
         } catch (error) {
             return res.status(500).send({
                 error: {
@@ -609,7 +614,13 @@ module.exports = models => ({
             });
         }
 
-        const user = await models.user.findOne(decoded.userId, { auth: true });
+        let user;
+        if (decoded.userId !== undefined) {
+            user = await models.user.findOne(decoded.userId, { auth: true });
+        } else {
+            user = await models.user.findOneByAccessId(decoded.id, { auth: true });
+        }
+
         if (user === null) {
             return res.status(400).send({
                 error: {
@@ -651,12 +662,27 @@ module.exports = models => ({
         }
 
         try {
-            await models.organization.activate(user.organization.id);
-            await models.user.update(user.id, {
-                password: hashPassword(req.body.password, user.salt),
-                fk_status: 'active',
-                activated_by: decoded.activatedBy,
-                activated_on: new Date(),
+            await sequelize.transaction(async (transaction) => {
+                const now = new Date();
+
+                let userAccessId = decoded.id;
+                if (decoded.id === undefined) {
+                    userAccessId = user.user_access.id;
+                }
+
+                await models.organization.activate(user.organization.id, transaction);
+                await models.user.update(user.id, {
+                    password: hashPassword(req.body.password, user.salt),
+                    fk_status: 'active',
+                }, transaction);
+                await models.userAccess.update(userAccessId, {
+                    sent_by: (user.user_access.sent_by === null && decoded.activatedBy) || undefined,
+                    used_at: now,
+                }, transaction);
+
+                if (user.user_access.sent_by !== null) {
+                    await accessRequestService.handleAccessActivated(user);
+                }
             });
         } catch (error) {
             return res.status(500).send({
