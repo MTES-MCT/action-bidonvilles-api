@@ -9,5 +9,6 @@ USER node
 
 WORKDIR /home/node/app/
 
-COPY --chown=node:node package.json yarn.lock ./
+COPY --chown=node:node package.json yarn.lock wait-for-it.sh ./
+RUN chmod +x ./wait-for-it.sh
 RUN yarn install --silent && yarn cache clean

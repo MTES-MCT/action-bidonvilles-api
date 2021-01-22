@@ -9,7 +9,7 @@ services:
             context: .
             target: development
         container_name: rb_api
-        command: yarn dev
+        command: ./wait-for-it.sh agenda_db:27017 -- yarn dev
         ports:
             - '1236:8080'
         volumes:
