@@ -131,7 +131,69 @@ async function triggerShantytownCreationAlert(town, user) {
     await shantytownCreationAlert.send(slackMessage);
 }
 
+async function triggerNewUserAlert(user) {
+    const shantytownCreationAlert = new IncomingWebhook(slack.new_user);
+
+    const username = formatUsername(user);
+    const usernameLink = `<https://resorption-bidonvilles.beta.gouv.fr/#/nouvel-utilisateur/${user.id}|${username}>`;
+
+    const { location } = user.organization;
+
+    let locationText;
+    if (location && location.type === 'departement') {
+        locationText = location.departement.name;
+    } else if (location && location.type === 'region') {
+        locationText = location.region.name;
+    } else {
+        locationText = 'National';
+    }
+
+    const slackMessage = {
+        text: `Nouvel utilisateur : ${username}`,
+        blocks: [
+            {
+                type: 'section',
+                text: {
+                    type: 'mrkdwn',
+                    text: `:rotating_light: Nouvel utilisateur : ${usernameLink} <${user.email}>`,
+                },
+            },
+        ],
+        attachments: [
+            {
+                color: '#f2c744',
+                blocks: [
+                    {
+                        type: 'section',
+                        text: {
+                            type: 'mrkdwn',
+                            text: `Territoire de rattachement: ${locationText}`,
+                        },
+                    },
+                    {
+                        type: 'section',
+                        text: {
+                            type: 'mrkdwn',
+                            text: `Organisation: ${user.organization.name}`,
+                        },
+                    },
+                    {
+                        type: 'section',
+                        text: {
+                            type: 'mrkdwn',
+                            text: `Fonction: ${user.position}`,
+                        },
+                    },
+                ],
+
+            }],
+    };
+
+    await shantytownCreationAlert.send(slackMessage);
+}
+
 module.exports = {
     triggerShantytownCloseAlert,
     triggerShantytownCreationAlert,
+    triggerNewUserAlert,
 };
