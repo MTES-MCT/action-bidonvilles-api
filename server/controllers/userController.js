@@ -785,7 +785,7 @@ module.exports = models => ({
                 await triggerNewUserAlert(user);
             }
         } catch (err) {
-            console.log(`Error with shantytown new user webhook : ${err.message}`);
+            console.log(`Error with new user webhook : ${err.message}`);
         }
 
         return res.status(200).send({});
