@@ -1,4 +1,5 @@
 const accessRequestService = require('#server/services/accessRequest/accessRequestService');
+const mailService = require('#server/services/mailService');
 
 module.exports = (agenda) => {
     agenda.define(
@@ -30,6 +31,19 @@ module.exports = (agenda) => {
         (job) => {
             const { accessId } = job.attrs.data;
             accessRequestService.handleAccessExpired(parseInt(accessId, 10));
+        },
+    );
+
+    agenda.define(
+        'demo_invitation',
+        (job) => {
+            const { user } = job.attrs.data;
+            mailService.send(
+                'demo_invitation',
+                user,
+                null,
+                [],
+            );
         },
     );
 };
