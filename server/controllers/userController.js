@@ -694,7 +694,7 @@ module.exports = models => ({
             });
         }
 
-        await agenda.schedule('in 1 minutes', 'demo_invitation', {
+        await agenda.schedule('in 7 days', 'demo_invitation', {
             user,
         });
 
