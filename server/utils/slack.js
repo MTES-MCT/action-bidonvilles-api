@@ -1,9 +1,10 @@
 const { IncomingWebhook } = require('@slack/webhook');
 const { slack } = require('#server/config');
+const { frontUrl } = require('#server/config');
 
 const formatAddress = town => `${town.address} ${town.name ? `« ${town.name} » ` : ''}`;
 const formatUsername = user => `${user.first_name} ${user.last_name} `;
-const formatTownLink = (townID, text) => `<https://resorption-bidonvilles.beta.gouv.fr/#/site/${townID}|${text}>`;
+const formatTownLink = (townID, text) => `<${frontUrl}/#/site/${townID}|${text}>`;
 
 async function triggerShantytownCloseAlert(town, user) {
     const shantytownCloseAlert = new IncomingWebhook(slack.close_shantytown);
@@ -132,20 +133,18 @@ async function triggerShantytownCreationAlert(town, user) {
 }
 
 async function triggerNewUserAlert(user) {
-    const shantytownCreationAlert = new IncomingWebhook(slack.new_user);
+    const newUserAlert = new IncomingWebhook(slack.new_user);
 
     const username = formatUsername(user);
-    const usernameLink = `<https://resorption-bidonvilles.beta.gouv.fr/#/nouvel-utilisateur/${user.id}|${username}>`;
+    const usernameLink = `<${frontUrl}/#/nouvel-utilisateur/${user.id}|${username}>`;
 
     const { location } = user.organization;
 
-    let locationText;
-    if (location && location.type === 'departement') {
-        locationText = location.departement.name;
-    } else if (location && location.type === 'region') {
-        locationText = location.region.name;
-    } else {
+    let locationText = 'Inconnu';
+    if (location && location.type === 'nation') {
         locationText = 'National';
+    } else if (location && location[location.type] !== null) {
+        locationText = location[location.type].name;
     }
 
     const slackMessage = {
@@ -189,7 +188,7 @@ async function triggerNewUserAlert(user) {
             }],
     };
 
-    await shantytownCreationAlert.send(slackMessage);
+    await newUserAlert.send(slackMessage);
 }
 
 module.exports = {
