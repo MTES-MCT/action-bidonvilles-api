@@ -92,7 +92,7 @@ const getFields = (Sequelize) => ({
 
 module.exports = {
     up: (queryInterface, Sequelize) => queryInterface.sequelize.transaction(
-        transaction => Promise.all(Object.entries(getFields(Sequelize)).map(([field, props]) => 
+        transaction => Promise.all(Object.entries(getFields(Sequelize)).flatMap(([field, props]) => [
             queryInterface.addColumn(
                 'shantytowns',
                 field,
@@ -100,11 +100,19 @@ module.exports = {
                 {
                     transaction,
                 },
+            ),
+            queryInterface.addColumn(
+                'ShantytownHistories',
+                field,
+                props,
+                {
+                    transaction,
+                },
             )
-        ))    
+        ]))    
     ),
     down: (queryInterface, Sequelize) => queryInterface.sequelize.transaction(
-        transaction => Promise.all(Object.keys(getFields(Sequelize)).map(field => 
+        transaction => Promise.all(Object.keys(getFields(Sequelize)).flatMap(field => [
             queryInterface.removeColumn(
                 'shantytowns',
                 field,
@@ -112,7 +120,14 @@ module.exports = {
                     transaction,
                 },
             ),
-        ))
+            queryInterface.removeColumn(
+                'ShantytownHistories',
+                field,
+                {
+                    transaction,
+                },
+            )
+        ]))
     ),
 };
 
