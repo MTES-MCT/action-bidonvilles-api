@@ -54,6 +54,33 @@ module.exports = () => async (req, res) => {
                 censusConductedAt: req.body.census_conducted_at,
                 censusConductedBy: req.body.census_conducted_by,
                 updatedBy: req.user.id,
+                // New fields
+                // Water
+                waterPotable: req.body.water_potable,
+                waterContinuousAccess: req.body.water_continuous_access,
+                waterPublicPoint: req.body.water_public_point,
+                waterDistance: req.body.water_distance,
+                waterRoadsToCross: req.body.water_roads_to_cross,
+                waterEveryoneHasAccess: req.body.water_everyone_has_access,
+                waterStagnantWater: req.body.water_stagnant_water,
+                waterHandWashAccess: req.body.water_hand_wash_access,
+                waterHandWashAccessNumber: req.body.water_hand_wash_access_number,
+                // Sanitary
+                sanitaryNumber: req.body.sanitary_number,
+                sanitaryInsalubrious: req.body.sanitary_insalubrious,
+                sanitaryOnSite: req.body.sanitary_on_site,
+                // Trash
+                trashCansOnSite: req.body.trash_cans_on_site,
+                trashAccumulation: req.body.trash_accumulation,
+                trashEvacuationRegular: req.body.trash_evacuation_regular,
+                // Vermin
+                vermin: req.body.vermin,
+                verminComments: req.body.vermin_comments,
+                // Fire prevention
+                firePreventionMeasures: req.body.fire_prevention_measures,
+                firePreventionDiagnostic: req.body.fire_prevention_diagnostic,
+                firePreventionSiteAccessible: req.body.fire_prevention_site_accessible,
+                firePreventionComments: req.body.fire_prevention_comments,
             };
 
             await town.update(
