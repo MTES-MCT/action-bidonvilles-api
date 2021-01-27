@@ -883,8 +883,9 @@ module.exports = mode => ([
      * Y a-t-il des nuisibles sur le site ou à proximité ? (BOOLEAN OBLIGATOIRE)
      ********************************************************************************************* */
     body('vermin')
+        .exists({ checkNull: true }).bail().withMessage('Le champ "Y a-t-il des nuisibles sur le site ou à proximité" est obligatoire')
         .toInt()
-        .isInt({ min: -1, max: 1 }).withMessage('Le champ "Est-ce qu’il y a des bacs de lavage des mains ?" est invalide')
+        .isInt({ min: -1, max: 1 }).withMessage('Le champ "Y a-t-il des nuisibles sur le site ou à proximité" est invalide')
         .customSanitizer(fromIntToBoolSanitizer),
 
     /* **********************************************************************************************
@@ -899,6 +900,7 @@ module.exports = mode => ([
      * Y a-t-il des mesures “prévention incendie” ? (BOOLEAN obligatoire)
      ********************************************************************************************* */
     body('fire_prevention_measures')
+        .exists({ checkNull: true }).bail().withMessage('Le champ "Y a-t-il des mesures “prévention incendie” ?" est obligatoire')
         .toInt()
         .isInt({ min: -1, max: 1 }).withMessage('Le champ "Y a-t-il des mesures “prévention incendie” ?" est invalide')
         .customSanitizer(fromIntToBoolSanitizer),
