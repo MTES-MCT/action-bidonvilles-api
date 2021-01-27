@@ -179,6 +179,34 @@ module.exports = (models) => {
                         censusStatus: req.body.census_status,
                         censusConductedAt: req.body.census_conducted_at,
                         censusConductedBy: req.body.census_conducted_by,
+                        // New fields
+                        // Water
+                        waterPotable: req.body.water_potable,
+                        waterContinuousAccess: req.body.water_continuous_access,
+                        waterPublicPoint: req.body.water_public_point,
+                        waterDistance: req.body.water_distance,
+                        waterRoadsToCross: req.body.water_roads_to_cross,
+                        waterEveryoneHasAccess: req.body.water_everyone_has_access,
+                        waterStagnantWater: req.body.water_stagnant_water,
+                        waterHandWashAccess: req.body.water_hand_wash_access,
+                        waterHandWashAccessNumber: req.body.water_hand_wash_access_number,
+                        // Sanitary
+                        sanitaryNumber: req.body.sanitary_number,
+                        sanitaryInsalubrious: req.body.sanitary_insalubrious,
+                        sanitaryOnSite: req.body.sanitary_on_site,
+                        // Trash
+                        trashCansOnSite: req.body.trash_cans_on_site,
+                        trashAccumulation: req.body.trash_accumulation,
+                        trashEvacuationRegular: req.body.trash_evacuation_regular,
+                        // Vermin
+                        vermin: req.body.vermin,
+                        verminComments: req.body.vermin_comments,
+                        // Fire prevention
+                        firePreventionMeasures: req.body.fire_prevention_measures,
+                        firePreventionDiagnostic: req.body.fire_prevention_diagnostic,
+                        firePreventionSiteAccessible: req.body.fire_prevention_site_accessible,
+                        firePreventionComments: req.body.fire_prevention_comments,
+
                     };
 
                     town = await ShantyTowns.create(
@@ -1153,6 +1181,118 @@ module.exports = (models) => {
                     }).join('\n----\n'),
                     width: COLUMN_WIDTHS.LARGE,
                 },
+                // New Fields
+                // water
+                waterPotable: {
+                    title: 'L’eau est-elle potable ?',
+                    data: ({ waterPotable }) => waterPotable,
+                    width: COLUMN_WIDTHS.SMALL,
+                },
+                waterContinuousAccess: {
+                    title: 'L\'accès à l\'eau est-il continu?',
+                    data: ({ waterContinuousAccess }) => waterContinuousAccess,
+                    width: COLUMN_WIDTHS.SMALL,
+                },
+                waterPublicPoint: {
+                    title: 'Est-ce un point d\'eau public?',
+                    data: ({ waterPublicPoint }) => waterPublicPoint,
+                    width: COLUMN_WIDTHS.SMALL,
+                },
+                waterDistance: {
+                    title: 'Où se situe l\'accès à l\'eau?',
+                    data: ({ waterDistance }) => waterDistance,
+                    width: COLUMN_WIDTHS.SMALL,
+                },
+                waterRoadsToCross: {
+                    title: 'L\'accès nécessite-t-il un franchissement de rue ou de route ?',
+                    data: ({ waterRoadsToCross }) => waterRoadsToCross,
+                    width: COLUMN_WIDTHS.SMALL,
+                },
+                waterEveryoneHasAccess: {
+                    title: 'Tous les habitants ont-ils accès aux points d’eau ?',
+                    data: ({ waterEveryoneHasAccess }) => waterEveryoneHasAccess,
+                    width: COLUMN_WIDTHS.SMALL,
+                },
+                waterStagnantWater: {
+                    title: 'Existe-t-il des eaux stagnantes autour du point de distribution ?',
+                    data: ({ waterStagnantWater }) => waterStagnantWater,
+                    width: COLUMN_WIDTHS.SMALL,
+                },
+                waterHandWashAccess: {
+                    title: 'Est-ce qu’il y a des bacs de lavage des mains ?',
+                    data: ({ waterHandWashAccess }) => waterHandWashAccess,
+                    width: COLUMN_WIDTHS.SMALL,
+                },
+                waterHandWashAccessNumber: {
+                    title: 'Quel est le nombre de bacs de lavage des mains ?',
+                    data: ({ waterHandWashAccessNumber }) => waterHandWashAccessNumber,
+                    width: COLUMN_WIDTHS.SMALL,
+                },
+                // sanitary
+                sanitaryNumber: {
+                    title: 'Les toilettes se situent-elles sur le site ?',
+                    data: ({ sanitaryNumber }) => sanitaryNumber,
+                    width: COLUMN_WIDTHS.SMALL,
+                },
+                sanitaryInsalubrious: {
+                    title: 'Constate-t-on des marques de défécation à l’air libre ?',
+                    data: ({ sanitaryInsalubrious }) => sanitaryInsalubrious,
+                    width: COLUMN_WIDTHS.SMALL,
+                },
+                sanitaryOnSite: {
+                    title: 'Nombre de toilettes ?',
+                    data: ({ sanitaryOnSite }) => sanitaryOnSite,
+                    width: COLUMN_WIDTHS.SMALL,
+                },
+                // trash
+                trashCansOnSite: {
+                    title: 'Combien de poubelles / bennes sont à proximité immédiate du site ?',
+                    data: ({ trashCansOnSite }) => trashCansOnSite,
+                    width: COLUMN_WIDTHS.SMALL,
+                },
+                trashAccumulation: {
+                    title: 'Constate-t-on une accumulation de déchets sur le site ou aux abords ?',
+                    data: ({ trashAccumulation }) => trashAccumulation,
+                    width: COLUMN_WIDTHS.SMALL,
+                },
+                trashEvacuationRegular: {
+                    title: 'La collecte des poubelles / bennes est-elle réalisée de manière régulière ?',
+                    data: ({ trashEvacuationRegular }) => trashEvacuationRegular,
+                    width: COLUMN_WIDTHS.SMALL,
+                },
+                // vermin
+                vermin: {
+                    title: 'Y a-t-il des nuisibles sur le site ou à proximité ?',
+                    data: ({ vermin }) => vermin,
+                    width: COLUMN_WIDTHS.SMALL,
+                },
+                verminComments: {
+                    title: 'Précision concernant les nuisibles ?',
+                    data: ({ verminComments }) => verminComments,
+                    width: COLUMN_WIDTHS.SMALL,
+                },
+                // Fire prevention
+                firePreventionMeasures: {
+                    title: 'Y a-t-il des mesures “prévention incendie” ?',
+                    data: ({ firePreventionMeasures }) => firePreventionMeasures,
+                    width: COLUMN_WIDTHS.SMALL,
+                },
+                firePreventionDiagnostic: {
+                    title: 'Est-ce qu’un diagnostic prévention incendie par le SDIS a été réalisé ?',
+                    data: ({ firePreventionDiagnostic }) => firePreventionDiagnostic,
+                    width: COLUMN_WIDTHS.SMALL,
+                },
+                firePreventionSiteAccessible: {
+                    title: 'Est-ce que le site est accessible aux pompiers ?',
+                    data: ({ firePreventionSiteAccessible }) => firePreventionSiteAccessible,
+                    width: COLUMN_WIDTHS.SMALL,
+                },
+                firePreventionComments: {
+                    title: 'Prévention incendie : Préciser',
+                    data: ({ firePreventionComments }) => firePreventionComments,
+                    width: COLUMN_WIDTHS.SMALL,
+                },
+
             };
 
             closingSolutions.forEach(({ id: solutionId }) => {
@@ -1268,6 +1408,27 @@ module.exports = (models) => {
                         properties.accessToSanitary,
                         properties.sanitaryComments,
                         properties.trashEvacuation,
+                        properties.waterPotable,
+                        properties.waterContinuousAccess,
+                        properties.waterPublicPoint,
+                        properties.waterDistance,
+                        properties.waterRoadsToCross,
+                        properties.waterEveryoneHasAccess,
+                        properties.waterStagnantWater,
+                        properties.waterHandWashAccess,
+                        properties.waterHandWashAccessNumber,
+                        properties.sanitaryNumber,
+                        properties.sanitaryInsalubrious,
+                        properties.sanitaryOnSite,
+                        properties.trashCansOnSite,
+                        properties.trashAccumulation,
+                        properties.trashEvacuationRegular,
+                        properties.vermin,
+                        properties.verminComments,
+                        properties.firePreventionMeasures,
+                        properties.firePreventionDiagnostic,
+                        properties.firePreventionSiteAccessible,
+                        properties.firePreventionComments,
                     ],
                 });
             }
