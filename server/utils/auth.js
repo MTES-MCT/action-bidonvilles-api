@@ -67,7 +67,7 @@ module.exports = {
             },
             authConfig.secret,
             {
-                expiresIn: authConfig.expiresIn,
+                expiresIn: activationTokenExpiresIn,
             },
         );
 
