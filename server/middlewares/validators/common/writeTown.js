@@ -753,6 +753,9 @@ module.exports = mode => ([
         .isInt({ min: -1, max: 1 }).withMessage('Le champ "L\'eau est-elle potable?" est invalide')
         .customSanitizer(fromIntToBoolSanitizer),
 
+    body('water_potable')
+        .customSanitizer(value => value || null),
+
     /* **********************************************************************************************
      * L'accès à l'eau est-il continu? (BOOLEAN optionnel)
      ********************************************************************************************* */
@@ -761,6 +764,9 @@ module.exports = mode => ([
         .toInt()
         .isInt({ min: -1, max: 1 }).withMessage('Le champ "L\'accès à l\'eau est-il continu?" est invalide')
         .customSanitizer(fromIntToBoolSanitizer),
+
+    body('water_continuous_access')
+        .customSanitizer(value => value || null),
 
     /* **********************************************************************************************
      * Est-ce un point d'eau public? (BOOLEAN optionnel)
@@ -771,14 +777,19 @@ module.exports = mode => ([
         .isInt({ min: -1, max: 1 }).withMessage('Le champ "Est-ce un point d\'eau public?" est invalide')
         .customSanitizer(fromIntToBoolSanitizer),
 
+    body('water_public_point')
+        .customSanitizer(value => value || null),
+
     /* **********************************************************************************************
      * Où se situe l'accès à l'eau (NUMBER optionnel)
      ********************************************************************************************* */
     body('water_distance')
         .optional({ nullable: true })
         .toInt()
-        .isInt({ min: -1, max: 1 }).withMessage('Le champ "Où se situe l\'accès à l\'eau?" est invalide')
-        .customSanitizer(fromIntToBoolSanitizer),
+        .isInt({ min: 0 }).withMessage('Le champ "Où se situe l\'accès à l\'eau?" est invalide'),
+
+    body('water_distance')
+        .customSanitizer(value => value || null),
 
     /* **********************************************************************************************
      * L’accès nécessite-t-il un franchissement de rue ou de route ? (BOOLEAN optionnel)
@@ -789,6 +800,9 @@ module.exports = mode => ([
         .isInt({ min: -1, max: 1 }).withMessage('Le champ "L\'accès nécessite-t-il un franchissement de rue ou de route ?" est invalide')
         .customSanitizer(fromIntToBoolSanitizer),
 
+    body('water_roads_to_cross')
+        .customSanitizer(value => value || null),
+
     /* **********************************************************************************************
      * Tous les habitants ont-ils accès aux points d’eau ? (BOOLEAN optionnel)
      ********************************************************************************************* */
@@ -797,6 +811,9 @@ module.exports = mode => ([
         .toInt()
         .isInt({ min: -1, max: 1 }).withMessage('Le champ "Tous les habitants ont-ils accès aux points d’eau ?" est invalide')
         .customSanitizer(fromIntToBoolSanitizer),
+
+    body('water_everyone_has_access')
+        .customSanitizer(value => value || null),
 
     /* **********************************************************************************************
      * Existe-t-il des eaux stagnantes autour du point de distribution ? (BOOLEAN optionnel)
@@ -807,6 +824,9 @@ module.exports = mode => ([
         .isInt({ min: -1, max: 1 }).withMessage('Le champ "Existe-t-il des eaux stagnantes autour du point de distribution ?" est invalide')
         .customSanitizer(fromIntToBoolSanitizer),
 
+    body('water_stagnant_water')
+        .customSanitizer(value => value || null),
+
     /* **********************************************************************************************
      * Est-ce qu’il y a des bacs de lavage des mains ? (BOOLEAN optionnel)
      ********************************************************************************************* */
@@ -816,14 +836,19 @@ module.exports = mode => ([
         .isInt({ min: -1, max: 1 }).withMessage('Le champ "Est-ce qu’il y a des bacs de lavage des mains ?" est invalide')
         .customSanitizer(fromIntToBoolSanitizer),
 
+    body('water_hand_wash_access')
+        .customSanitizer(value => value || null),
+
     /* **********************************************************************************************
      * Quel est le nombre de bacs de lavage des mains ? (NUMBER optionnel)
      ********************************************************************************************* */
     body('water_hand_wash_access_number')
         .optional({ nullable: true })
         .toInt()
-        .isInt({ min: 0 }).withMessage('Le champ "Nombre de bacs" est invalide')
-        .customSanitizer(fromIntToBoolSanitizer),
+        .isInt({ min: 0 }).withMessage('Le champ "Nombre de bacs" est invalide'),
+
+    body('water_hand_wash_access_number')
+        .customSanitizer(value => value || null),
 
     /* **********************************************************************************************
      * Les toilettes se situent-elles sur le site ? (BOOLEAN optionnel)
@@ -834,14 +859,20 @@ module.exports = mode => ([
         .isInt({ min: -1, max: 1 }).withMessage('Le champ "Les toilettes se situent-elles sur le site ?" est invalide')
         .customSanitizer(fromIntToBoolSanitizer),
 
+    body('sanitary_on_site')
+        .customSanitizer(value => value || null),
+
     /* **********************************************************************************************
      * Nombre de toilettes ? (INTEGER optionnel)
      ********************************************************************************************* */
     body('sanitary_number')
         .optional({ nullable: true })
         .toInt()
-        .isInt({ min: 0 }).withMessage('Le champ "Nombre de toilettes" est invalide')
-        .customSanitizer(fromIntToBoolSanitizer),
+        .isInt({ min: 0 }).withMessage('Le champ "Nombre de toilettes" est invalide'),
+
+    body('sanitary_number')
+        .customSanitizer(value => value || null),
+
 
     /* **********************************************************************************************
      * Constate-t-on des marques de défécation à l’air libre ? (BOOLEAN optionnel)
@@ -852,6 +883,9 @@ module.exports = mode => ([
         .isInt({ min: -1, max: 1 }).withMessage('Le champ "Constate-t-on des marques de défécation à l’air libre?" est invalide')
         .customSanitizer(fromIntToBoolSanitizer),
 
+    body('sanitary_insalubrious')
+        .customSanitizer(value => value || null),
+
     /* **********************************************************************************************
      * La collecte des poubelles / bennes est-elle réalisée de manière régulière ? (BOOLEAN optionnel)
      ********************************************************************************************* */
@@ -860,6 +894,9 @@ module.exports = mode => ([
         .toInt()
         .isInt({ min: -1, max: 1 }).withMessage('Le champ "La collecte des poubelles / bennes est-elle réalisée de manière régulière ?" est invalide')
         .customSanitizer(fromIntToBoolSanitizer),
+
+    body('trash_evacuation_regular')
+        .customSanitizer(value => value || null),
 
     /* **********************************************************************************************
      * Constate-t-on une accumulation de déchets sur le site ou aux abords ?  (BOOLEAN optionnel)
@@ -870,14 +907,19 @@ module.exports = mode => ([
         .isInt({ min: -1, max: 1 }).withMessage('Le champ "Constate-t-on une accumulation de déchets sur le site ou aux abords ?" est invalide')
         .customSanitizer(fromIntToBoolSanitizer),
 
+    body('trash_accumulation')
+        .customSanitizer(value => value || null),
+
     /* **********************************************************************************************
      * Combien de poubelles / bennes sont à proximité immédiate du site ? (INTEGER optionnel)
      ********************************************************************************************* */
     body('trash_cans_on_site')
         .optional({ nullable: true })
         .toInt()
-        .isInt({ min: 0 }).withMessage('Le champ "Combien de poubelles / bennes sont à proximité immédiate du site ?" est invalide')
-        .customSanitizer(fromIntToBoolSanitizer),
+        .isInt({ min: 0 }).withMessage('Le champ "Combien de poubelles / bennes sont à proximité immédiate du site ?" est invalide'),
+
+    body('trash_cans_on_site')
+        .customSanitizer(value => value || null),
 
     /* **********************************************************************************************
      * Y a-t-il des nuisibles sur le site ou à proximité ? (BOOLEAN OBLIGATOIRE)
@@ -895,6 +937,9 @@ module.exports = mode => ([
         .optional({ nullable: true })
         .isString().bail().withMessage('Le champ "Précision (rats, punaises de lit...)" est invalide')
         .trim(),
+
+    body('vermin_comments')
+        .customSanitizer(value => value || null),
 
     /* **********************************************************************************************
      * Y a-t-il des mesures “prévention incendie” ? (BOOLEAN obligatoire)
@@ -914,6 +959,9 @@ module.exports = mode => ([
         .isInt({ min: -1, max: 1 }).withMessage('Le champ "Est-ce qu’un diagnostic prévention incendie par le SDIS a été réalisé ?" est invalide')
         .customSanitizer(fromIntToBoolSanitizer),
 
+    body('fire_prevention_diagnostic')
+        .customSanitizer(value => value || null),
+
     /* **********************************************************************************************
      * Est-ce que le site est accessible aux pompiers ?  (BOOLEAN optionnel)
      ********************************************************************************************* */
@@ -923,6 +971,9 @@ module.exports = mode => ([
         .isInt({ min: -1, max: 1 }).withMessage('Le champ "Est-ce que le site est accessible aux pompiers ?" est invalide')
         .customSanitizer(fromIntToBoolSanitizer),
 
+    body('fire_prevention_site_accessible')
+        .customSanitizer(value => value || null),
+
     /* **********************************************************************************************
      * Préciser ? (TEXT optionnel)
      ********************************************************************************************* */
@@ -930,4 +981,7 @@ module.exports = mode => ([
         .optional({ nullable: true })
         .isString().bail().withMessage('Le champ "Prévention incendie : Préciser" est invalide')
         .trim(),
+
+    body('fire_prevention_comments')
+        .customSanitizer(value => value || null),
 ]);
