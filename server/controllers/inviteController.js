@@ -7,16 +7,12 @@ MAIL_TEMPLATES.invitation = require('#server/mails/invitation');
 
 const sendEmailsInvitations = async (guests, greeter) => {
     for (let i = 0; i < guests.length; i += 1) {
-        const guest = {
-            email: guests[i].email,
-            first_name: guests[i].first_name,
-            last_name: guests[i].last_name,
-            greeter_first_name: greeter.first_name,
-            greeter_last_name: greeter.last_name,
-            greeter_organization_name: greeter.organization_name,
+        const data = {
+            guest: guests[i],
+            greeter,
         };
         // eslint-disable-next-line no-await-in-loop
-        await sendMail(guest, MAIL_TEMPLATES.invitation(guest));
+        await sendMail(data, MAIL_TEMPLATES.invitation(data));
     }
 };
 
@@ -28,7 +24,12 @@ module.exports = () => ({
         } = req.body;
 
         // envoi du mail d'invitation
-        await sendEmailsInvitations(guests, greeter);
+        try {
+            await sendEmailsInvitations(guests, greeter);
+        } catch (err) {
+            // eslint-disable-next-line no-console
+            console.log(err);
+        }
         return res.status(200).send({});
     },
 });
