@@ -836,6 +836,11 @@ module.exports = (models) => {
                     data: ({ addressDetails }) => addressDetails,
                     width: COLUMN_WIDTHS.LARGE,
                 },
+                coordinates: {
+                    title: 'Coordonnées GPS',
+                    data: ({ latitude, longitude }) => `${latitude},${longitude}`,
+                    width: COLUMN_WIDTHS.SMALL,
+                },
                 name: {
                     title: 'Appellation du site',
                     data: ({ name }) => name,
@@ -1186,7 +1191,7 @@ module.exports = (models) => {
                 });
             }
 
-            sections.push({
+            const localizationSection = {
                 title: 'Localisation',
                 properties: [
                     properties.departement,
@@ -1195,16 +1200,19 @@ module.exports = (models) => {
                     properties.name,
                 ],
                 lastFrozen: true,
-            });
+            };
+            sections.push(localizationSection);
 
             if (options.indexOf('address_details') !== -1 && !closedTowns) {
-                sections.push({
-                    title: '',
-                    properties: [
-                        properties.addressDetails,
-                    ],
-                });
+                localizationSection.properties.push(properties.addressDetails);
             }
+
+            sections.push({
+                title: '',
+                properties: [
+                    properties.coordinates,
+                ],
+            });
 
             let section = {
                 title: 'Site',
