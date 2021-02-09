@@ -1185,17 +1185,47 @@ module.exports = (models) => {
                 // water
                 waterPotable: {
                     title: 'L’eau est-elle potable ?',
-                    data: ({ waterPotable }) => waterPotable,
+                    data: ({ waterPotable }) => {
+                        if (waterPotable === true) {
+                            return 'oui';
+                        }
+
+                        if (waterPotable === false) {
+                            return 'non';
+                        }
+
+                        return null;
+                    },
                     width: COLUMN_WIDTHS.SMALL,
                 },
                 waterContinuousAccess: {
                     title: 'L\'accès à l\'eau est-il continu?',
-                    data: ({ waterContinuousAccess }) => waterContinuousAccess,
+                    data: ({ waterContinuousAccess }) => {
+                        if (waterContinuousAccess === true) {
+                            return 'oui';
+                        }
+
+                        if (waterContinuousAccess === false) {
+                            return 'non';
+                        }
+
+                        return null;
+                    },
                     width: COLUMN_WIDTHS.SMALL,
                 },
                 waterPublicPoint: {
                     title: 'Est-ce un point d\'eau public?',
-                    data: ({ waterPublicPoint }) => waterPublicPoint,
+                    data: ({ waterPublicPoint }) => {
+                        if (waterPublicPoint === true) {
+                            return 'oui';
+                        }
+
+                        if (waterPublicPoint === false) {
+                            return 'non';
+                        }
+
+                        return null;
+                    },
                     width: COLUMN_WIDTHS.SMALL,
                 },
                 waterDistance: {
@@ -1205,22 +1235,62 @@ module.exports = (models) => {
                 },
                 waterRoadsToCross: {
                     title: 'L\'accès nécessite-t-il un franchissement de rue ou de route ?',
-                    data: ({ waterRoadsToCross }) => waterRoadsToCross,
+                    data: ({ waterRoadsToCross }) => {
+                        if (waterRoadsToCross === true) {
+                            return 'oui';
+                        }
+
+                        if (waterRoadsToCross === false) {
+                            return 'non';
+                        }
+
+                        return null;
+                    },
                     width: COLUMN_WIDTHS.SMALL,
                 },
                 waterEveryoneHasAccess: {
                     title: 'Tous les habitants ont-ils accès aux points d’eau ?',
-                    data: ({ waterEveryoneHasAccess }) => waterEveryoneHasAccess,
+                    data: ({ waterEveryoneHasAccess }) => {
+                        if (waterEveryoneHasAccess === true) {
+                            return 'oui';
+                        }
+
+                        if (waterEveryoneHasAccess === false) {
+                            return 'non';
+                        }
+
+                        return null;
+                    },
                     width: COLUMN_WIDTHS.SMALL,
                 },
                 waterStagnantWater: {
                     title: 'Existe-t-il des eaux stagnantes autour du point de distribution ?',
-                    data: ({ waterStagnantWater }) => waterStagnantWater,
+                    data: ({ waterStagnantWater }) => {
+                        if (waterStagnantWater === true) {
+                            return 'oui';
+                        }
+
+                        if (waterStagnantWater === false) {
+                            return 'non';
+                        }
+
+                        return null;
+                    },
                     width: COLUMN_WIDTHS.SMALL,
                 },
                 waterHandWashAccess: {
                     title: 'Est-ce qu’il y a des bacs de lavage des mains ?',
-                    data: ({ waterHandWashAccess }) => waterHandWashAccess,
+                    data: ({ waterHandWashAccess }) => {
+                        if (waterHandWashAccess === true) {
+                            return 'oui';
+                        }
+
+                        if (waterHandWashAccess === false) {
+                            return 'non';
+                        }
+
+                        return null;
+                    },
                     width: COLUMN_WIDTHS.SMALL,
                 },
                 waterHandWashAccessNumber: {
@@ -1236,12 +1306,32 @@ module.exports = (models) => {
                 },
                 sanitaryInsalubrious: {
                     title: 'Constate-t-on des marques de défécation à l’air libre ?',
-                    data: ({ sanitaryInsalubrious }) => sanitaryInsalubrious,
+                    data: ({ sanitaryInsalubrious }) => {
+                        if (sanitaryInsalubrious === true) {
+                            return 'oui';
+                        }
+
+                        if (sanitaryInsalubrious === false) {
+                            return 'non';
+                        }
+
+                        return null;
+                    },
                     width: COLUMN_WIDTHS.SMALL,
                 },
                 sanitaryOnSite: {
                     title: 'Nombre de toilettes ?',
-                    data: ({ sanitaryOnSite }) => sanitaryOnSite,
+                    data: ({ sanitaryOnSite }) => {
+                        if (sanitaryOnSite === true) {
+                            return 'oui';
+                        }
+
+                        if (sanitaryOnSite === false) {
+                            return 'non';
+                        }
+
+                        return null;
+                    },
                     width: COLUMN_WIDTHS.SMALL,
                 },
                 // trash
@@ -1252,18 +1342,48 @@ module.exports = (models) => {
                 },
                 trashAccumulation: {
                     title: 'Constate-t-on une accumulation de déchets sur le site ou aux abords ?',
-                    data: ({ trashAccumulation }) => trashAccumulation,
+                    data: ({ trashAccumulation }) => {
+                        if (trashAccumulation === true) {
+                            return 'oui';
+                        }
+
+                        if (trashAccumulation === false) {
+                            return 'non';
+                        }
+
+                        return null;
+                    },
                     width: COLUMN_WIDTHS.SMALL,
                 },
                 trashEvacuationRegular: {
                     title: 'La collecte des poubelles / bennes est-elle réalisée de manière régulière ?',
-                    data: ({ trashEvacuationRegular }) => trashEvacuationRegular,
+                    data: ({ trashEvacuationRegular }) => {
+                        if (trashEvacuationRegular === true) {
+                            return 'oui';
+                        }
+
+                        if (trashEvacuationRegular === false) {
+                            return 'non';
+                        }
+
+                        return null;
+                    },
                     width: COLUMN_WIDTHS.SMALL,
                 },
                 // vermin
                 vermin: {
                     title: 'Y a-t-il des nuisibles sur le site ou à proximité ?',
-                    data: ({ vermin }) => vermin,
+                    data: ({ vermin }) => {
+                        if (vermin === true) {
+                            return 'oui';
+                        }
+
+                        if (vermin === false) {
+                            return 'non';
+                        }
+
+                        return null;
+                    },
                     width: COLUMN_WIDTHS.SMALL,
                 },
                 verminComments: {
@@ -1274,17 +1394,47 @@ module.exports = (models) => {
                 // Fire prevention
                 firePreventionMeasures: {
                     title: 'Y a-t-il des mesures “prévention incendie” ?',
-                    data: ({ firePreventionMeasures }) => firePreventionMeasures,
+                    data: ({ firePreventionMeasures }) => {
+                        if (firePreventionMeasures === true) {
+                            return 'oui';
+                        }
+
+                        if (firePreventionMeasures === false) {
+                            return 'non';
+                        }
+
+                        return null;
+                    },
                     width: COLUMN_WIDTHS.SMALL,
                 },
                 firePreventionDiagnostic: {
                     title: 'Est-ce qu’un diagnostic prévention incendie par le SDIS a été réalisé ?',
-                    data: ({ firePreventionDiagnostic }) => firePreventionDiagnostic,
+                    data: ({ firePreventionDiagnostic }) => {
+                        if (firePreventionDiagnostic === true) {
+                            return 'oui';
+                        }
+
+                        if (firePreventionDiagnostic === false) {
+                            return 'non';
+                        }
+
+                        return null;
+                    },
                     width: COLUMN_WIDTHS.SMALL,
                 },
                 firePreventionSiteAccessible: {
                     title: 'Est-ce que le site est accessible aux pompiers ?',
-                    data: ({ firePreventionSiteAccessible }) => firePreventionSiteAccessible,
+                    data: ({ firePreventionSiteAccessible }) => {
+                        if (firePreventionSiteAccessible === true) {
+                            return 'oui';
+                        }
+
+                        if (firePreventionSiteAccessible === false) {
+                            return 'non';
+                        }
+
+                        return null;
+                    },
                     width: COLUMN_WIDTHS.SMALL,
                 },
                 firePreventionComments: {
