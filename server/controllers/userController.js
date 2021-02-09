@@ -1,5 +1,6 @@
 const semver = require('semver');
 const jwt = require('jsonwebtoken');
+const agenda = require('#server/loaders/agendaLoader')();
 const sanitize = require('#server/controllers/userController/helpers/sanitize');
 const checkPassword = require('#server/controllers/userController/helpers/checkPassword');
 const validate = require('#server/controllers/userController/helpers/validate');
@@ -692,6 +693,10 @@ module.exports = models => ({
                 },
             });
         }
+
+        await agenda.schedule('in 7 days', 'demo_invitation', {
+            user,
+        });
 
         return res.status(200).send({});
     },
