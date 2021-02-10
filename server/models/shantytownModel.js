@@ -203,6 +203,7 @@ function getDiff(oldVersion, newVersion) {
         return [
             ...diff,
             {
+                fieldKey: property,
                 field: labels[property],
                 oldValue,
                 newValue,
@@ -366,6 +367,7 @@ function serializeShantytown(town, permission) {
         closingSolutions: [],
         closedWithSolutions: town.closedWithSolutions,
         changelog: [],
+        createdAt: town.createdAt.getTime() / 1000,
         updatedAt: town.updatedAt !== null ? (town.updatedAt.getTime() / 1000) : null,
         updatedBy: {
             id: town.updatedById,
@@ -449,6 +451,7 @@ const SQL = {
         'shantytowns.police_granted_at': 'policeGrantedAt',
         'shantytowns.bailiff': 'bailiff',
         'shantytowns.closed_with_solutions::text': 'closedWithSolutions',
+        'shantytowns.created_at': 'createdAt',
         'shantytowns.updated_at': 'updatedAt',
         'users.user_id': 'updatedById',
         'users.first_name': 'updatedByFirstName',
