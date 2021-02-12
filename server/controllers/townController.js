@@ -861,6 +861,11 @@ module.exports = (models) => {
                     data: ({ closedAt }) => (closedAt ? new Date(closedAt * 1000) : ''),
                     width: COLUMN_WIDTHS.SMALL,
                 },
+                closedWithSolutions: {
+                    title: 'Résorbé',
+                    data: ({ closedWithSolutions }) => (closedWithSolutions === 'yes' ? 'Oui' : 'Non'),
+                    width: COLUMN_WIDTHS.XSMALL,
+                },
                 status: {
                     title: 'Cause de la fermeture',
                     data: ({ status }) => STATUS_DETAILS[status],
@@ -1217,6 +1222,7 @@ module.exports = (models) => {
 
             if (closedTowns) {
                 section.properties.push(properties.closedAt);
+                section.properties.push(properties.closedWithSolutions);
                 section.properties.push(properties.status);
             }
 

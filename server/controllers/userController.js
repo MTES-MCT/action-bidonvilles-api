@@ -5,6 +5,8 @@ const sanitize = require('#server/controllers/userController/helpers/sanitize');
 const checkPassword = require('#server/controllers/userController/helpers/checkPassword');
 const validate = require('#server/controllers/userController/helpers/validate');
 const userService = require('#server/services/userService');
+const { triggerNewUserAlert } = require('#server/utils/slack');
+const { slack: slackConfig } = require('#server/config');
 
 const {
     generateAccessTokenFor, hashPassword, getPasswordResetLink,
@@ -775,6 +777,15 @@ module.exports = models => ({
                     developer_message: 'Failed updating the user',
                 },
             });
+        }
+
+        // Send a slack alert, if it fails, do nothing
+        try {
+            if (slackConfig && slackConfig.new_user) {
+                await triggerNewUserAlert(user);
+            }
+        } catch (err) {
+            console.log(`Error with new user webhook : ${err.message}`);
         }
 
         return res.status(200).send({});

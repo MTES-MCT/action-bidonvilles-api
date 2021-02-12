@@ -1,9 +1,10 @@
 const { IncomingWebhook } = require('@slack/webhook');
 const { slack } = require('#server/config');
+const { frontUrl } = require('#server/config');
 
 const formatAddress = town => `${town.address} ${town.name ? `« ${town.name} » ` : ''}`;
 const formatUsername = user => `${user.first_name} ${user.last_name} `;
-const formatTownLink = (townID, text) => `<https://resorption-bidonvilles.beta.gouv.fr/#/site/${townID}|${text}>`;
+const formatTownLink = (townID, text) => `<${frontUrl}/#/site/${townID}|${text}>`;
 
 async function triggerShantytownCloseAlert(town, user) {
     const shantytownCloseAlert = new IncomingWebhook(slack.close_shantytown);
@@ -131,7 +132,67 @@ async function triggerShantytownCreationAlert(town, user) {
     await shantytownCreationAlert.send(slackMessage);
 }
 
+async function triggerNewUserAlert(user) {
+    const newUserAlert = new IncomingWebhook(slack.new_user);
+
+    const username = formatUsername(user);
+    const usernameLink = `<${frontUrl}/#/nouvel-utilisateur/${user.id}|${username}>`;
+
+    const { location } = user.organization;
+
+    let locationText = 'Inconnu';
+    if (location && location.type === 'nation') {
+        locationText = 'National';
+    } else if (location && location[location.type] !== null) {
+        locationText = location[location.type].name;
+    }
+
+    const slackMessage = {
+        text: `Nouvel utilisateur : ${username}`,
+        blocks: [
+            {
+                type: 'section',
+                text: {
+                    type: 'mrkdwn',
+                    text: `:rotating_light: Nouvel utilisateur : ${usernameLink} <${user.email}>`,
+                },
+            },
+        ],
+        attachments: [
+            {
+                color: '#f2c744',
+                blocks: [
+                    {
+                        type: 'section',
+                        text: {
+                            type: 'mrkdwn',
+                            text: `Territoire de rattachement: ${locationText}`,
+                        },
+                    },
+                    {
+                        type: 'section',
+                        text: {
+                            type: 'mrkdwn',
+                            text: `Organisation: ${user.organization.name}`,
+                        },
+                    },
+                    {
+                        type: 'section',
+                        text: {
+                            type: 'mrkdwn',
+                            text: `Fonction: ${user.position}`,
+                        },
+                    },
+                ],
+
+            }],
+    };
+
+    await newUserAlert.send(slackMessage);
+}
+
 module.exports = {
     triggerShantytownCloseAlert,
     triggerShantytownCreationAlert,
+    triggerNewUserAlert,
 };
