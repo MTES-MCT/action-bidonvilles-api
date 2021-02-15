@@ -1,4 +1,4 @@
-const getFields = (Sequelize) => ({
+const getFields = Sequelize => ({
     // WATER FIELDS
     water_potable: {
         type: Sequelize.BOOLEAN,
@@ -84,11 +84,15 @@ const getFields = (Sequelize) => ({
         type: Sequelize.BOOLEAN,
         allowNull: true,
     },
+    fire_prevention_devices: {
+        type: Sequelize.BOOLEAN,
+        allowNull: true,
+    },
     fire_prevention_comments: {
         type: Sequelize.TEXT,
         allowNull: true,
     },
-})
+});
 
 module.exports = {
     up: (queryInterface, Sequelize) => queryInterface.sequelize.transaction(
@@ -108,8 +112,8 @@ module.exports = {
                 {
                     transaction,
                 },
-            )
-        ]))    
+            ),
+        ])),
     ),
     down: (queryInterface, Sequelize) => queryInterface.sequelize.transaction(
         transaction => Promise.all(Object.keys(getFields(Sequelize)).flatMap(field => [
@@ -126,8 +130,7 @@ module.exports = {
                 {
                     transaction,
                 },
-            )
-        ]))
+            ),
+        ])),
     ),
 };
-

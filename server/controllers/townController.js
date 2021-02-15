@@ -204,6 +204,7 @@ module.exports = (models) => {
                         firePreventionMeasures: req.body.fire_prevention_measures,
                         firePreventionDiagnostic: req.body.fire_prevention_diagnostic,
                         firePreventionSiteAccessible: req.body.fire_prevention_site_accessible,
+                        firePreventionDevices: req.body.fire_prevention_devices,
                         firePreventionComments: req.body.fire_prevention_comments,
 
                     };
@@ -1430,6 +1431,21 @@ module.exports = (models) => {
                     },
                     width: COLUMN_WIDTHS.SMALL,
                 },
+                firePreventionDevices: {
+                    title: 'Est-ce que des dispositifs spécifiques ont été mises en place ?',
+                    data: ({ firePreventionDevices }) => {
+                        if (firePreventionDevices === true) {
+                            return 'oui';
+                        }
+
+                        if (firePreventionDevices === false) {
+                            return 'non';
+                        }
+
+                        return null;
+                    },
+                    width: COLUMN_WIDTHS.SMALL,
+                },
                 firePreventionComments: {
                     title: 'Prévention incendie : Préciser',
                     data: ({ firePreventionComments }) => firePreventionComments,
@@ -1563,6 +1579,7 @@ module.exports = (models) => {
                         properties.firePreventionMeasures,
                         properties.firePreventionDiagnostic,
                         properties.firePreventionSiteAccessible,
+                        properties.firePreventionDevices,
                         properties.firePreventionComments,
                     ],
                 });

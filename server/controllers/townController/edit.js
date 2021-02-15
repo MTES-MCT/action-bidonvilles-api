@@ -80,6 +80,7 @@ module.exports = () => async (req, res) => {
                 firePreventionMeasures: req.body.fire_prevention_measures,
                 firePreventionDiagnostic: req.body.fire_prevention_diagnostic,
                 firePreventionSiteAccessible: req.body.fire_prevention_site_accessible,
+                firePreventionDevices: req.body.fire_prevention_devices,
                 firePreventionComments: req.body.fire_prevention_comments,
             };
 
