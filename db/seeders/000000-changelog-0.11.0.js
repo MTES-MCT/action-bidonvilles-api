@@ -6,7 +6,7 @@ const changelog = {
     items: [
         {
             title: 'L\'essentiel en un coup d\'œil pour définir les actions à mener',
-            description: `<p>La plateforme fait pean neuve pour améliorer la lisibilité des informations essentielles afin de pré-diagnostiquer un site. <strong>Acteurs, saisissez-vous des données pour agir !</strong></p><p><a href="${backUrl}/assets/guide_utilisateur/guide_utilisateur_2021_02.pdf" class="link">Le guide utilisateur</a> est téléchargeable pour prendre en main la nouvelle version.</p>`,
+            description: `<p>La plateforme fait peau neuve pour améliorer la lisibilité des informations essentielles afin de pré-diagnostiquer un site. <strong>Acteurs, saisissez-vous des données pour agir !</strong></p><p><a href="${backUrl}/assets/guide_utilisateur/guide_utilisateur_2021_02.pdf" class="link">Le guide utilisateur</a> est téléchargeable pour prendre en main la nouvelle version.</p>`,
             image: `${backUrl}/assets/changelog/0.11.0/item_1.png`,
         },
         {
