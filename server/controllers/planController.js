@@ -239,6 +239,7 @@ function sanitizeState(plan, data) {
     // indicateurs éducation
     if (topics.indexOf('school') !== -1) {
         sanitizedData.scolarisables = getIntOrNull(data.scolarisables);
+        sanitizedData.en_mediation = getIntOrNull(data.en_mediation);
         sanitizedData.maternelles = getIntOrNull(data.maternelles);
         sanitizedData.elementaires = getIntOrNull(data.elementaires);
         sanitizedData.colleges = getIntOrNull(data.colleges);
@@ -1325,6 +1326,9 @@ module.exports = models => ({
             if (stateData.scolarisables !== null && (Number.isNaN(stateData.scolarisables) || stateData.scolarisables < 0)) {
                 addError('scolarisables', 'Ce champ est obligatoire et sa valeur ne peut pas être négative');
             }
+            if (stateData.en_mediation !== null && (Number.isNaN(stateData.en_mediation) || stateData.en_mediation < 0)) {
+                addError('en_mediation', 'Ce champ est obligatoire et sa valeur ne peut pas être négative');
+            }
             if (stateData.maternelles !== null && (Number.isNaN(stateData.maternelles) || stateData.maternelles < 0)) {
                 addError('maternelles', 'Ce champ est obligatoire et sa valeur ne peut pas être négative');
             }
@@ -1537,8 +1541,8 @@ module.exports = models => ({
                 if (topics.indexOf('school') !== -1) {
                     indicateurPromises.push(
                         sequelize.query(
-                            `INSERT INTO indicateurs_education(scolarisables, maternelles, elementaires, colleges, lycees, difficulte_cantine, difficculte_place_up2a, difficulte_transport, created_by)
-                            VALUES(:scolarisables, :maternelles, :elementaires, :colleges, :lycees, :difficulte_cantine, :difficulte_place_up2a, :difficulte_transport, :createdBy)
+                            `INSERT INTO indicateurs_education(scolarisables, en_mediation, maternelles, elementaires, colleges, lycees, difficulte_cantine, difficculte_place_up2a, difficulte_transport, created_by)
+                            VALUES(:scolarisables, :en_mediation, :maternelles, :elementaires, :colleges, :lycees, :difficulte_cantine, :difficulte_place_up2a, :difficulte_transport, :createdBy)
                             RETURNING indicateurs_education_id AS id`,
                             {
                                 replacements: stateData,

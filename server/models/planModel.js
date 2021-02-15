@@ -343,6 +343,7 @@ module.exports = (database) => {
                     indicateurs_formation.are,
                     indicateurs_formation.are_femmes,
                     indicateurs_education.scolarisables,
+                    indicateurs_education.en_mediation,
                     indicateurs_education.maternelles,
                     indicateurs_education.elementaires,
                     indicateurs_education.colleges,
@@ -574,6 +575,7 @@ module.exports = (database) => {
                 } : null,
                 education: hashedPlans[state.fk_plan].topics.find(({ uid }) => uid === 'school') ? {
                     scolarisables: state.scolarisables,
+                    en_mediation: state.en_mediation,
                     maternelles: state.maternelles,
                     elementaires: state.elementaires,
                     colleges: state.colleges,
