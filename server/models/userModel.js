@@ -89,7 +89,6 @@ function serializeUser(user, latestCharte, filters, permissionMap) {
                 } : null,
             },
         },
-        // charte_engagement_a_jour: latestCharte === null || user.charte_engagement_signee === latestCharte || user.role !== 'national_admin',
         charte_engagement_a_jour: latestCharte === null || user.charte_engagement_signee === latestCharte,
         is_admin: user.is_admin,
         role: user.role_name || user.organization_type_role_name,

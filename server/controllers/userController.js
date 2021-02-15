@@ -992,7 +992,7 @@ module.exports = models => ({
         }
 
         if (req.body.confidentiality_agreement !== true) {
-            return res.status(500).send({
+            return res.status(400).send({
                 user_message: 'Vous devez vous engager à ne pas diffuser les données de la plateforme',
             });
         }
