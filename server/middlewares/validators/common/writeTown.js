@@ -916,6 +916,7 @@ module.exports = mode => ([
         .isInt({ min: -1, max: 1 }).withMessage('Le champ "Est-ce qu’un diagnostic prévention incendie par le SDIS a été réalisé ?" est invalide')
         .customSanitizer(fromIntToBoolSanitizer),
 
+
     /* **********************************************************************************************
      * Est-ce que le site est accessible aux pompiers ?  (BOOLEAN optionnel)
      ********************************************************************************************* */
@@ -923,6 +924,16 @@ module.exports = mode => ([
         .optional({ nullable: true })
         .toInt()
         .isInt({ min: -1, max: 1 }).withMessage('Le champ "Est-ce que le site est accessible aux pompiers ?" est invalide')
+        .customSanitizer(fromIntToBoolSanitizer),
+
+    /* **********************************************************************************************
+     * Y a-t-il des mesures “prévention incendie” ? (BOOLEAN obligatoire)
+     ********************************************************************************************* */
+
+    body('fire_prevention_devices')
+        .optional({ nullable: true })
+        .toInt()
+        .isInt({ min: -1, max: 1 }).withMessage('Le champ "Est-ce que des dispositifs spécifiques ont été mises en place ?" est invalide')
         .customSanitizer(fromIntToBoolSanitizer),
 
     /* **********************************************************************************************

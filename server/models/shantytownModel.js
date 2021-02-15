@@ -51,7 +51,7 @@ function getDiff(oldVersion, newVersion) {
         'bailiff', 'waterPotable', 'waterContinuousAccess', 'waterPublicPoint', 'waterDistance', 'waterRoadsToCross',
         'waterEveryoneHasAccess', 'waterStagnantWater', 'waterHandWashAccess', 'waterHandWashAccessNumber', 'sanitaryNumber',
         'sanitaryInsalubrious', 'sanitaryOnSite', 'trashCansOnSite', 'trashAccumulation', 'trashEvacuationRegular',
-        'vermin', 'verminComments', 'firePreventionMeasures', 'firePreventionDiagnostic', 'firePreventionSiteAccessible', 'firePreventionComments',
+        'vermin', 'verminComments', 'firePreventionMeasures', 'firePreventionDiagnostic', 'firePreventionSiteAccessible', 'firePreventionDevices', 'firePreventionComments',
     ];
 
     const labels = {
@@ -116,6 +116,7 @@ function getDiff(oldVersion, newVersion) {
         firePreventionMeasures: 'Y a-t-il des mesures “prévention incendie” ?',
         firePreventionDiagnostic: 'Est-ce qu’un diagnostic prévention incendie par le SDIS a été réalisé ?',
         firePreventionSiteAccessible: 'Est-ce que le site est accessible aux pompiers ?',
+        firePreventionDevices: 'Est-ce que des dispositifs spécifiques ont été mises en place ?',
         firePreventionComments: 'Prévention incendie : Préciser',
     };
 
@@ -232,6 +233,7 @@ function getDiff(oldVersion, newVersion) {
         // verminComments: baseProcessors.bool,
         firePreventionMeasures: baseProcessors.bool,
         firePreventionDiagnostic: baseProcessors.bool,
+        firePreventionDevices: baseProcessors.bool,
         firePreventionSiteAccessible: baseProcessors.bool,
         // firePreventionComments: baseProcessors.bool
     };
@@ -443,6 +445,7 @@ function serializeShantytown(town, permission) {
         firePreventionMeasures: town.firePreventionMeasures,
         firePreventionDiagnostic: town.firePreventionDiagnostic,
         firePreventionSiteAccessible: town.firePreventionSiteAccessible,
+        firePreventionDevices: town.firePreventionDevices,
         firePreventionComments: town.firePreventionComments,
     };
 
@@ -540,6 +543,7 @@ const SQL = {
         'shantytowns.fire_prevention_measures': 'firePreventionMeasures',
         'shantytowns.fire_prevention_diagnostic': 'firePreventionDiagnostic',
         'shantytowns.fire_prevention_site_accessible': 'firePreventionSiteAccessible',
+        'shantytowns.fire_prevention_devices': 'firePreventionDevices',
         'shantytowns.fire_prevention_comments': 'firePreventionComments',
         'users.user_id': 'updatedById',
         'users.first_name': 'updatedByFirstName',
