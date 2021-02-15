@@ -18,14 +18,24 @@ function generateSearch(table) {
         },
     };
 
+    const departement_map = {
+        cities: 'fk_departement',
+        epci: 'fk_departement',
+        departements: 'code',
+        regions: 'null',
+    };
+
+
     return `
     SELECT
         '${map[table].label}' AS "label",
         '${map[table].type}' AS "type",
         code,
-        name
+        name,
+        ${departement_map[table]} AS "departement"
     FROM
         ${table}
+    ${table === 'epci' ? 'LEFT JOIN epci_to_departement ON epci.code = epci_to_departement.fk_epci' : ''}     
     WHERE
         REPLACE(REPLACE(name, '-', ' '), 'Î', 'I') ILIKE REPLACE(?, '-', ' ')
         ${table === 'cities' ? 'AND fk_main IS NULL' : ''}
