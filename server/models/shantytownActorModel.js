@@ -72,4 +72,62 @@ module.exports = database => ({
             },
         );
     },
+
+    addActor(shantytownId, userId, themes, createdBy, transaction = undefined) {
+        const replacements = ACTOR_THEMES.reduce((acc, themeId) => {
+            const obj = themes.find(({ id }) => id === themeId);
+            if (themeId === 'autre') {
+                return {
+                    ...acc,
+                    [themeId]: obj !== undefined ? obj.value : null,
+                };
+            }
+
+            return {
+                ...acc,
+                [themeId]: obj !== undefined,
+            };
+        }, {
+            fk_shantytown: shantytownId,
+            fk_user: userId,
+            created_by: createdBy,
+        });
+
+        return database.query(
+            `INSERT INTO shantytown_actors
+                (
+                    fk_shantytown,
+                    fk_user,
+                    sante,
+                    education,
+                    emploi,
+                    logement,
+                    mediation_sociale,
+                    securite,
+                    humanitaire,
+                    diagnostic,
+                    pilotage,
+                    autre,
+                    created_by
+                )
+            VALUES (
+                :fk_shantytown,
+                :fk_user,
+                :sante,
+                :education,
+                :emploi,
+                :logement,
+                :mediation_sociale,
+                :securite,
+                :humanitaire,
+                :diagnostic,
+                :pilotage,
+                :autre,
+                :created_by
+            )`, {
+                replacements,
+                transaction,
+            },
+        );
+    },
 });
