@@ -362,6 +362,7 @@ function serializeShantytown(town, permission) {
             regular: [],
             covid: [],
         },
+        actors: [],
         closingSolutions: [],
         closedWithSolutions: town.closedWithSolutions,
         changelog: [],
@@ -495,6 +496,9 @@ function getBaseSql(table, whereClause = null, order = null) {
 }
 
 module.exports = (database) => {
+    // eslint-disable-next-line global-require
+    const shantytownActorModel = require('#server/models/shantytownActorModel')(database);
+
     async function getComments(user, shantytownIds, covid = false) {
         const comments = shantytownIds.reduce((acc, id) => Object.assign({}, acc, {
             [id]: [],
@@ -672,7 +676,13 @@ module.exports = (database) => {
             ),
         );
 
-        const [history, socialOrigins, comments, covidComments, closingSolutions] = await Promise.all(promises);
+        promises.push(
+            shantytownActorModel.findAll(
+                Object.keys(serializedTowns.hash),
+            ),
+        );
+
+        const [history, socialOrigins, comments, covidComments, closingSolutions, actors] = await Promise.all(promises);
 
         if (history !== undefined && history.length > 0) {
             const serializedHistory = history.map(h => serializeShantytown(h, user.permissions.shantytown[feature]));
@@ -735,6 +745,12 @@ module.exports = (database) => {
                 });
             });
         }
+
+        actors.forEach((actor) => {
+            serializedTowns.hash[actor.shantytownId].actors.push(
+                shantytownActorModel.serializeActor(actor),
+            );
+        });
 
         return serializedTowns.ordered;
     }
