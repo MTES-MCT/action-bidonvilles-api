@@ -152,6 +152,18 @@ module.exports = (app) => {
         controllers.user.setNewPassword,
     );
 
+    // shantytown actors
+    app.post(
+        '/towns/:id/actors',
+        middlewares.auth.authenticate,
+        middlewares.shantytown.checkReadPermission,
+        middlewares.charte.check,
+        middlewares.appVersion.sync,
+        validators.shantytownActors.addShantytownActor,
+        middlewares.validation,
+        controllers.town.addActor,
+    );
+
     // plans
     app.get(
         '/plans',
