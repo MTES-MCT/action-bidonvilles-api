@@ -1836,5 +1836,10 @@ module.exports = (models) => {
         models,
     );
 
+    // eslint-disable-next-line global-require
+    methods.addActor = require('./townController/addActor')(
+        models,
+    );
+
     return methods;
 };
