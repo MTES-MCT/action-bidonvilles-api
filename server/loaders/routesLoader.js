@@ -183,6 +183,16 @@ module.exports = (app) => {
         middlewares.validation,
         controllers.town.removeActorTheme,
     );
+    app.put(
+        '/towns/:id/invitations',
+        middlewares.auth.authenticate,
+        middlewares.shantytown.checkReadPermission,
+        middlewares.charte.check,
+        middlewares.appVersion.sync,
+        validators.shantytownActors.inviteShantytownActor,
+        middlewares.validation,
+        controllers.town.inviteNewActor,
+    );
 
     // plans
     app.get(

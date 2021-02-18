@@ -1,5 +1,7 @@
+const nodeMailjet = require('node-mailjet');
 const { mail: mailConfig, frontUrl } = require('#server/config');
-const mailjet = require('node-mailjet').connect(mailConfig.publicKey, mailConfig.privateKey);
+
+const mailjet = nodeMailjet.connect(mailConfig.publicKey, mailConfig.privateKey);
 
 module.exports = {
     generateUserSignature(user) {
@@ -32,7 +34,9 @@ module.exports = {
                         To: [
                             {
                                 Email: user.email,
-                                Name: `${user.first_name} ${user.last_name.toUpperCase()}`,
+                                Name: user.first_name && user.last_name
+                                    ? `${user.first_name} ${user.last_name.toUpperCase()}`
+                                    : undefined,
                             },
                         ],
                     }, mailContent),
