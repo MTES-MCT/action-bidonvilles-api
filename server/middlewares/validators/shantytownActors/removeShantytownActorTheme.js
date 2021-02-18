@@ -5,7 +5,7 @@ const ACTOR_THEMES = require('#server/config/shantytown_actor_themes');
 const ACTOR_THEME_IDS = Object.keys(ACTOR_THEMES);
 
 module.exports = [
-    selfUserIdValidator,
+    selfUserIdValidator('Vous ne pouvez pas modifier les champs d\'intervention d\'un autre intervenant'),
 
     param('theme_id')
         .custom((value, { req }) => {
