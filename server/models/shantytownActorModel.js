@@ -33,6 +33,33 @@ function serializeActor(actor) {
     };
 }
 
+/**
+ * Takes a non-exhaustive array of themes, and returns an exhaustive one with the proper matching value
+ *
+ * - if a theme is not in the array: sets its value to false (or null for "autre")
+ * - if a theme is in the array: keeps the provided value
+ *
+ * @param {Array} themes
+ *
+ * @returns {Object} A key-value object where the key is theme id
+ */
+function processThemes(themes) {
+    return ACTOR_THEMES.reduce((acc, themeId) => {
+        const obj = themes.find(({ id }) => id === themeId);
+        if (themeId === 'autre') {
+            return {
+                ...acc,
+                [themeId]: obj !== undefined ? obj.value : null,
+            };
+        }
+
+        return {
+            ...acc,
+            [themeId]: obj !== undefined,
+        };
+    }, {});
+}
+
 module.exports = database => ({
     serializeActor,
 
@@ -74,24 +101,12 @@ module.exports = database => ({
     },
 
     addActor(shantytownId, userId, themes, createdBy, transaction = undefined) {
-        const replacements = ACTOR_THEMES.reduce((acc, themeId) => {
-            const obj = themes.find(({ id }) => id === themeId);
-            if (themeId === 'autre') {
-                return {
-                    ...acc,
-                    [themeId]: obj !== undefined ? obj.value : null,
-                };
-            }
-
-            return {
-                ...acc,
-                [themeId]: obj !== undefined,
-            };
-        }, {
+        const replacements = {
+            ...processThemes(themes),
             fk_shantytown: shantytownId,
             fk_user: userId,
             created_by: createdBy,
-        });
+        };
 
         return database.query(
             `INSERT INTO shantytown_actors
@@ -125,6 +140,36 @@ module.exports = database => ({
                 :autre,
                 :created_by
             )`, {
+                replacements,
+                transaction,
+            },
+        );
+    },
+
+    updateThemes(shantytownId, userId, themes, updatedBy, transaction = undefined) {
+        const replacements = {
+            ...processThemes(themes),
+            fk_shantytown: shantytownId,
+            fk_user: userId,
+            updated_by: updatedBy,
+        };
+
+        return database.query(
+            `UPDATE shantytown_actors
+                SET
+                    sante = :sante,
+                    education = :education,
+                    emploi = :emploi,
+                    logement = :logement,
+                    mediation_sociale = :mediation_sociale,
+                    securite = :securite,
+                    humanitaire = :humanitaire,
+                    diagnostic = :diagnostic,
+                    pilotage = :pilotage,
+                    autre = :autre,
+                    updated_by = :updated_by
+                WHERE fk_shantytown = :fk_shantytown AND fk_user = :fk_user`,
+            {
                 replacements,
                 transaction,
             },
