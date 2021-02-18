@@ -1,12 +1,12 @@
 const { param } = require('express-validator');
 
-module.exports = param('user_id')
+module.exports = error => param('user_id')
     .toInt()
     .isInt().bail()
     .withMessage('L\'identifiant de l\'intervenant est invalide')
     .custom(async (value, { req }) => {
         if (req.user.id !== value) {
-            throw new Error('Vous ne pouvez pas modifier les champs d\'intervention d\'un autre intervenant');
+            throw new Error(error);
         }
 
         const actor = req.shantytown.actors.find(({ id }) => id === value);
