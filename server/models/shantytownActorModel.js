@@ -175,4 +175,23 @@ module.exports = database => ({
             },
         );
     },
+
+    removeTheme(shantytownId, userId, themeId, updatedBy, transaction = undefined) {
+        return database.query(
+            `UPDATE shantytown_actors
+                SET
+                    ${themeId} = :value,
+                    updated_by = :updated_by
+                WHERE fk_shantytown = :fk_shantytown AND fk_user = :fk_user`,
+            {
+                replacements: {
+                    value: themeId === 'autre' ? null : false,
+                    fk_shantytown: shantytownId,
+                    fk_user: userId,
+                    updated_by: updatedBy,
+                },
+                transaction,
+            },
+        );
+    },
 });
