@@ -5,6 +5,7 @@ const editTown = require('./editTown');
 const addShantytownActor = require('./shantytownActors/addShantytownActor');
 const updateShantytownActor = require('./shantytownActors/updateShantytownActor');
 const removeShantytownActorTheme = require('./shantytownActors/removeShantytownActorTheme');
+const inviteShantytownActor = require('./shantytownActors/inviteShantytownActor');
 
 module.exports = {
     createContact,
@@ -15,5 +16,6 @@ module.exports = {
         addShantytownActor,
         updateShantytownActor,
         removeShantytownActorTheme,
+        inviteShantytownActor,
     },
 };
