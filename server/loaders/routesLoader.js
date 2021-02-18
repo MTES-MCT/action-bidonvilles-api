@@ -163,6 +163,16 @@ module.exports = (app) => {
         middlewares.validation,
         controllers.town.addActor,
     );
+    app.put(
+        '/towns/:id/actors/:user_id',
+        middlewares.auth.authenticate,
+        middlewares.shantytown.checkReadPermission,
+        middlewares.charte.check,
+        middlewares.appVersion.sync,
+        validators.shantytownActors.updateShantytownActor,
+        middlewares.validation,
+        controllers.town.updateActor,
+    );
 
     // plans
     app.get(
