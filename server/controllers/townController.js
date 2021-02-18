@@ -1851,5 +1851,10 @@ module.exports = (models) => {
         models,
     );
 
+    // eslint-disable-next-line global-require
+    methods.inviteNewActor = require('./townController/inviteNewActor')(
+        models,
+    );
+
     return methods;
 };
