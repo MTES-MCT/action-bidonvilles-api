@@ -1846,5 +1846,10 @@ module.exports = (models) => {
         models,
     );
 
+    // eslint-disable-next-line global-require
+    methods.removeActorTheme = require('./townController/removeActorTheme')(
+        models,
+    );
+
     return methods;
 };
