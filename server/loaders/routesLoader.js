@@ -193,6 +193,16 @@ module.exports = (app) => {
         middlewares.validation,
         controllers.town.inviteNewActor,
     );
+    app.delete(
+        '/towns/:id/actors/:user_id',
+        middlewares.auth.authenticate,
+        middlewares.shantytown.checkReadPermission,
+        middlewares.charte.check,
+        middlewares.appVersion.sync,
+        validators.shantytownActors.removeShantytownActor,
+        middlewares.validation,
+        controllers.town.removeActor,
+    );
 
     // plans
     app.get(
