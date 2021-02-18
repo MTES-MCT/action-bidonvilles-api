@@ -696,6 +696,15 @@ module.exports = models => ({
             });
         }
 
+        // Send a slack alert, if it fails, do nothing
+        try {
+            if (slackConfig && slackConfig.new_user) {
+                await triggerNewUserAlert(user);
+            }
+        } catch (err) {
+            console.log(`Error with new user webhook : ${err.message}`);
+        }
+
         await agenda.schedule('in 7 days', 'demo_invitation', {
             user,
         });
@@ -777,15 +786,6 @@ module.exports = models => ({
                     developer_message: 'Failed updating the user',
                 },
             });
-        }
-
-        // Send a slack alert, if it fails, do nothing
-        try {
-            if (slackConfig && slackConfig.new_user) {
-                await triggerNewUserAlert(user);
-            }
-        } catch (err) {
-            console.log(`Error with new user webhook : ${err.message}`);
         }
 
         return res.status(200).send({});
