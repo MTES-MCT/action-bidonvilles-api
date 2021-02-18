@@ -173,6 +173,16 @@ module.exports = (app) => {
         middlewares.validation,
         controllers.town.updateActor,
     );
+    app.delete(
+        '/towns/:id/actors/:user_id/themes/:theme_id',
+        middlewares.auth.authenticate,
+        middlewares.shantytown.checkReadPermission,
+        middlewares.charte.check,
+        middlewares.appVersion.sync,
+        validators.shantytownActors.removeShantytownActorTheme,
+        middlewares.validation,
+        controllers.town.removeActorTheme,
+    );
 
     // plans
     app.get(
