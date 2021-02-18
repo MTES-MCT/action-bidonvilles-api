@@ -146,6 +146,21 @@ module.exports = database => ({
         );
     },
 
+    removeActor(shantytownId, userId, transaction = undefined) {
+        return database.query(
+            `DELETE
+                FROM shantytown_actors
+                WHERE fk_shantytown = :fk_shantytown AND fk_user = :fk_user`,
+            {
+                replacements: {
+                    fk_shantytown: shantytownId,
+                    fk_user: userId,
+                },
+                transaction,
+            },
+        );
+    },
+
     updateThemes(shantytownId, userId, themes, updatedBy, transaction = undefined) {
         const replacements = {
             ...processThemes(themes),
