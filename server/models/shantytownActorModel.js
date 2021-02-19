@@ -89,7 +89,8 @@ module.exports = database => ({
                 shantytown_actors sa
             LEFT JOIN users u ON sa.fk_user = u.user_id
             LEFT JOIN organizations o ON u.fk_organization = o.organization_id
-            WHERE sa.fk_shantytown IN (:ids) AND u.fk_status = 'active'`,
+            WHERE sa.fk_shantytown IN (:ids) AND u.fk_status = 'active'
+            ORDER BY sa.fk_shantytown ASC, u.first_name ASC`,
             {
                 type: database.QueryTypes.SELECT,
                 replacements: {
