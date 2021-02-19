@@ -203,6 +203,14 @@ module.exports = (app) => {
         middlewares.validation,
         controllers.town.removeActor,
     );
+    app.get(
+        '/towns/:id/relations',
+        middlewares.auth.authenticate,
+        middlewares.shantytown.checkReadPermission,
+        middlewares.charte.check,
+        middlewares.appVersion.sync,
+        controllers.town.getRelations,
+    );
 
     // plans
     app.get(

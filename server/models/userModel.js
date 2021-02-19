@@ -193,7 +193,7 @@ module.exports = (database) => {
         const whereClause = where.map((clauses, index) => {
             const clauseGroup = Object.keys(clauses).map((column) => {
                 replacements[`${column}${index}`] = clauses[column].value || clauses[column];
-                return `${clauses[column].query || `users.${column}`} IN (:${column}${index})`;
+                return `${clauses[column].query || `users.${column}`} ${clauses[column].operator || 'IN'} (:${column}${index})`;
             }).join(' OR ');
 
             return `(${clauseGroup})`;
@@ -777,6 +777,42 @@ module.exports = (database) => {
         }
 
         return localAdmins;
+    };
+
+    model.findForRegion = async (regionCode, name = undefined) => {
+        const where = [
+            {
+                nationalUser: {
+                    query: 'organizations.location_type',
+                    value: 'nation',
+                },
+                // or
+                userInTheProperRegion: {
+                    query: 'organizations.region_code',
+                    value: regionCode,
+                },
+            },
+            {
+                fk_status: ['active'],
+            },
+        ];
+        if (name !== undefined) {
+            where.push({
+                firstName: {
+                    query: 'users.first_name',
+                    operator: 'ILIKE',
+                    value: `%${name}%`,
+                },
+                // or
+                lastName: {
+                    query: 'users.last_name',
+                    operator: 'ILIKE',
+                    value: `%${name}%`,
+                },
+            });
+        }
+
+        return query(where, {});
     };
 
     return model;

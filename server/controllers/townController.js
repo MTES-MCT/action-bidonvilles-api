@@ -1530,5 +1530,10 @@ module.exports = (models) => {
         models,
     );
 
+    // eslint-disable-next-line global-require
+    methods.getRelations = require('./townController/getRelations')(
+        models,
+    );
+
     return methods;
 };
