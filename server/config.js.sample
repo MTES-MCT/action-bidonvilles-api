@@ -18,6 +18,9 @@ const config = {
     agenda: {
         mongo_address: 'mongodb://root:demo@agenda_db'
     },
+    slack: {
+        invite_actor: 'SLACK_WEBHOOK_INVITE_ACTOR'
+    }
 };
 config.backUrl = `http://localhost:${config.externalPort}`;
 
