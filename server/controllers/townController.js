@@ -68,6 +68,7 @@ function serializeComment(comment) {
                 organization: comment.organizationAbbreviation || comment.organizationName,
                 organizationId: comment.organizationId,
             },
+            private: comment.commentPrivate,
             shantytown: comment.shantytownId,
         },
         comment.covidCommentDate !== null
@@ -439,6 +440,7 @@ module.exports = (models) => {
         async addComment(req, res) {
             const {
                 description,
+                private: privateField,
             } = req.body;
 
             // get the related town
@@ -486,6 +488,7 @@ module.exports = (models) => {
                 await ShantyTownComments.create({
                     shantytown: shantytown.id,
                     description: trimmedDescription,
+                    private: privateField,
                     createdBy: req.user.id,
                 });
 
@@ -496,6 +499,7 @@ module.exports = (models) => {
                         shantytown_comments.description AS "commentDescription",
                         shantytown_comments.created_at AS "commentCreatedAt",
                         shantytown_comments.created_by AS "commentCreatedBy",
+                        shantytown_comments.private AS "commentPrivate",
                         users.first_name AS "userFirstName",
                         users.last_name AS "userLastName",
                         users.position AS "userPosition",
@@ -556,11 +560,12 @@ module.exports = (models) => {
 
             try {
                 await sequelize.query(
-                    'UPDATE shantytown_comments SET description = :description WHERE shantytown_comment_id = :id',
+                    'UPDATE shantytown_comments SET description = :description SET private = :private WHERE shantytown_comment_id = :id',
                     {
                         replacements: {
                             id: req.params.commentId,
                             description: req.body.description,
+                            private: req.body.private,
                         },
                     },
                 );

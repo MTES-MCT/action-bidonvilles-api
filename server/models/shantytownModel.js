@@ -265,6 +265,7 @@ function serializeComment(comment) {
             id: comment.commentId,
             description: comment.commentDescription,
             createdAt: comment.commentCreatedAt !== null ? (comment.commentCreatedAt.getTime() / 1000) : null,
+            private: comment.commentPrivate,
             createdBy: {
                 id: comment.commentCreatedBy,
                 firstName: comment.userFirstName,
@@ -581,7 +582,7 @@ function getBaseSql(table, whereClause = null, order = null) {
 }
 
 module.exports = (database) => {
-    async function getComments(user, shantytownIds, covid = false) {
+    async function getComments(user, shantytownIds, covid = false, filterPrivateComments = true) {
         const comments = shantytownIds.reduce((acc, id) => Object.assign({}, acc, {
             [id]: [],
         }), {});
@@ -597,6 +598,7 @@ module.exports = (database) => {
                 shantytown_comments.description AS "commentDescription",
                 shantytown_comments.created_at AS "commentCreatedAt",
                 shantytown_comments.created_by AS "commentCreatedBy",
+                shantytown_comments.private AS "commentPrivate",
                 shantytown_covid_comments.date AS "covidCommentDate",
                 shantytown_covid_comments.equipe_maraude AS "covidEquipeMaraude",
                 shantytown_covid_comments.equipe_sanitaire AS "covidEquipeSanitaire",
@@ -615,7 +617,10 @@ module.exports = (database) => {
             LEFT JOIN users ON shantytown_comments.created_by = users.user_id
             LEFT JOIN organizations ON users.fk_organization = organizations.organization_id
             LEFT JOIN shantytown_covid_comments ON shantytown_covid_comments.fk_comment = shantytown_comments.shantytown_comment_id
-            WHERE shantytown_comments.fk_shantytown IN (:ids) AND shantytown_covid_comment_id IS ${covid === true ? 'NOT ' : ''}NULL
+            WHERE
+                shantytown_comments.fk_shantytown IN (:ids) 
+                AND shantytown_covid_comment_id IS ${covid === true ? 'NOT ' : ''}NULL
+                ${filterPrivateComments === true ? 'AND private IS FALSE ' : ''}
             ORDER BY shantytown_comments.created_at DESC`,
             {
                 type: database.QueryTypes.SELECT,
@@ -738,7 +743,9 @@ module.exports = (database) => {
             ),
         );
 
-        promises.push(getComments(user, Object.keys(serializedTowns.hash), false));
+        const isAdmin = ['local_admin', 'national_admin'].includes(user.role_id);
+        const filterPrivateComments = !isAdmin;
+        promises.push(getComments(user, Object.keys(serializedTowns.hash), false, filterPrivateComments));
         promises.push(getComments(user, Object.keys(serializedTowns.hash), true));
 
         promises.push(
