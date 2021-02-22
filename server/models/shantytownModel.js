@@ -587,10 +587,6 @@ module.exports = (database) => {
             [id]: [],
         }), {});
 
-        if (covid === false && !user.isAllowedTo('list', 'shantytown_comment')) {
-            return comments;
-        }
-
         const rows = await database.query(
             `SELECT
                 shantytown_comments.shantytown_comment_id AS "commentId",
