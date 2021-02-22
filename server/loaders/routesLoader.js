@@ -300,7 +300,6 @@ module.exports = (app) => {
     app.post(
         '/towns/:id/comments',
         middlewares.auth.authenticate,
-        (...args) => middlewares.auth.checkPermissions(['shantytown_comment.create'], ...args),
         middlewares.charte.check,
         middlewares.appVersion.sync,
         controllers.town.addComment,
