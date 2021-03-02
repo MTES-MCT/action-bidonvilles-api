@@ -13,10 +13,6 @@ module.exports = function (sequelize, DataTypes) {
             type: DataTypes.STRING,
             allowNull: true,
         },
-        priority: {
-            type: DataTypes.INTEGER,
-            allowNull: true,
-        },
         status: {
             type: DataTypes.ENUM('open', 'immediately_expelled', 'closed', 'closed_by_justice', 'closed_by_admin', 'covered'),
             allowNull: false,
@@ -272,121 +268,6 @@ module.exports = function (sequelize, DataTypes) {
                 key: 'user_id',
             },
             field: 'updated_by',
-        },
-        // WATER FIELDS
-        waterPotable: {
-            type: DataTypes.BOOLEAN,
-            allowNull: true,
-            field: 'water_potable',
-        },
-        waterContinuousAccess: {
-            type: DataTypes.BOOLEAN,
-            allowNull: true,
-            field: 'water_continuous_access',
-        },
-        waterPublicPoint: {
-            type: DataTypes.BOOLEAN,
-            allowNull: true,
-            field: 'water_public_point',
-        },
-        waterDistance: {
-            type: DataTypes.INTEGER,
-            allowNull: true,
-            field: 'water_distance',
-        },
-        waterRoadsToCross: {
-            type: DataTypes.BOOLEAN,
-            allowNull: true,
-            field: 'water_roads_to_cross',
-        },
-        waterEveryoneHasAccess: {
-            type: DataTypes.BOOLEAN,
-            allowNull: true,
-            field: 'water_everyone_has_access',
-        },
-        waterStagnantWater: {
-            type: DataTypes.BOOLEAN,
-            allowNull: true,
-            field: 'water_stagnant_water',
-        },
-        waterHandWashAccess: {
-            type: DataTypes.BOOLEAN,
-            allowNull: true,
-            field: 'water_hand_wash_access',
-        },
-        waterHandWashAccessNumber: {
-            type: DataTypes.INTEGER,
-            allowNull: true,
-            field: 'water_hand_wash_access_number',
-        },
-        // SANITARY FIELDS
-        sanitaryNumber: {
-            type: DataTypes.INTEGER,
-            allowNull: true,
-            field: 'sanitary_number',
-        },
-        sanitaryInsalubrious: {
-            type: DataTypes.BOOLEAN,
-            allowNull: true,
-            field: 'sanitary_insalubrious',
-        },
-        sanitaryOnSite: {
-            type: DataTypes.BOOLEAN,
-            allowNull: true,
-            field: 'sanitary_on_site',
-        },
-        // TRASH EVACUATION
-        trashCansOnSite: {
-            type: DataTypes.INTEGER,
-            allowNull: true,
-            field: 'trash_cans_on_site',
-        },
-        trashAccumulation: {
-            type: DataTypes.BOOLEAN,
-            allowNull: true,
-            field: 'trash_accumulation',
-        },
-        trashEvacuationRegular: {
-            type: DataTypes.BOOLEAN,
-            allowNull: true,
-            field: 'trash_evacuation_regular',
-        },
-        // VERMIN
-        vermin: {
-            type: DataTypes.BOOLEAN,
-            allowNull: true,
-            field: 'vermin',
-        },
-        verminComments: {
-            type: DataTypes.TEXT,
-            allowNull: true,
-            field: 'vermin_comments',
-        },
-        // FIRE PREVENTION
-        firePreventionMeasures: {
-            type: DataTypes.BOOLEAN,
-            allowNull: true,
-            field: 'fire_prevention_measures',
-        },
-        firePreventionDiagnostic: {
-            type: DataTypes.BOOLEAN,
-            allowNull: true,
-            field: 'fire_prevention_diagnostic',
-        },
-        firePreventionSiteAccessible: {
-            type: DataTypes.BOOLEAN,
-            allowNull: true,
-            field: 'fire_prevention_site_accessible',
-        },
-        firePreventionDevices: {
-            type: DataTypes.BOOLEAN,
-            allowNull: true,
-            field: 'fire_prevention_devices',
-        },
-        firePreventionComments: {
-            type: DataTypes.TEXT,
-            allowNull: true,
-            field: 'fire_prevention_comments',
         },
     }, {
         tableName: 'shantytowns',
