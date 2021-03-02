@@ -143,18 +143,6 @@ module.exports = mode => ([
         .customSanitizer(value => value || null),
 
     /* **********************************************************************************************
-     * Niveau de priorité du site
-     ********************************************************************************************* */
-    body('priority')
-        .optional({ nullable: true })
-        .toInt()
-        .isInt().bail().withMessage('Le champ "Niveau de priorité du site" est invalide')
-        .isInt({ min: 1, max: 3 }).withMessage('La valeur du champ "Niveau de priorité du site" doit être comprise entre 1 et 3'),
-
-    body('priority')
-        .customSanitizer(value => value || null),
-
-    /* **********************************************************************************************
      * Date d'installation du site
      ********************************************************************************************* */
     body('built_at')

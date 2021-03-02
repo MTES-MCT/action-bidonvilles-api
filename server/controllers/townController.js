@@ -148,7 +148,6 @@ module.exports = (models) => {
                 await sequelize.transaction(async (transaction) => {
                     const baseTown = {
                         name: req.body.name,
-                        priority: req.body.priority,
                         latitude: req.body.latitude,
                         longitude: req.body.longitude,
                         address: req.body.address,
@@ -805,12 +804,6 @@ module.exports = (models) => {
             };
 
             const properties = {
-                priority: {
-                    title: 'Priorité',
-                    data: ({ priority }) => priority,
-                    bold: true,
-                    width: COLUMN_WIDTHS.XSMALL,
-                },
                 departement: {
                     title: 'Département',
                     data: ({ departement }) => `${departement.code} - ${departement.name}`,
@@ -1187,14 +1180,6 @@ module.exports = (models) => {
             // sections
             const options = req.query.options ? req.query.options.split(',') : [];
             const sections = [];
-            if (options.indexOf('priority') !== -1 && !closedTowns) {
-                sections.push({
-                    title: null,
-                    properties: [
-                        properties.priority,
-                    ],
-                });
-            }
 
             const localizationSection = {
                 title: 'Localisation',

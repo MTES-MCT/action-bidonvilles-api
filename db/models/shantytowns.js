@@ -13,10 +13,6 @@ module.exports = function (sequelize, DataTypes) {
             type: DataTypes.STRING,
             allowNull: true,
         },
-        priority: {
-            type: DataTypes.INTEGER,
-            allowNull: true,
-        },
         status: {
             type: DataTypes.ENUM('open', 'immediately_expelled', 'closed', 'closed_by_justice', 'closed_by_admin', 'covered'),
             allowNull: false,
