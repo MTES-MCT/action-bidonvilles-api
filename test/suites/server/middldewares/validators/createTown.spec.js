@@ -137,53 +137,6 @@ describe('createTown', () => {
     });
 
     /* **********************************************************************************************
-     * Niveau de priorité du site
-     ********************************************************************************************* */
-    describe('.priority', () => {
-        [
-            { label: 'undefined', value: undefined },
-            { label: 'null', value: null },
-        ].forEach(({ label, value }) => {
-            describe(`given ${label}`, () => {
-                it('should not raise an error', async () => {
-                    const { errors } = await validate({ priority: value });
-                    expect(errors).to.not.have.property('priority');
-                });
-
-                it('should sanitize the value to null', async () => {
-                    const { body } = await validate({ priority: value });
-                    expect(body.priority).to.be.null;
-                });
-            });
-        });
-
-        describe('given a value that is not a number', () => {
-            it('should raise an error', async () => {
-                const { errors } = await validate({ priority: 'test' });
-                expect(errors.priority).to.have.members([
-                    'Le champ "Niveau de priorité du site" est invalide',
-                ]);
-            });
-        });
-
-        describe('given a value that is a number out of the [1,3] range', () => {
-            it('should raise an error', async () => {
-                const { errors } = await validate({ priority: '4' });
-                expect(errors.priority).to.have.members([
-                    'La valeur du champ "Niveau de priorité du site" doit être comprise entre 1 et 3',
-                ]);
-            });
-        });
-
-        describe('given a value that is a valid number', () => {
-            it('should sanitize to an integer', async () => {
-                const { body } = await validate({ priority: '3' });
-                expect(body.priority).to.be.eql(3);
-            });
-        });
-    });
-
-    /* **********************************************************************************************
      * Date d'installation du site
      ********************************************************************************************* */
     describe('.built_at', () => {

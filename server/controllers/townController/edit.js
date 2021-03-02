@@ -24,7 +24,6 @@ module.exports = () => async (req, res) => {
         await sequelize.transaction(async (transaction) => {
             const baseTown = {
                 name: req.body.name,
-                priority: req.body.priority,
                 latitude: req.body.latitude,
                 longitude: req.body.longitude,
                 address: req.body.address,
