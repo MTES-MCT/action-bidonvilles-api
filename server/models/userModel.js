@@ -801,13 +801,13 @@ module.exports = (database) => {
                 firstName: {
                     query: 'users.first_name',
                     operator: 'ILIKE',
-                    value: `%${name}%`,
+                    value: `${name}%`,
                 },
                 // or
                 lastName: {
                     query: 'users.last_name',
                     operator: 'ILIKE',
-                    value: `%${name}%`,
+                    value: `${name}%`,
                 },
             });
         }
