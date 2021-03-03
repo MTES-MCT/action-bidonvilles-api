@@ -286,7 +286,7 @@ module.exports = function (sequelize, DataTypes) {
             field: 'water_public_point',
         },
         waterDistance: {
-            type: DataTypes.INTEGER,
+            type: DataTypes.ENUM('0-20', '20-50', '50-100', '100+'),
             allowNull: true,
             field: 'water_distance',
         },
