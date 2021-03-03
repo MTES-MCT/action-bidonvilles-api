@@ -776,8 +776,7 @@ module.exports = mode => ([
      ********************************************************************************************* */
     body('water_distance')
         .optional({ nullable: true })
-        .toInt()
-        .isInt({ min: 0 }).withMessage('Le champ "Où se situe l\'accès à l\'eau?" est invalide'),
+        .isIn(['0-20', '20-50', '50-100', '100+']).withMessage('Le champ "Où se situe l\'accès ?" est invalide'),
 
     /* **********************************************************************************************
      * L’accès nécessite-t-il un franchissement de rue ou de route ? (BOOLEAN optionnel)

@@ -101,9 +101,12 @@ const addWaterAndWashAccessNumberConstraint = ({ queryInterface, Sequelize, tran
         type: 'check',
         name: 'water_hand_wash_access_number_only_defined_if_access_true',
         where: {
-            [Sequelize.Op.and]: {
-                water_hand_wash_access: { [Sequelize.Op.ne]: true },
-                water_hand_wash_access_number: { [Sequelize.Op.eq]: null },
+            [Sequelize.Op.or]: {
+                [Sequelize.Op.and]: {
+                    water_hand_wash_access: { [Sequelize.Op.ne]: true },
+                    water_hand_wash_access_number: { [Sequelize.Op.eq]: null },
+                },
+                water_hand_wash_access: { [Sequelize.Op.eq]: true },
             },
         },
         transaction,
