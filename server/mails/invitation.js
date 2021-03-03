@@ -5,9 +5,9 @@ const { frontUrl } = require('#server/config');
 module.exports = data => ({
     Subject: '[Résorption-bidonvilles] - Découvrez la plateforme Résorption-bidonvilles',
 
-    TextPart: `Bonjour ${data.guest.first_name},
+    TextPart: `Bonjour ${data.first_name},
 
-        Connaissez-vous la plateforme Résorption-bidonvilles ? ${data.greeter.first_name}  ${data.greeter.last_name.toUpperCase()}, ${data.greeter.organization_name} vous invite à la découvrir !
+        Connaissez-vous la plateforme Résorption-bidonvilles ? ${data.greeter_first_name}  ${data.greeter_last_name.toUpperCase()}, ${data.greeter_organization_name} vous invite à la découvrir !
         
         Résorption-Bidonvilles est un outil numérique de travail collaboratif pour accélérer la résorption des bidonvilles. Il s’adresse à tous les acteurs de terrain : les services de l’État, les DDCS, les collectivités territoriales, les opérateurs…
         
@@ -34,9 +34,9 @@ module.exports = data => ({
                         <tbody>
                             <tr>
                                 <td bgcolor="#ffffff">
-                                    Bonjour ${data.guest.first_name},<br/>
+                                    Bonjour ${data.first_name},<br/>
                                     <br/>
-                                    Connaissez-vous la plateforme Résorption-bidonvilles ? ${data.greeter.first_name}  ${data.greeter.last_name.toUpperCase()}, ${data.greeter.organization_name} vous invite à la découvrir !<br/>
+                                    Connaissez-vous la plateforme Résorption-bidonvilles ? ${data.greeter_first_name}  ${data.greeter_last_name.toUpperCase()}, ${data.greeter_organization_name} vous invite à la découvrir !<br/>
                                     <br/>
                                     Résorption-Bidonvilles est un outil numérique de travail collaboratif pour accélérer la résorption des bidonvilles. Il s’adresse à tous les acteurs de terrain : les services de l’État, les DDCS, les collectivités territoriales, les opérateurs…<br/>
                                 </td>
