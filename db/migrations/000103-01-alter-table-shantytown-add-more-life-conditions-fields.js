@@ -13,7 +13,7 @@ const getFields = Sequelize => ({
         allowNull: true,
     },
     water_distance: {
-        type: Sequelize.INTEGER,
+        type: Sequelize.ENUM('0-20', '20-50', '50-100', '100+'),
         allowNull: true,
     },
     water_roads_to_cross: {
@@ -94,43 +94,101 @@ const getFields = Sequelize => ({
     },
 });
 
+const addWaterAndWashAccessNumberConstraint = ({ queryInterface, Sequelize, transaction }) => queryInterface.addConstraint(
+    'shantytowns',
+    ['water_hand_wash_access_number'],
+    {
+        type: 'check',
+        name: 'water_hand_wash_access_number_only_defined_if_access_true',
+        where: {
+            [Sequelize.Op.and]: {
+                water_hand_wash_access: { [Sequelize.Op.ne]: true },
+                water_hand_wash_access_number: { [Sequelize.Op.eq]: null },
+            },
+        },
+        transaction,
+    },
+);
+
+const addPositiveConstraint = ({
+    queryInterface, Sequelize, transaction, field,
+}) => queryInterface.addConstraint(
+    'shantytowns',
+    [field],
+    {
+        type: 'check',
+        name: `${field}_positive_or_null`,
+        where: {
+            [Sequelize.Op.or]: [
+                {
+                    [field]: { [Sequelize.Op.eq]: null },
+                },
+                {
+                    [field]: { [Sequelize.Op.gt]: 0 },
+                },
+            ],
+        },
+        transaction,
+    },
+);
+
 module.exports = {
     up: (queryInterface, Sequelize) => queryInterface.sequelize.transaction(
-        transaction => Promise.all(Object.entries(getFields(Sequelize)).flatMap(([field, props]) => [
-            queryInterface.addColumn(
-                'shantytowns',
-                field,
-                props,
-                {
-                    transaction,
-                },
-            ),
-            queryInterface.addColumn(
-                'ShantytownHistories',
-                field,
-                props,
-                {
-                    transaction,
-                },
-            ),
-        ])),
+        transaction => Promise.all([
+            ...Object.entries(getFields(Sequelize)).flatMap(([field, props]) => [
+                queryInterface.addColumn(
+                    'shantytowns',
+                    field,
+                    props,
+                    {
+                        transaction,
+                    },
+                ),
+                queryInterface.addColumn(
+                    'ShantytownHistories',
+                    field,
+                    props,
+                    {
+                        transaction,
+                    },
+                ),
+            ]),
+            addWaterAndWashAccessNumberConstraint({ queryInterface, Sequelize, transaction }),
+            addPositiveConstraint({
+                queryInterface, Sequelize, transaction, field: 'water_hand_wash_access_number',
+            }),
+            addPositiveConstraint({
+                queryInterface, Sequelize, transaction, field: 'sanitary_number',
+            }),
+            addPositiveConstraint({
+                queryInterface, Sequelize, transaction, field: 'trash_cans_on_site',
+            }),
+        ]),
     ),
     down: (queryInterface, Sequelize) => queryInterface.sequelize.transaction(
-        transaction => Promise.all(Object.keys(getFields(Sequelize)).flatMap(field => [
-            queryInterface.removeColumn(
-                'shantytowns',
-                field,
-                {
-                    transaction,
-                },
-            ),
-            queryInterface.removeColumn(
-                'ShantytownHistories',
-                field,
-                {
-                    transaction,
-                },
-            ),
-        ])),
+        transaction => Promise.all([
+            queryInterface.removeConstraint('shantytowns', 'water_hand_wash_access_number_only_defined_if_access_true', { transaction }),
+            queryInterface.removeConstraint('shantytowns', 'water_hand_wash_access_number_positive_or_null', { transaction }),
+            queryInterface.removeConstraint('shantytowns', 'sanitary_number_positive_or_null', { transaction }),
+            queryInterface.removeConstraint('shantytowns', 'trash_cans_on_site_positive_or_null', { transaction }),
+            queryInterface.sequelize.query('DROP TYPE "enum_shantytowns_water_distance"', { transaction }),
+            queryInterface.sequelize.query('DROP TYPE "enum_ShantytownHistories_water_distance"', { transaction }),
+            ...Object.keys(getFields(Sequelize)).flatMap(field => [
+                queryInterface.removeColumn(
+                    'shantytowns',
+                    field,
+                    {
+                        transaction,
+                    },
+                ),
+                queryInterface.removeColumn(
+                    'ShantytownHistories',
+                    field,
+                    {
+                        transaction,
+                    },
+                ),
+
+            ])]),
     ),
 };

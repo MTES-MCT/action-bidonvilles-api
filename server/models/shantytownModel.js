@@ -217,25 +217,20 @@ function getDiff(oldVersion, newVersion) {
         waterPotable: baseProcessors.bool,
         waterContinuousAccess: baseProcessors.bool,
         waterPublicPoint: baseProcessors.bool,
-        // waterDistance: baseProcessors.bool,
         waterRoadsToCross: baseProcessors.bool,
         waterEveryoneHasAccess: baseProcessors.bool,
         waterStagnantWater: baseProcessors.bool,
         waterHandWashAccess: baseProcessors.bool,
-        // waterHandWashAccessNumber: baseProcessors.bool,
-        // sanitaryNumber: baseProcessors.bool,
         sanitaryInsalubrious: baseProcessors.bool,
         sanitaryOnSite: baseProcessors.bool,
         trashCansOnSite: baseProcessors.bool,
         trashAccumulation: baseProcessors.bool,
         trashEvacuationRegular: baseProcessors.bool,
         vermin: baseProcessors.bool,
-        // verminComments: baseProcessors.bool,
         firePreventionMeasures: baseProcessors.bool,
         firePreventionDiagnostic: baseProcessors.bool,
         firePreventionDevices: baseProcessors.bool,
         firePreventionSiteAccessible: baseProcessors.bool,
-        // firePreventionComments: baseProcessors.bool
     };
 
     return properties.reduce((diff, property) => {
