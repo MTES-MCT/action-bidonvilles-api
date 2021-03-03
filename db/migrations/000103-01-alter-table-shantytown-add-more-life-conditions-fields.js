@@ -171,8 +171,6 @@ module.exports = {
             queryInterface.removeConstraint('shantytowns', 'water_hand_wash_access_number_positive_or_null', { transaction }),
             queryInterface.removeConstraint('shantytowns', 'sanitary_number_positive_or_null', { transaction }),
             queryInterface.removeConstraint('shantytowns', 'trash_cans_on_site_positive_or_null', { transaction }),
-            queryInterface.sequelize.query('DROP TYPE "enum_shantytowns_water_distance"', { transaction }),
-            queryInterface.sequelize.query('DROP TYPE "enum_ShantytownHistories_water_distance"', { transaction }),
             ...Object.keys(getFields(Sequelize)).flatMap(field => [
                 queryInterface.removeColumn(
                     'shantytowns',
@@ -190,5 +188,8 @@ module.exports = {
                 ),
 
             ])]),
-    ),
+    ).then(() => Promise.all([
+        queryInterface.sequelize.query('DROP TYPE "enum_shantytowns_water_distance"'),
+        queryInterface.sequelize.query('DROP TYPE "enum_ShantytownHistories_water_distance"'),
+    ])),
 };
