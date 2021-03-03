@@ -1294,7 +1294,7 @@ module.exports = (models) => {
                 },
                 // sanitary
                 sanitaryNumber: {
-                    title: 'Les toilettes se situent-elles sur le site ?',
+                    title: 'Nombre de toilettes ?',
                     data: ({ sanitaryNumber }) => sanitaryNumber,
                     width: COLUMN_WIDTHS.SMALL,
                 },
