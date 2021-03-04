@@ -20,7 +20,7 @@ module.exports = models => ({
             user: models.user.findOne(req.user.id, { extended: true }),
             changelog: models.changelog.getLastChangelogFor(req.user),
             version_charte_engagement: models.charteEngagement.getLatest(),
-            actor_themes: Promise.resolve(themes),
+            actor_themes: themes,
         };
 
         const promises = Object.values(queries);
