@@ -560,7 +560,7 @@ module.exports = (models) => {
 
             try {
                 await sequelize.query(
-                    'UPDATE shantytown_comments SET description = :description SET private = :private WHERE shantytown_comment_id = :id',
+                    'UPDATE shantytown_comments SET description = :description, private = :private WHERE shantytown_comment_id = :id',
                     {
                         replacements: {
                             id: req.params.commentId,
