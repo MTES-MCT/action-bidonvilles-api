@@ -1,5 +1,3 @@
-const ACTOR_THEMES = Object.keys(require('#server/config/shantytown_actor_themes'));
-
 /**
  * Serializes a single actor row
  *
@@ -8,6 +6,19 @@ const ACTOR_THEMES = Object.keys(require('#server/config/shantytown_actor_themes
  * @returns {Object}
  */
 function serializeActor(actor) {
+    const themes = [
+        ...actor.themes.map(id => ({
+            id,
+        })),
+    ];
+
+    if (actor.autre !== null) {
+        themes.push({
+            id: 'autre',
+            value: actor.autre,
+        });
+    }
+
     return {
         id: actor.userId,
         first_name: actor.userFirstName,
@@ -16,49 +27,37 @@ function serializeActor(actor) {
             id: actor.organizationId,
             name: actor.organizationAbbreviation || actor.organizationName,
         },
-        themes: ACTOR_THEMES.reduce((arr, themeId) => {
-            if (actor[themeId] === true) {
-                return [...arr, { id: themeId }];
-            }
-
-            // cas particulier du theme "autre"
-            if (typeof actor[themeId] === 'string') {
-                return [...arr, {
-                    id: themeId,
-                    value: actor[themeId],
-                }];
-            }
-
-            return arr;
-        }, []),
+        themes,
     };
 }
 
 /**
- * Takes a non-exhaustive array of themes, and returns an exhaustive one with the proper matching value
+ * Processes an array of themes to make it ready for database insertion
  *
- * - if a theme is not in the array: sets its value to false (or null for "autre")
- * - if a theme is in the array: keeps the provided value
+ * @param {Array.<Object>} themes Each object has the property "id", and for the special case "autre" a property "value"
  *
- * @param {Array} themes
- *
- * @returns {Object} A key-value object where the key is theme id
+ * @returns {Object} A key-value object with a key "themes" (array of theme ids) and a key "autre" (string or null)
  */
 function processThemes(themes) {
-    return ACTOR_THEMES.reduce((acc, themeId) => {
-        const obj = themes.find(({ id }) => id === themeId);
-        if (themeId === 'autre') {
+    return themes.reduce((acc, theme) => {
+        if (theme.id === 'autre') {
             return {
                 ...acc,
-                [themeId]: obj !== undefined ? obj.value : null,
+                autre: theme.value,
             };
         }
 
         return {
             ...acc,
-            [themeId]: obj !== undefined,
+            themes: [
+                ...acc.themes,
+                theme.id,
+            ],
         };
-    }, {});
+    }, {
+        themes: [],
+        autre: null,
+    });
 }
 
 module.exports = database => ({
@@ -70,15 +69,7 @@ module.exports = database => ({
         return database.query(
             `SELECT
                 sa.fk_shantytown AS "shantytownId",
-                sa.sante,
-                sa.education,
-                sa.emploi,
-                sa.logement,
-                sa.mediation_sociale,
-                sa.securite,
-                sa.humanitaire,
-                sa.diagnostic,
-                sa.pilotage,
+                sa.themes,
                 sa.autre,
                 u.user_id AS "userId",
                 u.first_name AS "userFirstName",
@@ -115,30 +106,14 @@ module.exports = database => ({
                 (
                     fk_shantytown,
                     fk_user,
-                    sante,
-                    education,
-                    emploi,
-                    logement,
-                    mediation_sociale,
-                    securite,
-                    humanitaire,
-                    diagnostic,
-                    pilotage,
+                    themes,
                     autre,
                     created_by
                 )
             VALUES (
                 :fk_shantytown,
                 :fk_user,
-                :sante,
-                :education,
-                :emploi,
-                :logement,
-                :mediation_sociale,
-                :securite,
-                :humanitaire,
-                :diagnostic,
-                :pilotage,
+                ARRAY[${replacements.themes.map(id => `'${id}'`).join(',')}]::enum_shantytown_actors_themes[],
                 :autre,
                 :created_by
             )`, {
@@ -174,15 +149,7 @@ module.exports = database => ({
         return database.query(
             `UPDATE shantytown_actors
                 SET
-                    sante = :sante,
-                    education = :education,
-                    emploi = :emploi,
-                    logement = :logement,
-                    mediation_sociale = :mediation_sociale,
-                    securite = :securite,
-                    humanitaire = :humanitaire,
-                    diagnostic = :diagnostic,
-                    pilotage = :pilotage,
+                    themes = ARRAY[${replacements.themes.map(id => `'${id}'`).join(',')}]::enum_shantytown_actors_themes[],
                     autre = :autre,
                     updated_by = :updated_by
                 WHERE fk_shantytown = :fk_shantytown AND fk_user = :fk_user`,
@@ -194,15 +161,22 @@ module.exports = database => ({
     },
 
     removeTheme(shantytownId, userId, themeId, updatedBy, transaction = undefined) {
+        let query;
+        if (themeId === 'autre') {
+            query = 'autre = null';
+        } else {
+            query = 'themes = array_remove(themes, :themeId)';
+        }
+
         return database.query(
             `UPDATE shantytown_actors
                 SET
-                    ${themeId} = :value,
+                    ${query},
                     updated_by = :updated_by
                 WHERE fk_shantytown = :fk_shantytown AND fk_user = :fk_user`,
             {
                 replacements: {
-                    value: themeId === 'autre' ? null : false,
+                    themeId,
                     fk_shantytown: shantytownId,
                     fk_user: userId,
                     updated_by: updatedBy,
