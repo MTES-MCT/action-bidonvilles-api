@@ -300,7 +300,14 @@ module.exports = (app) => {
     app.post(
         '/towns/:id/comments',
         middlewares.auth.authenticate,
-        (...args) => middlewares.auth.checkPermissions(['shantytown_comment.createPrivate'], ...args),
+        (req, res, next, respond = true) => {
+            // Only check permissions for private comments
+            if (req.body.private) {
+                return middlewares.auth.checkPermissions(['shantytown_comment.createPrivate'], req, res, next, respond);
+            }
+
+            return next();
+        },
         middlewares.charte.check,
         middlewares.appVersion.sync,
         controllers.town.addComment,
