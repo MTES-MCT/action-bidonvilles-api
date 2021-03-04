@@ -12,40 +12,13 @@ module.exports = {
                     type: Sequelize.INTEGER,
                     allowNull: false,
                 },
-                sante: {
-                    type: Sequelize.BOOLEAN,
-                    allowNull: false,
-                },
-                education: {
-                    type: Sequelize.BOOLEAN,
-                    allowNull: false,
-                },
-                emploi: {
-                    type: Sequelize.BOOLEAN,
-                    allowNull: false,
-                },
-                logement: {
-                    type: Sequelize.BOOLEAN,
-                    allowNull: false,
-                },
-                mediation_sociale: {
-                    type: Sequelize.BOOLEAN,
-                    allowNull: false,
-                },
-                securite: {
-                    type: Sequelize.BOOLEAN,
-                    allowNull: false,
-                },
-                humanitaire: {
-                    type: Sequelize.BOOLEAN,
-                    allowNull: false,
-                },
-                diagnostic: {
-                    type: Sequelize.BOOLEAN,
-                    allowNull: false,
-                },
-                pilotage: {
-                    type: Sequelize.BOOLEAN,
+                themes: {
+                    type: Sequelize.ARRAY(
+                        Sequelize.ENUM(
+                            'sante', 'education', 'emploi', 'logement', 'mediation_sociale',
+                            'securite', 'humanitaire', 'diagnostic', 'pilotage',
+                        ),
+                    ),
                     allowNull: false,
                 },
                 autre: {
@@ -177,7 +150,13 @@ module.exports = {
                     transaction,
                 },
             ))
-            .then(() => queryInterface.dropTable('shantytown_actors', { transaction })),
+            .then(() => queryInterface.dropTable('shantytown_actors', { transaction }))
+            .then(() => queryInterface.sequelize.query(
+                'DROP TYPE "enum_shantytown_actors_themes"',
+                {
+                    transaction,
+                },
+            )),
     ),
 
 };
