@@ -6,7 +6,6 @@ const commonInputs = require('#fixtures/common.fixtures')(randomStr);
 function getEmptyTownInput(withDistrict = false) {
     return {
         // shantytown_id: '', (auto)
-        priority: 1,
         status: 'open',
         built_at: null,
         closed_at: null,
@@ -154,7 +153,6 @@ function getEmptyTownOutput(townId, version = 'unfiltered', withDistrict = false
     }
 
     return Object.assign(baseOutput, {
-        priority: 1,
         declaredAt: null,
         builtAt: null,
         closedAt: null,

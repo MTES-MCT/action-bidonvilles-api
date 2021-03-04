@@ -72,7 +72,6 @@ describe.only('townController.edit()', () => {
             },
 
             body: {
-                priority: 1,
                 built_at: new Date(625273200000),
                 declared_at: null,
                 latitude: 49.414964,
@@ -185,7 +184,6 @@ describe.only('townController.edit()', () => {
             await edit(req, res);
             expect(mock.update).to.have.been.calledWithMatch(
                 {
-                    priority: 1,
                     builtAt: new Date(625273200000),
                     declaredAt: null,
                     latitude: 49.414964,
@@ -250,7 +248,6 @@ describe.only('townController.edit()', () => {
 
             expect(mock.update).to.have.been.calledWithMatch(
                 {
-                    priority: 1,
                     builtAt: new Date(625273200000),
                     declaredAt: null,
                     latitude: 49.414964,
