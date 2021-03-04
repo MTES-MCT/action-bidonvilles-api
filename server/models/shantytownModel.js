@@ -582,14 +582,16 @@ function getBaseSql(table, whereClause = null, order = null) {
 }
 
 module.exports = (database) => {
-    async function getComments(user, shantytownIds, covid = false, filterPrivateComments = true) {
+    async function getComments(user, shantytownIds, covid = false) {
         const comments = shantytownIds.reduce((acc, id) => Object.assign({}, acc, {
             [id]: [],
         }), {});
 
-        if (covid === false && !user.isAllowedTo('listPrivate', 'shantytown_comment')) {
+        if (covid === false && !user.isAllowedTo('list', 'shantytown_comment')) {
             return comments;
         }
+
+        const filterPrivateComments = !user.isAllowedTo('listPrivate', 'shantytown_comment');
 
         const rows = await database.query(
             `SELECT
@@ -743,9 +745,7 @@ module.exports = (database) => {
             ),
         );
 
-        const isAdmin = ['local_admin', 'national_admin'].includes(user.role_id);
-        const filterPrivateComments = !isAdmin;
-        promises.push(getComments(user, Object.keys(serializedTowns.hash), false, filterPrivateComments));
+        promises.push(getComments(user, Object.keys(serializedTowns.hash), false));
         promises.push(getComments(user, Object.keys(serializedTowns.hash), true));
 
         promises.push(
