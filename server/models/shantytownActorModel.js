@@ -21,6 +21,7 @@ function serializeActor(actor) {
                 return [...arr, { id: themeId }];
             }
 
+            // cas particulier du theme "autre"
             if (typeof actor[themeId] === 'string') {
                 return [...arr, {
                     id: themeId,
