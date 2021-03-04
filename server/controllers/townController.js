@@ -1503,12 +1503,7 @@ module.exports = (models) => {
                 localizationSection.properties.push(properties.addressDetails);
             }
 
-            sections.push({
-                title: '',
-                properties: [
-                    properties.coordinates,
-                ],
-            });
+            localizationSection.properties.push(properties.coordinates);
 
             let section = {
                 title: 'Site',

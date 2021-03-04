@@ -181,12 +181,11 @@ function align(sheet, cellReference, alignment) {
  * @returns {String}
  */
 function column(i) {
-    let prefix = '';
-    if (i > 26) {
-        prefix = (Math.floor(i / 26) + 9).toString(36).toUpperCase();
+    if (i <= 26) {
+        return String.fromCharCode(((i - 1) % 26) + 65);
     }
 
-    return prefix + (((i - 1) % 26) + 10).toString(36).toUpperCase();
+    return column(Math.floor((i - 1) / 26)) + String.fromCharCode(((i % 26 === 0 ? 26 : i % 26) - 1) + 65);
 }
 
 /**
