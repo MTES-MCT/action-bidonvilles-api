@@ -19,8 +19,7 @@ const sendEmailsInvitations = async (guests, greeter) => {
             // eslint-disable-next-line no-await-in-loop
             await sendMail(data, MAIL_TEMPLATES.invitation(data));
         } catch (err) {
-            // eslint-disable-next-line no-console
-            console.log(err);
+            // Ignore
         }
     }
 };
@@ -60,8 +59,8 @@ module.exports = models => ({
 
         return res.status(400).send({
             error: {
-                developer_message: 'guests is not an Array or is an empty array',
-                user_message: 'La liste des invités n\'est pas valide : envoi des invitations impossible',
+                developer_message: 'A problem occured while sending invitations',
+                user_message: 'Un problème n\'a pas permis d\'envoyer les invitations',
             },
         });
     },
