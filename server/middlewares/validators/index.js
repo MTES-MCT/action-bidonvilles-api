@@ -8,6 +8,7 @@ const updateShantytownActor = require('./shantytownActors/updateShantytownActor'
 const removeShantytownActor = require('./shantytownActors/removeShantytownActor');
 const removeShantytownActorTheme = require('./shantytownActors/removeShantytownActorTheme');
 const inviteShantytownActor = require('./shantytownActors/inviteShantytownActor');
+const invite = require('./invite');
 
 module.exports = {
     createContact,
@@ -22,4 +23,5 @@ module.exports = {
         removeShantytownActorTheme,
         inviteShantytownActor,
     },
+    invite,
 };
