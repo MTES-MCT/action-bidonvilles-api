@@ -492,6 +492,8 @@ module.exports = (models) => {
                     createdBy: req.user.id,
                 });
 
+                const filterPrivateComments = !req.user.isAllowedTo('listPrivate', 'shantytown_comment');
+
                 const rawComments = await sequelize.query(
                     `SELECT
                         shantytown_comments.shantytown_comment_id AS "commentId",
@@ -510,6 +512,7 @@ module.exports = (models) => {
                     LEFT JOIN users ON shantytown_comments.created_by = users.user_id
                     LEFT JOIN organizations ON users.fk_organization = organizations.organization_id
                     WHERE shantytown_comments.fk_shantytown = :id
+                    ${filterPrivateComments === true ? 'AND private IS FALSE ' : ''}
                     ORDER BY shantytown_comments.created_at DESC`,
                     {
                         type: sequelize.QueryTypes.SELECT,
