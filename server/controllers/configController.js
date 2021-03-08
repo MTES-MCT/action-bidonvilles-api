@@ -1,5 +1,6 @@
 const permissionsDescription = require('#server/permissions_description');
 const { activationTokenExpiresIn } = require('#server/config');
+const themes = require('#server/config/shantytown_actor_themes');
 
 module.exports = models => ({
     async list(req, res) {
@@ -19,6 +20,7 @@ module.exports = models => ({
             user: models.user.findOne(req.user.id, { extended: true }),
             changelog: models.changelog.getLastChangelogFor(req.user),
             version_charte_engagement: models.charteEngagement.getLatest(),
+            actor_themes: themes,
         };
 
         const promises = Object.values(queries);

@@ -265,6 +265,7 @@ function serializeComment(comment) {
             id: comment.commentId,
             description: comment.commentDescription,
             createdAt: comment.commentCreatedAt !== null ? (comment.commentCreatedAt.getTime() / 1000) : null,
+            private: comment.commentPrivate,
             createdBy: {
                 id: comment.commentCreatedBy,
                 firstName: comment.userFirstName,
@@ -403,6 +404,7 @@ function serializeShantytown(town, permission) {
             regular: [],
             covid: [],
         },
+        actors: [],
         closingSolutions: [],
         closedWithSolutions: town.closedWithSolutions,
         changelog: [],
@@ -581,6 +583,9 @@ function getBaseSql(table, whereClause = null, order = null) {
 }
 
 module.exports = (database) => {
+    // eslint-disable-next-line global-require
+    const shantytownActorModel = require('#server/models/shantytownActorModel')(database);
+
     async function getComments(user, shantytownIds, covid = false) {
         const comments = shantytownIds.reduce((acc, id) => Object.assign({}, acc, {
             [id]: [],
@@ -590,6 +595,8 @@ module.exports = (database) => {
             return comments;
         }
 
+        const filterPrivateComments = !user.isAllowedTo('listPrivate', 'shantytown_comment');
+
         const rows = await database.query(
             `SELECT
                 shantytown_comments.shantytown_comment_id AS "commentId",
@@ -597,6 +604,7 @@ module.exports = (database) => {
                 shantytown_comments.description AS "commentDescription",
                 shantytown_comments.created_at AS "commentCreatedAt",
                 shantytown_comments.created_by AS "commentCreatedBy",
+                shantytown_comments.private AS "commentPrivate",
                 shantytown_covid_comments.date AS "covidCommentDate",
                 shantytown_covid_comments.equipe_maraude AS "covidEquipeMaraude",
                 shantytown_covid_comments.equipe_sanitaire AS "covidEquipeSanitaire",
@@ -615,7 +623,10 @@ module.exports = (database) => {
             LEFT JOIN users ON shantytown_comments.created_by = users.user_id
             LEFT JOIN organizations ON users.fk_organization = organizations.organization_id
             LEFT JOIN shantytown_covid_comments ON shantytown_covid_comments.fk_comment = shantytown_comments.shantytown_comment_id
-            WHERE shantytown_comments.fk_shantytown IN (:ids) AND shantytown_covid_comment_id IS ${covid === true ? 'NOT ' : ''}NULL
+            WHERE
+                shantytown_comments.fk_shantytown IN (:ids) 
+                AND shantytown_covid_comment_id IS ${covid === true ? 'NOT ' : ''}NULL
+                ${filterPrivateComments === true ? 'AND private IS FALSE ' : ''}
             ORDER BY shantytown_comments.created_at DESC`,
             {
                 type: database.QueryTypes.SELECT,
@@ -758,7 +769,13 @@ module.exports = (database) => {
             ),
         );
 
-        const [history, socialOrigins, comments, covidComments, closingSolutions] = await Promise.all(promises);
+        promises.push(
+            shantytownActorModel.findAll(
+                Object.keys(serializedTowns.hash),
+            ),
+        );
+
+        const [history, socialOrigins, comments, covidComments, closingSolutions, actors] = await Promise.all(promises);
 
         if (history !== undefined && history.length > 0) {
             const serializedHistory = history.map(h => serializeShantytown(h, user.permissions.shantytown[feature]));
@@ -821,6 +838,12 @@ module.exports = (database) => {
                 });
             });
         }
+
+        actors.forEach((actor) => {
+            serializedTowns.hash[actor.shantytownId].actors.push(
+                shantytownActorModel.serializeActor(actor),
+            );
+        });
 
         return serializedTowns.ordered;
     }

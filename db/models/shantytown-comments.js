@@ -11,6 +11,11 @@ module.exports = function (sequelize, DataTypes) {
             type: DataTypes.TEXT,
             allowNull: false,
         },
+        private: {
+            type: DataTypes.BOOLEAN,
+            defaultValue: true,
+            allowNull: false,
+        },
         shantytown: {
             type: DataTypes.INTEGER,
             allowNull: false,

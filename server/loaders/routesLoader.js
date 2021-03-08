@@ -152,6 +152,66 @@ module.exports = (app) => {
         controllers.user.setNewPassword,
     );
 
+    // shantytown actors
+    app.post(
+        '/towns/:id/actors',
+        middlewares.auth.authenticate,
+        middlewares.shantytown.checkReadPermission,
+        middlewares.charte.check,
+        middlewares.appVersion.sync,
+        validators.shantytownActors.addShantytownActor,
+        middlewares.validation,
+        controllers.town.addActor,
+    );
+    app.put(
+        '/towns/:id/actors/:user_id',
+        middlewares.auth.authenticate,
+        middlewares.shantytown.checkReadPermission,
+        middlewares.charte.check,
+        middlewares.appVersion.sync,
+        validators.shantytownActors.updateShantytownActor,
+        middlewares.validation,
+        controllers.town.updateActor,
+    );
+    app.delete(
+        '/towns/:id/actors/:user_id/themes/:theme_id',
+        middlewares.auth.authenticate,
+        middlewares.shantytown.checkReadPermission,
+        middlewares.charte.check,
+        middlewares.appVersion.sync,
+        validators.shantytownActors.removeShantytownActorTheme,
+        middlewares.validation,
+        controllers.town.removeActorTheme,
+    );
+    app.put(
+        '/towns/:id/invitations',
+        middlewares.auth.authenticate,
+        middlewares.shantytown.checkReadPermission,
+        middlewares.charte.check,
+        middlewares.appVersion.sync,
+        validators.shantytownActors.inviteShantytownActor,
+        middlewares.validation,
+        controllers.town.inviteNewActor,
+    );
+    app.delete(
+        '/towns/:id/actors/:user_id',
+        middlewares.auth.authenticate,
+        middlewares.shantytown.checkReadPermission,
+        middlewares.charte.check,
+        middlewares.appVersion.sync,
+        validators.shantytownActors.removeShantytownActor,
+        middlewares.validation,
+        controllers.town.removeActor,
+    );
+    app.get(
+        '/towns/:id/relations',
+        middlewares.auth.authenticate,
+        middlewares.shantytown.checkReadPermission,
+        middlewares.charte.check,
+        middlewares.appVersion.sync,
+        controllers.town.getRelations,
+    );
+
     // plans
     app.get(
         '/plans',
@@ -300,7 +360,14 @@ module.exports = (app) => {
     app.post(
         '/towns/:id/comments',
         middlewares.auth.authenticate,
-        (...args) => middlewares.auth.checkPermissions(['shantytown_comment.create'], ...args),
+        (req, res, next, respond = true) => {
+            // Only check permissions for private comments
+            if (req.body.private) {
+                return middlewares.auth.checkPermissions(['shantytown_comment.createPrivate'], req, res, next, respond);
+            }
+
+            return next();
+        },
         middlewares.charte.check,
         middlewares.appVersion.sync,
         controllers.town.addComment,

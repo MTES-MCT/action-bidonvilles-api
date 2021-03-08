@@ -68,6 +68,7 @@ function serializeComment(comment) {
                 organization: comment.organizationAbbreviation || comment.organizationName,
                 organizationId: comment.organizationId,
             },
+            private: comment.commentPrivate,
             shantytown: comment.shantytownId,
         },
         comment.covidCommentDate !== null
@@ -439,6 +440,7 @@ module.exports = (models) => {
         async addComment(req, res) {
             const {
                 description,
+                private: privateField,
             } = req.body;
 
             // get the related town
@@ -486,8 +488,11 @@ module.exports = (models) => {
                 await ShantyTownComments.create({
                     shantytown: shantytown.id,
                     description: trimmedDescription,
+                    private: privateField,
                     createdBy: req.user.id,
                 });
+
+                const filterPrivateComments = !req.user.isAllowedTo('listPrivate', 'shantytown_comment');
 
                 const rawComments = await sequelize.query(
                     `SELECT
@@ -496,6 +501,7 @@ module.exports = (models) => {
                         shantytown_comments.description AS "commentDescription",
                         shantytown_comments.created_at AS "commentCreatedAt",
                         shantytown_comments.created_by AS "commentCreatedBy",
+                        shantytown_comments.private AS "commentPrivate",
                         users.first_name AS "userFirstName",
                         users.last_name AS "userLastName",
                         users.position AS "userPosition",
@@ -506,6 +512,7 @@ module.exports = (models) => {
                     LEFT JOIN users ON shantytown_comments.created_by = users.user_id
                     LEFT JOIN organizations ON users.fk_organization = organizations.organization_id
                     WHERE shantytown_comments.fk_shantytown = :id
+                    ${filterPrivateComments === true ? 'AND private IS FALSE ' : ''}
                     ORDER BY shantytown_comments.created_at DESC`,
                     {
                         type: sequelize.QueryTypes.SELECT,
@@ -556,11 +563,12 @@ module.exports = (models) => {
 
             try {
                 await sequelize.query(
-                    'UPDATE shantytown_comments SET description = :description WHERE shantytown_comment_id = :id',
+                    'UPDATE shantytown_comments SET description = :description, private = :private WHERE shantytown_comment_id = :id',
                     {
                         replacements: {
                             id: req.params.commentId,
                             description: req.body.description,
+                            private: req.body.private,
                         },
                     },
                 );
@@ -1825,6 +1833,36 @@ module.exports = (models) => {
 
     // eslint-disable-next-line global-require
     methods.createHighCovidComment = require('./townController/createHighCovidComment')(
+        models,
+    );
+
+    // eslint-disable-next-line global-require
+    methods.addActor = require('./townController/addActor')(
+        models,
+    );
+
+    // eslint-disable-next-line global-require
+    methods.updateActor = require('./townController/updateActor')(
+        models,
+    );
+
+    // eslint-disable-next-line global-require
+    methods.removeActorTheme = require('./townController/removeActorTheme')(
+        models,
+    );
+
+    // eslint-disable-next-line global-require
+    methods.inviteNewActor = require('./townController/inviteNewActor')(
+        models,
+    );
+
+    // eslint-disable-next-line global-require
+    methods.removeActor = require('./townController/removeActor')(
+        models,
+    );
+
+    // eslint-disable-next-line global-require
+    methods.getRelations = require('./townController/getRelations')(
         models,
     );
 

@@ -4,7 +4,7 @@ const { frontUrl } = require('#server/config');
 
 const formatAddress = town => `${town.address} ${town.name ? `« ${town.name} » ` : ''}`;
 const formatUsername = user => `${user.first_name} ${user.last_name} `;
-const formatTownLink = (townID, text) => `<${frontUrl}/#/site/${townID}|${text}>`;
+const formatTownLink = (townID, text) => `<${frontUrl}/site/${townID}|${text}>`;
 
 async function triggerShantytownCloseAlert(town, user) {
     const shantytownCloseAlert = new IncomingWebhook(slack.close_shantytown);
@@ -136,7 +136,7 @@ async function triggerNewUserAlert(user) {
     const newUserAlert = new IncomingWebhook(slack.new_user);
 
     const username = formatUsername(user);
-    const usernameLink = `<${frontUrl}/#/nouvel-utilisateur/${user.id}|${username}>`;
+    const usernameLink = `<${frontUrl}/nouvel-utilisateur/${user.id}|${username}>`;
 
     const { location } = user.organization;
 
@@ -191,8 +191,49 @@ async function triggerNewUserAlert(user) {
     await newUserAlert.send(slackMessage);
 }
 
+async function triggerActorInvitedAlert(town, host, invited) {
+    if (!slack || !slack.invite_actor) {
+        return;
+    }
+
+    const actorInvitedAlert = new IncomingWebhook(slack.invite_actor);
+    const townLink = formatTownLink(town.id, town.usename);
+
+    const username = formatUsername(host);
+    const usernameLink = `<${frontUrl}/nouvel-utilisateur/${host.id}|${username}>`;
+
+    const slackMessage = {
+        text: `Nouvel intervenant invité : ${invited}`,
+        blocks: [
+            {
+                type: 'section',
+                text: {
+                    type: 'mrkdwn',
+                    text: `:rotating_light: Intervenant invité sur le site ${townLink} par ${usernameLink}`,
+                },
+            },
+        ],
+        attachments: [
+            {
+                color: '#f2c744',
+                blocks: [
+                    {
+                        type: 'section',
+                        text: {
+                            type: 'mrkdwn',
+                            text: `Personne invitée : ${invited}`,
+                        },
+                    },
+                ],
+            }],
+    };
+
+    await actorInvitedAlert.send(slackMessage);
+}
+
 module.exports = {
     triggerShantytownCloseAlert,
     triggerShantytownCreationAlert,
     triggerNewUserAlert,
+    triggerActorInvitedAlert,
 };
