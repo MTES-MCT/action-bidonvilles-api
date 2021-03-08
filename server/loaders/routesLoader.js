@@ -12,10 +12,6 @@ module.exports = (app) => {
     app.use('/assets', express.static(path.resolve(__dirname, '../../assets')));
 
     app.post(
-        '/test',
-        controllers.test.test,
-    );
-    app.post(
         '/signin',
         controllers.user.signin,
     );
