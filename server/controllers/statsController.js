@@ -138,6 +138,7 @@ module.exports = models => ({
             await Stats_Directory_Views.create({
                 organization: organizationId,
                 viewed_by: req.user.id,
+                created_at: new Date(),
             });
         } catch (error) {
             return res.status(500).send({
