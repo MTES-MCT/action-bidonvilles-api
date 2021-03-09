@@ -6,13 +6,13 @@ module.exports = () => ({
 
     TextPart: `Bonjour,
 
-    Bienvenue ! Nous sommes heureux de vous compter parmi les utilisateurs de Résorption-bidonvilles.
+    Bienvenue ! Nous sommes heureux de vous compter parmi les utilisateurs de <a href="${frontUrl}">Résorption-bidonvilles</a>.
 
     Afin de vous accompagner dans l'utilisation de la plateforme, vous trouverez ci-dessous le guide de l'utilisateur.
 
-    <a href="${frontUrl}/doc/guide_utilisateur_2021_02.pdf">Télécharger le guide de l'utilisateur</a>
+    Télécharger le guide de l'utilisateur: ${frontUrl}/doc/guide_utilisateur_2021_02.pdf
 
-    <a href="${frontUrl}/#/connexion">Lien pour vous connecter à la plateforme</a>
+    Se connecter à la plateforme: ${frontUrl}/#/connexion
 
     La plateforme est vivante grâce à ses utilisateurs, faites-la connaître à vos partenaires :
 
@@ -42,7 +42,7 @@ module.exports = () => ({
                         <td bgcolor="#ffffff">
                             Bonjour,<br/>
                             <br/>
-                            Bienvenue ! Nous sommes heureux de vous compter parmi les utilisateurs de Résorption-bidonvilles.
+                            Bienvenue ! Nous sommes heureux de vous compter parmi les utilisateurs de <a style="text-decoration: none" href="${frontUrl}">Résorption-bidonvilles</a>.
                             <br/>
                             Afin de vous accompagner dans l'utilisation de la plateforme, vous trouverez ci-dessous le guide de l'utilisateur. 
                         </td>
@@ -78,7 +78,7 @@ module.exports = () => ({
                                                 <td align="center" bgcolor="#000091" style="background-color: #000091; margin: auto; max-width: 600px; -webkit-border-radius: 0px; -moz-border-radius: 0px; border-radius: 0px; padding: 15px 20px; " width="100%">
                                                 <!--[if mso]>&nbsp;<![endif]-->
                                                     <a href="${frontUrl}/#/connexion" target="_blank" style="16px; font-family: Helvetica, Arial, sans-serif; color: #ffffff; font-weight:normal; text-align:center; background-color: #000091; text-decoration: none; border: none; -webkit-border-radius: 0px; -moz-border-radius: 0px; border-radius: 0px; display: inline-block;">
-                                                        <span style="font-size: 16px; font-family: Helvetica, Arial, sans-serif; color: #ffffff; font-weight:normal; line-height:1.5em; text-align:center;">Lien pour vous connecter à la plateforme</span>
+                                                        <span style="font-size: 16px; font-family: Helvetica, Arial, sans-serif; color: #ffffff; font-weight:normal; line-height:1.5em; text-align:center;">Se connecter à la plateforme</span>
                                                     </a>
                                                 <!--[if mso]>&nbsp;<![endif]-->
                                                 </td>
