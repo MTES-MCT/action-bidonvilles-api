@@ -22,6 +22,7 @@ const MAIL_TEMPLATES = {};
 MAIL_TEMPLATES.access_granted = require('#server/mails/access_request/user/access_granted');
 MAIL_TEMPLATES.access_denied = require('#server/mails/access_request/user/access_denied');
 MAIL_TEMPLATES.new_password = require('#server/mails/new_password');
+MAIL_TEMPLATES.access_activated_welcome = require('#server/mails/access_request/user/access_activated_welcome');
 
 const { auth: authConfig } = require('#server/config');
 const { sequelize } = require('#db/models');
@@ -682,6 +683,18 @@ module.exports = models => ({
         await agenda.schedule('in 7 days', 'demo_invitation', {
             user,
         });
+
+        // Envoi du mail avec lien vers guide utilisateur
+        try {
+            await sendMail(user, MAIL_TEMPLATES.access_activated_welcome());
+        } catch (error) {
+            return res.status(500).send({
+                error: {
+                    user_message: 'Une erreur est survenue lors de l\'envoi du mail de bienvenue',
+                    developer_message: error.message,
+                },
+            });
+        }
 
         return res.status(200).send({});
     },
