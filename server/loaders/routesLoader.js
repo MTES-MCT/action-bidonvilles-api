@@ -27,12 +27,12 @@ module.exports = (app) => {
         middlewares.appVersion.sync,
         controllers.config.list,
     );
-    app.post(
-        '/changelog',
-        middlewares.auth.authenticate,
-        middlewares.appVersion.sync,
-        controllers.user.setLastChangelog,
-    );
+    // app.post(
+    //     '/changelog',
+    //     middlewares.auth.authenticate,
+    //     middlewares.appVersion.sync,
+    //     controllers.user.setLastChangelog,
+    // );
 
     // directory
     app.get(
@@ -127,10 +127,10 @@ module.exports = (app) => {
     //     middlewares.appVersion.sync,
     //     controllers.user.upgrade,
     // );
-    app.get(
-        '/activation-tokens/:token/check',
-        controllers.user.checkActivationToken,
-    );
+    // app.get(
+    //     '/activation-tokens/:token/check',
+    //     controllers.user.checkActivationToken,
+    // );
     // app.delete(
     //     '/users/:id',
     //     middlewares.auth.authenticate,
@@ -143,10 +143,10 @@ module.exports = (app) => {
     //     '/users/new-password',
     //     controllers.user.requestNewPassword,
     // );
-    app.get(
-        '/password-tokens/:token/check',
-        controllers.user.checkPasswordToken,
-    );
+    // app.get(
+    //     '/password-tokens/:token/check',
+    //     controllers.user.checkPasswordToken,
+    // );
     // app.post(
     //     '/users/:id/newPassword',
     //     controllers.user.setNewPassword,
