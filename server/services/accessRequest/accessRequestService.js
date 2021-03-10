@@ -3,7 +3,7 @@ const { user: userModel } = require('#server/models/index')(sequelize);
 const { getAccountActivationLink } = require('#server/utils/auth');
 
 const sendEmail = require('./mailer');
-const { scheduleEvent, cancelEvent } = require('./scheduler');
+const { cancelEvent } = require('./scheduler');
 
 function isAccessRequestPending(user) {
     return user.status === 'new' && user.user_access === null;
@@ -52,7 +52,7 @@ module.exports = {
         ]);
 
         // schedule events
-        await scheduleEvent.accessRequestIsPending(user.id);
+        // await scheduleEvent.accessRequestIsPending(user.id);
     },
 
     /**
@@ -111,8 +111,8 @@ module.exports = {
         // schedule new events
         await Promise.all([
             cancelEvent.accessRequestIsPending(user.id),
-            scheduleEvent.accessPending(user.user_access.id),
-            scheduleEvent.accessExpired(user.user_access.id),
+            // scheduleEvent.accessPending(user.user_access.id),
+            // scheduleEvent.accessExpired(user.user_access.id),
         ]);
     },
 
