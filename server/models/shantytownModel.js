@@ -519,7 +519,7 @@ const SQL = {
         'shantytowns.water_potable': 'waterPotable',
         'shantytowns.water_continuous_access': 'waterContinuousAccess',
         'shantytowns.water_public_point': 'waterPublicPoint',
-        'shantytowns.water_distance': 'waterDistance',
+        'shantytowns.water_distance::text': 'waterDistance',
         'shantytowns.water_roads_to_cross': 'waterRoadsToCross',
         'shantytowns.water_everyone_has_access': 'waterEveryoneHasAccess',
         'shantytowns.water_stagnant_water': 'waterStagnantWater',
