@@ -23,7 +23,6 @@ module.exports = models => ({
             models.stats.numberOfActiveUsers(),
             models.stats.numberOfNewUsersPerMonth(),
             models.stats.numberOfCollaboratorAndAssociationUsers(),
-            models.stats.numberOfCollaboratorAndAssociationOrganizations(),
             models.stats.numberOfShantytownOperations(),
             Stats_Exports.count(),
             models.stats.numberOfComments(),
