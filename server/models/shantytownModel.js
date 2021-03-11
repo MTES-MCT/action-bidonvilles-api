@@ -538,6 +538,10 @@ const SQL = {
         'shantytowns.fire_prevention_site_accessible': 'firePreventionSiteAccessible',
         'shantytowns.fire_prevention_devices': 'firePreventionDevices',
         'shantytowns.fire_prevention_comments': 'firePreventionComments',
+        'creators.user_id': 'createdById',
+        'creators.first_name': 'createdByFirstName',
+        'creators.last_name': 'createdByLastName',
+        'creators.position': 'createdByPosition',
         'users.user_id': 'updatedById',
         'users.first_name': 'updatedByFirstName',
         'users.last_name': 'updatedByLastName',
@@ -568,6 +572,7 @@ const SQL = {
         { table: 'epci', on: 'cities.fk_epci = epci.code' },
         { table: 'departements', on: 'cities.fk_departement = departements.code' },
         { table: 'regions', on: 'departements.fk_region = regions.code' },
+        { table: 'users AS creators', on: 'shantytowns.created_by = creators.user_id' },
         { table: 'users', on: 'shantytowns.updated_by = users.user_id' },
         { table: 'organizations', on: 'users.fk_organization = organizations.organization_id' },
     ],
@@ -699,7 +704,10 @@ module.exports = (database) => {
         if (towns.length === 0) {
             return [];
         }
-
+        console.log('============================================================');
+        console.log('===== TOWN =================================================');
+        console.log(towns);
+        console.log('============================================================');
         const serializedTowns = towns.reduce(
             (object, town) => {
                 /* eslint-disable no-param-reassign */
