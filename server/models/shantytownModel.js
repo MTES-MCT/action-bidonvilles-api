@@ -715,10 +715,6 @@ module.exports = (database) => {
         if (towns.length === 0) {
             return [];
         }
-        console.log('============================================================');
-        console.log('===== TOWN =================================================');
-        console.log(towns);
-        console.log('============================================================');
         const serializedTowns = towns.reduce(
             (object, town) => {
                 /* eslint-disable no-param-reassign */
