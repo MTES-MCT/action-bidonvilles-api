@@ -1,8 +1,0 @@
-module.exports = {
-    username: 'postgres',
-    password: 'resorption_bidonvilles',
-    database: 'resorption_bidonvilles',
-    host: 'database',
-    port: 5432,
-    dialect: 'postgres',
-};
