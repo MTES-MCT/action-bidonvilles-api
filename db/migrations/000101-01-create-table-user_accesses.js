@@ -92,13 +92,13 @@ module.exports = {
                     transaction,
                 },
             ))
-            .then(data => queryInterface.bulkInsert(
+            .then(data => data.length > 0 ? queryInterface.bulkInsert(
                 'user_accesses',
                 data,
                 {
                     transaction,
                 },
-            )),
+            ) : true),
     ),
 
     down: queryInterface => queryInterface.sequelize.transaction(
