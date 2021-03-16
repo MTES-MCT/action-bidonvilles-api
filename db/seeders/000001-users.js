@@ -12,7 +12,6 @@ function generate(email, password, first_name, last_name, fk_role, phone, positi
         fk_role,
         fk_status: 'active',
         access_request_message: 'Compte généré automatiquement',
-        activated_on: new Date(),
         phone,
         position,
         fk_organization: 1,
