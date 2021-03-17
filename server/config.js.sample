@@ -20,6 +20,9 @@ const config = {
     },
     slack: {
         invite_actor: 'SLACK_WEBHOOK_INVITE_ACTOR'
+    },
+    sentry: {
+        dsn: "",
     }
 };
 config.backUrl = `http://localhost:${config.externalPort}`;

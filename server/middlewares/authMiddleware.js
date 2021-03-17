@@ -1,4 +1,5 @@
 const jwt = require('jsonwebtoken');
+const Sentry = require('@sentry/node');
 const { auth: authConfig } = require('#server/config');
 
 class AuthenticateError extends Error {
@@ -50,6 +51,8 @@ module.exports = (models) => {
                 developer_message: 'The access token is either invalid or expired',
             });
         }
+
+        Sentry.setUser({ id: user.id });
 
         return user;
     }
