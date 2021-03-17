@@ -245,7 +245,7 @@ describe.only('townController.createCovidComment()', () => {
             );
 
             // execute
-            returnValue = await createCovidComment(req, res);
+            returnValue = await createCovidComment(req, res, () => {});
         });
 
         it('responds with status 500', () => {
