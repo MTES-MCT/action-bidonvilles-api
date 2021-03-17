@@ -487,7 +487,7 @@ module.exports = models => ({
         }
     },
 
-    async create(req, res) {
+    async create(req, res, next) {
         // sanitize data
         const planData = Object.assign({}, sanitize(req.body), {
             createdBy: req.user.id,
@@ -509,13 +509,14 @@ module.exports = models => ({
                 addError('departement', 'Le département d\'intervention est obligatoire');
             }
         } catch (error) {
-            return res.status(500).send({
+            res.status(500).send({
                 success: false,
                 error: {
                     developer_message: 'Could not find the matching departement in database',
                     user_message: 'Une erreur de lecture en base de données est survenue',
                 },
             });
+            return next(error);
         }
 
         let financeTypes;
@@ -524,13 +525,14 @@ module.exports = models => ({
                 [type.uid]: type,
             }), {});
         } catch (error) {
-            return res.status(500).send({
+            res.status(500).send({
                 success: false,
                 error: {
                     developer_message: 'Could not fetch the list of finance types from the database',
                     user_message: 'Une erreur de lecture en base de données est survenue',
                 },
             });
+            return next(error);
         }
 
         let topics;
@@ -539,13 +541,14 @@ module.exports = models => ({
                 [topic.uid]: topic,
             }), {});
         } catch (error) {
-            return res.status(500).send({
+            res.status(500).send({
                 success: false,
                 error: {
                     developer_message: 'Could not fetch the list of topics from the database',
                     user_message: 'Une erreur de lecture en base de données est survenue',
                 },
             });
+            return next(error);
         }
 
         if (!planData.name) {
@@ -858,13 +861,14 @@ module.exports = models => ({
                 ]);
             });
         } catch (error) {
-            return res.status(500).send({
+            res.status(500).send({
                 success: false,
                 error: {
                     user_message: 'Une erreur est survenue lors de l\'écriture en base de données',
                     developer_message: error,
                 },
             });
+            return next(error);
         }
 
         return res.status(200).send({
@@ -872,17 +876,18 @@ module.exports = models => ({
         });
     },
 
-    async update(req, res) {
+    async update(req, res, next) {
         let plan;
         try {
             plan = await models.plan.findOne(req.user, req.params.id);
         } catch (error) {
-            return res.status(500).send({
+            res.status(500).send({
                 error: {
                     user_message: 'Une erreur est survenue lors de la récupération des données en base',
                     developer_message: `Could not fetch plan #${req.params.id}`,
                 },
             });
+            return next(error);
         }
 
         // sanitize data
@@ -906,13 +911,14 @@ module.exports = models => ({
                 [type.uid]: type,
             }), {});
         } catch (error) {
-            return res.status(500).send({
+            res.status(500).send({
                 success: false,
                 error: {
                     developer_message: 'Could not fetch the list of finance types from the database',
                     user_message: 'Une erreur de lecture en base de données est survenue',
                 },
             });
+            return next(error);
         }
 
         let topics;
@@ -921,13 +927,14 @@ module.exports = models => ({
                 [topic.uid]: topic,
             }), {});
         } catch (error) {
-            return res.status(500).send({
+            res.status(500).send({
                 success: false,
                 error: {
                     developer_message: 'Could not fetch the list of topics from the database',
                     user_message: 'Une erreur de lecture en base de données est survenue',
                 },
             });
+            return next(error);
         }
 
         if (!planData.name) {
@@ -1080,29 +1087,31 @@ module.exports = models => ({
                 );
             });
         } catch (error) {
-            return res.status(500).send({
+            res.status(500).send({
                 success: false,
                 error: {
                     user_message: 'Une erreur est survenue lors de l\'écriture en base de données',
                     developer_message: error,
                 },
             });
+            return next(error);
         }
 
         return res.status(200).send({});
     },
 
-    async addState(req, res) {
+    async addState(req, res, next) {
         let plan;
         try {
             plan = await models.plan.findOne(req.user, req.params.id);
         } catch (error) {
-            return res.status(500).send({
+            res.status(500).send({
                 error: {
                     user_message: 'Une erreur est survenue lors de la récupération des données en base',
                     developer_message: `Could not fetch plan #${req.params.id}`,
                 },
             });
+            return next(error);
         }
 
         // sanitize data
@@ -1126,13 +1135,14 @@ module.exports = models => ({
                 [type.uid]: type,
             }), {});
         } catch (error) {
-            return res.status(500).send({
+            res.status(500).send({
                 success: false,
                 error: {
                     developer_message: 'Could not fetch the list of etp types from the database',
                     user_message: 'Une erreur de lecture en base de données est survenue',
                 },
             });
+            return next(error);
         }
 
         // date
@@ -1645,28 +1655,30 @@ module.exports = models => ({
                 );
             });
         } catch (error) {
-            return res.status(500).send({
+            res.status(500).send({
                 success: false,
                 error: {
                     user_message: 'Une erreur est survenue lors de l\'écriture en base de données',
                     developer_message: error,
                 },
             });
+            return next(error);
         }
 
         // insert into database
         return res.status(200).send({});
     },
 
-    async link(req, res) {
+    async link(req, res, next) {
         try {
             await models.plan.addTown(req.params.id, req.body.townId, req.user.id);
         } catch (error) {
-            return res.status(500).send({
+            res.status(500).send({
                 error: {
                     user_message: 'Une erreur est survenue lors de l\'écriture des données en base',
                 },
             });
+            return next(error);
         }
 
         return res.status(200).send({});
@@ -1687,18 +1699,19 @@ module.exports = models => ({
         return res.status(200).send({});
     },
 
-    async close(req, res) {
+    async close(req, res, next) {
         // check existence of the plan (otherwise, 404)
         let plan;
         try {
             plan = await models.plan.findOne(req.user, req.params.id);
         } catch (error) {
-            return res.status(500).send({
+            res.status(500).send({
                 error: {
                     user_message: 'Une erreur est survenue lors de la récupération des données en base',
                     developer_message: `Could not fetch plan #${req.params.id}`,
                 },
             });
+            return next(error);
         }
 
         if (plan === null) {
@@ -1865,12 +1878,13 @@ module.exports = models => ({
                 );
             });
         } catch (error) {
-            return res.status(500).send({
+            res.status(500).send({
                 error: {
                     user_message: 'Une erreur est survenue lors de l\'écriture en base de données',
                     developer_message: error.message,
                 },
             });
+            return next(error);
         }
 
         return res.status(200).send({});

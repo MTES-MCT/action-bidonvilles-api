@@ -104,7 +104,7 @@ module.exports = models => ({
         });
     },
 
-    async directoryView(req, res) {
+    async directoryView(req, res, next) {
         const organizationId = parseInt(req.body.organization, 10);
 
         try {
@@ -122,7 +122,7 @@ module.exports = models => ({
                 });
             }
         } catch (error) {
-            return res.status(500).send({
+            res.status(500).send({
                 success: false,
                 response: {
                     error: {
@@ -131,16 +131,17 @@ module.exports = models => ({
                     },
                 },
             });
+            return next(error);
         }
 
         try {
-            await Stats_Directory_Views.create({
+            Stats_Directory_Views.create({
                 organization: organizationId,
                 viewed_by: req.user.id,
                 created_at: new Date(),
             });
         } catch (error) {
-            return res.status(500).send({
+            res.status(500).send({
                 success: false,
                 response: {
                     error: {
@@ -149,6 +150,7 @@ module.exports = models => ({
                     },
                 },
             });
+            return next(error);
         }
 
         return res.status(201).send({});

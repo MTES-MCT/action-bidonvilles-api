@@ -4,7 +4,7 @@ const {
     Shantytown: ShantyTowns,
 } = require('#db/models');
 
-module.exports = () => async (req, res) => {
+module.exports = () => async (req, res, next) => {
     const town = await ShantyTowns.findOne({
         where: {
             shantytown_id: req.params.id,
@@ -126,11 +126,12 @@ module.exports = () => async (req, res) => {
 
         return res.status(200).send(town);
     } catch (e) {
-        return res.status(500).send({
+        res.status(500).send({
             error: {
                 developer_message: e.message,
                 user_message: 'Une erreur est survenue dans l\'enregistrement du site en base de données',
             },
         });
+        return next(e);
     }
 };
