@@ -77,7 +77,7 @@ module.exports = models => ({
         });
     },
 
-    async search(req, res) {
+    async search(req, res, next) {
         // parse query
         const query = trim(req.query.query).replace(/\s+/g, ' ');
         if (query === null || query === '') {
@@ -222,12 +222,13 @@ module.exports = models => ({
 
             return res.status(200).send(result);
         } catch (error) {
-            return res.status(500).send({
+            res.status(500).send({
                 error: {
                     developer_message: 'SQL query failed',
                     user_message: 'Une erreur est survenue lors de la lecture en base de données',
                 },
             });
+            return next(error);
         }
     },
 

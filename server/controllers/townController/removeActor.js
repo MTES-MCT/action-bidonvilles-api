@@ -1,7 +1,7 @@
 
 const { sequelize } = require('#db/models');
 
-module.exports = models => async (req, res) => {
+module.exports = models => async (req, res, next) => {
     let actors;
     try {
         actors = await sequelize.transaction(async (transaction) => {
@@ -17,9 +17,10 @@ module.exports = models => async (req, res) => {
             );
         });
     } catch (error) {
-        return res.status(500).send({
+        res.status(500).send({
             user_message: 'Une erreur est survenue lors de l\'écriture en base de données',
         });
+        return next(error);
     }
 
     return res.status(200).send({

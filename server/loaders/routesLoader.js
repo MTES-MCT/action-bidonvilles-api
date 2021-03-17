@@ -497,9 +497,10 @@ module.exports = (app) => {
             try {
                 middlewares.auth.checkPermissions(['stats.read'], req, res, next, false);
             } catch (error) {
-                return res.status(500).send({
+                res.status(500).send({
                     success: false,
                 });
+                return next(error);
             }
 
             await middlewares.appVersion.sync(req, res, next, false);

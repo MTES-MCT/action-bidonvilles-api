@@ -10,34 +10,36 @@ function trim(str) {
 }
 
 module.exports = models => ({
-    async getDepartementsForRegion(req, res) {
+    async getDepartementsForRegion(req, res, next) {
         try {
             const departements = await models.geo.getDepartementsFor('region', req.params.id);
             return res.status(200).send({
                 departements,
             });
         } catch (error) {
-            return res.status(500).send({
+            res.status(500).send({
                 user_message: 'Une erreur est survenue lors de la lecture en base de données',
                 developer_message: error.message,
             });
+            return next(error);
         }
     },
 
-    async getDepartementsForEpci(req, res) {
+    async getDepartementsForEpci(req, res, next) {
         try {
             return res.status(200).send({
                 departements: await models.geo.getDepartementsFor('epci', req.params.id),
             });
         } catch (error) {
-            return res.status(500).send({
+            res.status(500).send({
                 user_message: 'Une erreur est survenue lors de la lecture en base de données',
                 developer_message: error.message,
             });
+            return next(error);
         }
     },
 
-    async searchCities(req, res) {
+    async searchCities(req, res, next) {
         const { query: { q } } = url.parse(req.url, true);
 
         const query = trim(q);
@@ -80,16 +82,17 @@ module.exports = models => ({
 
             return res.status(200).send(results);
         } catch (error) {
-            return res.status(500).send({
+            res.status(500).send({
                 error: {
                     developer_message: 'SQL query failed',
                     user_message: 'Une erreur est survenue dans la lecture en base de données',
                 },
             });
+            return next(error);
         }
     },
 
-    async searchEpci(req, res) {
+    async searchEpci(req, res, next) {
         const { query: { q } } = url.parse(req.url, true);
 
         const query = trim(q);
@@ -129,16 +132,17 @@ module.exports = models => ({
 
             return res.status(200).send(results);
         } catch (error) {
-            return res.status(500).send({
+            res.status(500).send({
                 error: {
                     developer_message: 'SQL query failed',
                     user_message: 'Une erreur est survenue dans la lecture en base de données',
                 },
             });
+            return next(error);
         }
     },
 
-    async search(req, res) {
+    async search(req, res, next) {
         const { query: { q } } = url.parse(req.url, true);
 
         const query = trim(q);
@@ -155,12 +159,13 @@ module.exports = models => ({
             const results = await models.geo.search(query);
             return res.status(200).send(results);
         } catch (error) {
-            return res.status(500).send({
+            res.status(500).send({
                 error: {
                     developer_message: 'SQL query failed',
                     user_message: 'Une erreur est survenue dans la lecture en base de données',
                 },
             });
+            return next(error);
         }
     },
 

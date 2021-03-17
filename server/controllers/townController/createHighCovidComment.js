@@ -109,7 +109,7 @@ module.exports = (models) => {
     /**
      * Creates a high covid comment
      */
-    return async (req, res) => {
+    return async (req, res, next) => {
         // validate input
         let input;
         try {
@@ -122,10 +122,11 @@ module.exports = (models) => {
         try {
             await models.highCovidComment.create(req.user, input);
         } catch (error) {
-            return res.status(500).send({
+            res.status(500).send({
                 user_message: 'Une erreur est survenue lors de l\'écriture en base de données',
                 developer_message: `Failed saving the comment into database: ${error.message}`,
             });
+            return next(error);
         }
 
         // respond

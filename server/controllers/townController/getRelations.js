@@ -1,12 +1,13 @@
 
-module.exports = models => async (req, res) => {
+module.exports = models => async (req, res, next) => {
     let users;
     try {
         users = await models.user.findForRegion(req.shantytown.region.code, req.query.q || undefined);
     } catch (error) {
-        return res.status(500).send({
+        res.status(500).send({
             user_message: 'Une erreur est survenue lors de la lecture en base de données',
         });
+        return next(error);
     }
 
     // filter users that are already marked as actors for this town
