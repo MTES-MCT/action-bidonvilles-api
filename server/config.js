@@ -18,6 +18,14 @@ const config = {
     agenda: {
         mongo_address: `mongodb://${process.env.RB_API_MONGO_USERNAME}:${process.env.RB_API_MONGO_PASSWORD}@rb_database_agenda`,
     },
+    slack: {}
 };
+
+let webhookIndex = 1;
+while (process.env[`RB_API_SLACK_WEBHOOK_${webhookIndex}`]) {
+    const [name, url] = process.env[`RB_API_SLACK_WEBHOOK_${webhookIndex}`].split(';');
+    config.slack[name] = url;
+    webhookIndex += 1;
+}
 
 module.exports = config;
