@@ -354,6 +354,52 @@ module.exports = (database) => {
         ], {});
     }
 
+    function getLocalAdminsForRegion(regionCode) {
+        return query([
+            {
+                fk_role: ['local_admin'],
+            },
+            {
+                region: {
+                    query: 'organizations.region_code',
+                    value: [regionCode],
+                },
+            },
+            {
+                fk_status: ['active'],
+            },
+            {
+                organization_active: {
+                    query: 'organizations.active',
+                    value: [true],
+                },
+            },
+        ], {});
+    }
+
+    function getLocalAdminsForDepartement(departementCode) {
+        return query([
+            {
+                fk_role: ['local_admin'],
+            },
+            {
+                departement: {
+                    query: 'organizations.departement_code',
+                    value: [departementCode],
+                },
+            },
+            {
+                fk_status: ['active'],
+            },
+            {
+                organization_active: {
+                    query: 'organizations.active',
+                    value: [true],
+                },
+            },
+        ], {});
+    }
+
     const model = {
         /**
          * Returns ALL users
@@ -715,7 +761,23 @@ module.exports = (database) => {
         return response[0][0].user_id;
     };
 
-    model.getAdminsFor = async () => getNationalAdmins();
+    model.getAdminsFor = async (user) => {
+        let localAdmins = null;
+        if (user.organization.location.departement !== null) {
+            // if the user is related to a specific departement, get the admins for that departement only
+            localAdmins = await getLocalAdminsForDepartement(user.organization.location.departement.code);
+        } else if (user.organization.location.region !== null) {
+            // if the user is related to a specific region, get the admins of all departements belonging to that region
+            localAdmins = await getLocalAdminsForRegion(user.organization.location.region.code);
+        }
+
+        // if no local admin was found, provide national admins
+        if (localAdmins === null || localAdmins.length === 0) {
+            return getNationalAdmins();
+        }
+
+        return localAdmins;
+    };
 
     model.findForRegion = async (regionCode, name = undefined) => {
         const where = [
