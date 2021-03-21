@@ -27,12 +27,12 @@ module.exports = (app) => {
         middlewares.appVersion.sync,
         controllers.config.list,
     );
-    // app.post(
-    //     '/changelog',
-    //     middlewares.auth.authenticate,
-    //     middlewares.appVersion.sync,
-    //     controllers.user.setLastChangelog,
-    // );
+    app.post(
+        '/changelog',
+        middlewares.auth.authenticate,
+        middlewares.appVersion.sync,
+        controllers.user.setLastChangelog,
+    );
 
     // directory
     app.get(
@@ -58,13 +58,13 @@ module.exports = (app) => {
         middlewares.appVersion.sync,
         controllers.user.me,
     );
-    // app.post(
-    //     '/me',
-    //     middlewares.auth.authenticate,
-    //     middlewares.charte.check,
-    //     middlewares.appVersion.sync,
-    //     controllers.user.edit,
-    // );
+    app.post(
+        '/me',
+        middlewares.auth.authenticate,
+        middlewares.charte.check,
+        middlewares.appVersion.sync,
+        controllers.user.edit,
+    );
     app.get(
         '/users/:id',
         middlewares.auth.authenticate,
@@ -78,131 +78,131 @@ module.exports = (app) => {
         middlewares.auth.authenticate,
         controllers.user.acceptCharte,
     );
-    // app.post(
-    //     '/me/default-export',
-    //     middlewares.auth.authenticate,
-    //     middlewares.charte.check,
-    //     middlewares.appVersion.sync,
-    //     controllers.user.setDefaultExport,
-    // );
-    // app.post(
-    //     '/users',
-    //     middlewares.auth.authenticate,
-    //     (...args) => middlewares.auth.checkPermissions(['user.create'], ...args),
-    //     middlewares.charte.check,
-    //     middlewares.appVersion.sync,
-    //     validators.createUser,
-    //     middlewares.validation,
-    //     controllers.user.create,
-    // );
+    app.post(
+        '/me/default-export',
+        middlewares.auth.authenticate,
+        middlewares.charte.check,
+        middlewares.appVersion.sync,
+        controllers.user.setDefaultExport,
+    );
+    app.post(
+        '/users',
+        middlewares.auth.authenticate,
+        (...args) => middlewares.auth.checkPermissions(['user.create'], ...args),
+        middlewares.charte.check,
+        middlewares.appVersion.sync,
+        validators.createUser,
+        middlewares.validation,
+        controllers.user.create,
+    );
     app.post(
         '/contact',
         validators.createContact,
         middlewares.validation,
         controllers.contact.contact,
     );
-    // app.post(
-    //     '/users/:id/sendActivationLink',
-    //     middlewares.auth.authenticate,
-    //     (...args) => middlewares.auth.checkPermissions(['user.activate'], ...args),
-    //     middlewares.charte.check,
-    //     middlewares.appVersion.sync,
-    //     controllers.user.sendActivationLink,
-    // );
-    // app.post(
-    //     '/users/:id/denyAccess',
-    //     middlewares.auth.authenticate,
-    //     (...args) => middlewares.auth.checkPermissions(['user.activate'], ...args),
-    //     middlewares.charte.check,
-    //     middlewares.appVersion.sync,
-    //     controllers.user.denyAccess,
-    // );
-    // app.post(
-    //     '/users/:id/activate',
-    //     controllers.user.activate,
-    // );
-    // app.post(
-    //     '/users/:id/upgrade',
-    //     middlewares.auth.authenticate,
-    //     middlewares.appVersion.sync,
-    //     controllers.user.upgrade,
-    // );
-    // app.get(
-    //     '/activation-tokens/:token/check',
-    //     controllers.user.checkActivationToken,
-    // );
-    // app.delete(
-    //     '/users/:id',
-    //     middlewares.auth.authenticate,
-    //     (...args) => middlewares.auth.checkPermissions(['user.deactivate'], ...args),
-    //     middlewares.charte.check,
-    //     middlewares.appVersion.sync,
-    //     controllers.user.remove,
-    // );
-    // app.post(
-    //     '/users/new-password',
-    //     controllers.user.requestNewPassword,
-    // );
-    // app.get(
-    //     '/password-tokens/:token/check',
-    //     controllers.user.checkPasswordToken,
-    // );
-    // app.post(
-    //     '/users/:id/newPassword',
-    //     controllers.user.setNewPassword,
-    // );
+    app.post(
+        '/users/:id/sendActivationLink',
+        middlewares.auth.authenticate,
+        (...args) => middlewares.auth.checkPermissions(['user.activate'], ...args),
+        middlewares.charte.check,
+        middlewares.appVersion.sync,
+        controllers.user.sendActivationLink,
+    );
+    app.post(
+        '/users/:id/denyAccess',
+        middlewares.auth.authenticate,
+        (...args) => middlewares.auth.checkPermissions(['user.activate'], ...args),
+        middlewares.charte.check,
+        middlewares.appVersion.sync,
+        controllers.user.denyAccess,
+    );
+    app.post(
+        '/users/:id/activate',
+        controllers.user.activate,
+    );
+    app.post(
+        '/users/:id/upgrade',
+        middlewares.auth.authenticate,
+        middlewares.appVersion.sync,
+        controllers.user.upgrade,
+    );
+    app.get(
+        '/activation-tokens/:token/check',
+        controllers.user.checkActivationToken,
+    );
+    app.delete(
+        '/users/:id',
+        middlewares.auth.authenticate,
+        (...args) => middlewares.auth.checkPermissions(['user.deactivate'], ...args),
+        middlewares.charte.check,
+        middlewares.appVersion.sync,
+        controllers.user.remove,
+    );
+    app.post(
+        '/users/new-password',
+        controllers.user.requestNewPassword,
+    );
+    app.get(
+        '/password-tokens/:token/check',
+        controllers.user.checkPasswordToken,
+    );
+    app.post(
+        '/users/:id/newPassword',
+        controllers.user.setNewPassword,
+    );
 
-    // // shantytown actors
-    // app.post(
-    //     '/towns/:id/actors',
-    //     middlewares.auth.authenticate,
-    //     middlewares.shantytown.checkReadPermission,
-    //     middlewares.charte.check,
-    //     middlewares.appVersion.sync,
-    //     validators.shantytownActors.addShantytownActor,
-    //     middlewares.validation,
-    //     controllers.town.addActor,
-    // );
-    // app.put(
-    //     '/towns/:id/actors/:user_id',
-    //     middlewares.auth.authenticate,
-    //     middlewares.shantytown.checkReadPermission,
-    //     middlewares.charte.check,
-    //     middlewares.appVersion.sync,
-    //     validators.shantytownActors.updateShantytownActor,
-    //     middlewares.validation,
-    //     controllers.town.updateActor,
-    // );
-    // app.delete(
-    //     '/towns/:id/actors/:user_id/themes/:theme_id',
-    //     middlewares.auth.authenticate,
-    //     middlewares.shantytown.checkReadPermission,
-    //     middlewares.charte.check,
-    //     middlewares.appVersion.sync,
-    //     validators.shantytownActors.removeShantytownActorTheme,
-    //     middlewares.validation,
-    //     controllers.town.removeActorTheme,
-    // );
-    // app.put(
-    //     '/towns/:id/invitations',
-    //     middlewares.auth.authenticate,
-    //     middlewares.shantytown.checkReadPermission,
-    //     middlewares.charte.check,
-    //     middlewares.appVersion.sync,
-    //     validators.shantytownActors.inviteShantytownActor,
-    //     middlewares.validation,
-    //     controllers.town.inviteNewActor,
-    // );
-    // app.delete(
-    //     '/towns/:id/actors/:user_id',
-    //     middlewares.auth.authenticate,
-    //     middlewares.shantytown.checkReadPermission,
-    //     middlewares.charte.check,
-    //     middlewares.appVersion.sync,
-    //     validators.shantytownActors.removeShantytownActor,
-    //     middlewares.validation,
-    //     controllers.town.removeActor,
-    // );
+    // shantytown actors
+    app.post(
+        '/towns/:id/actors',
+        middlewares.auth.authenticate,
+        middlewares.shantytown.checkReadPermission,
+        middlewares.charte.check,
+        middlewares.appVersion.sync,
+        validators.shantytownActors.addShantytownActor,
+        middlewares.validation,
+        controllers.town.addActor,
+    );
+    app.put(
+        '/towns/:id/actors/:user_id',
+        middlewares.auth.authenticate,
+        middlewares.shantytown.checkReadPermission,
+        middlewares.charte.check,
+        middlewares.appVersion.sync,
+        validators.shantytownActors.updateShantytownActor,
+        middlewares.validation,
+        controllers.town.updateActor,
+    );
+    app.delete(
+        '/towns/:id/actors/:user_id/themes/:theme_id',
+        middlewares.auth.authenticate,
+        middlewares.shantytown.checkReadPermission,
+        middlewares.charte.check,
+        middlewares.appVersion.sync,
+        validators.shantytownActors.removeShantytownActorTheme,
+        middlewares.validation,
+        controllers.town.removeActorTheme,
+    );
+    app.put(
+        '/towns/:id/invitations',
+        middlewares.auth.authenticate,
+        middlewares.shantytown.checkReadPermission,
+        middlewares.charte.check,
+        middlewares.appVersion.sync,
+        validators.shantytownActors.inviteShantytownActor,
+        middlewares.validation,
+        controllers.town.inviteNewActor,
+    );
+    app.delete(
+        '/towns/:id/actors/:user_id',
+        middlewares.auth.authenticate,
+        middlewares.shantytown.checkReadPermission,
+        middlewares.charte.check,
+        middlewares.appVersion.sync,
+        validators.shantytownActors.removeShantytownActor,
+        middlewares.validation,
+        controllers.town.removeActor,
+    );
     app.get(
         '/towns/:id/relations',
         middlewares.auth.authenticate,
@@ -229,73 +229,73 @@ module.exports = (app) => {
         middlewares.appVersion.sync,
         controllers.plan.find,
     );
-    // app.post(
-    //     '/plans',
-    //     middlewares.auth.authenticate,
-    //     (...args) => middlewares.auth.checkPermissions(['plan.create'], ...args),
-    //     middlewares.charte.check,
-    //     middlewares.appVersion.sync,
-    //     controllers.plan.create,
-    // );
-    // app.post(
-    //     '/plans/:id',
-    //     middlewares.auth.authenticate,
-    //     (...args) => middlewares.auth.checkPermissions(['plan.update'], ...args),
-    //     middlewares.charte.check,
-    //     middlewares.appVersion.sync,
-    //     controllers.plan.update,
-    // );
-    // app.post(
-    //     '/plans/:id/states',
-    //     middlewares.auth.authenticate,
-    //     (...args) => middlewares.auth.checkPermissions(['plan.updateMarks'], ...args),
-    //     middlewares.charte.check,
-    //     middlewares.appVersion.sync,
-    //     controllers.plan.addState,
-    // );
-    // app.patch(
-    //     '/plans/:id',
-    //     middlewares.auth.authenticate,
-    //     async (req, res, next) => {
-    //         // parse body to check the requested operation
-    //         let controller;
-    //         switch (req.body.operation) {
-    //             case 'close':
-    //                 try {
-    //                     middlewares.auth.checkPermissions(['plan.close'], req, res, next, false);
-    //                 } catch (error) {
-    //                     return res.status(500).send({
-    //                         success: false,
-    //                     });
-    //                 }
+    app.post(
+        '/plans',
+        middlewares.auth.authenticate,
+        (...args) => middlewares.auth.checkPermissions(['plan.create'], ...args),
+        middlewares.charte.check,
+        middlewares.appVersion.sync,
+        controllers.plan.create,
+    );
+    app.post(
+        '/plans/:id',
+        middlewares.auth.authenticate,
+        (...args) => middlewares.auth.checkPermissions(['plan.update'], ...args),
+        middlewares.charte.check,
+        middlewares.appVersion.sync,
+        controllers.plan.update,
+    );
+    app.post(
+        '/plans/:id/states',
+        middlewares.auth.authenticate,
+        (...args) => middlewares.auth.checkPermissions(['plan.updateMarks'], ...args),
+        middlewares.charte.check,
+        middlewares.appVersion.sync,
+        controllers.plan.addState,
+    );
+    app.patch(
+        '/plans/:id',
+        middlewares.auth.authenticate,
+        async (req, res, next) => {
+            // parse body to check the requested operation
+            let controller;
+            switch (req.body.operation) {
+                case 'close':
+                    try {
+                        middlewares.auth.checkPermissions(['plan.close'], req, res, next, false);
+                    } catch (error) {
+                        return res.status(500).send({
+                            success: false,
+                        });
+                    }
 
-    //                 controller = controllers.plan.close;
-    //                 break;
+                    controller = controllers.plan.close;
+                    break;
 
-    //             default:
-    //                 return res.status(404).send({});
-    //         }
+                default:
+                    return res.status(404).send({});
+            }
 
-    //         // check charte
-    //         try {
-    //             await middlewares.charte.check.sync(req, res, next, false);
-    //         } catch (error) {
-    //             return res.status(400).send({
-    //                 user_message: error.message,
-    //             });
-    //         }
+            // check charte
+            try {
+                await middlewares.charte.check.sync(req, res, next, false);
+            } catch (error) {
+                return res.status(400).send({
+                    user_message: error.message,
+                });
+            }
 
-    //         // sync app-version
-    //         try {
-    //             await middlewares.appVersion.sync(req, res, next, false);
-    //         } catch (error) {
-    //             return res.status(500).send({});
-    //         }
+            // sync app-version
+            try {
+                await middlewares.appVersion.sync(req, res, next, false);
+            } catch (error) {
+                return res.status(500).send({});
+            }
 
-    //         // route to proper controller
-    //         return controller(req, res, next);
-    //     },
-    // );
+            // route to proper controller
+            return controller(req, res, next);
+        },
+    );
 
     // towns
     app.get(
@@ -321,87 +321,87 @@ module.exports = (app) => {
         middlewares.appVersion.sync,
         controllers.town.find,
     );
-    // app.post(
-    //     '/towns',
-    //     middlewares.auth.authenticate,
-    //     (...args) => middlewares.auth.checkPermissions(['shantytown.create'], ...args),
-    //     middlewares.charte.check,
-    //     middlewares.appVersion.sync,
-    //     validators.createTown,
-    //     middlewares.validation,
-    //     controllers.town.create,
-    // );
-    // app.post(
-    //     '/towns/:id',
-    //     middlewares.auth.authenticate,
-    //     (...args) => middlewares.auth.checkPermissions(['shantytown.update'], ...args),
-    //     middlewares.charte.check,
-    //     middlewares.appVersion.sync,
-    //     validators.editTown,
-    //     middlewares.validation,
-    //     controllers.town.edit,
-    // );
-    // app.post(
-    //     '/towns/:id/close',
-    //     middlewares.auth.authenticate,
-    //     (...args) => middlewares.auth.checkPermissions(['shantytown.close'], ...args),
-    //     middlewares.charte.check,
-    //     middlewares.appVersion.sync,
-    //     controllers.town.close,
-    // );
-    // app.delete(
-    //     '/towns/:id',
-    //     middlewares.auth.authenticate,
-    //     (...args) => middlewares.auth.checkPermissions(['shantytown.delete'], ...args),
-    //     middlewares.charte.check,
-    //     middlewares.appVersion.sync,
-    //     controllers.town.delete,
-    // );
-    // app.post(
-    //     '/towns/:id/comments',
-    //     middlewares.auth.authenticate,
-    //     (req, res, next, respond = true) => {
-    //         // Only check permissions for private comments
-    //         if (req.body.private) {
-    //             return middlewares.auth.checkPermissions(['shantytown_comment.createPrivate'], req, res, next, respond);
-    //         }
+    app.post(
+        '/towns',
+        middlewares.auth.authenticate,
+        (...args) => middlewares.auth.checkPermissions(['shantytown.create'], ...args),
+        middlewares.charte.check,
+        middlewares.appVersion.sync,
+        validators.createTown,
+        middlewares.validation,
+        controllers.town.create,
+    );
+    app.post(
+        '/towns/:id',
+        middlewares.auth.authenticate,
+        (...args) => middlewares.auth.checkPermissions(['shantytown.update'], ...args),
+        middlewares.charte.check,
+        middlewares.appVersion.sync,
+        validators.editTown,
+        middlewares.validation,
+        controllers.town.edit,
+    );
+    app.post(
+        '/towns/:id/close',
+        middlewares.auth.authenticate,
+        (...args) => middlewares.auth.checkPermissions(['shantytown.close'], ...args),
+        middlewares.charte.check,
+        middlewares.appVersion.sync,
+        controllers.town.close,
+    );
+    app.delete(
+        '/towns/:id',
+        middlewares.auth.authenticate,
+        (...args) => middlewares.auth.checkPermissions(['shantytown.delete'], ...args),
+        middlewares.charte.check,
+        middlewares.appVersion.sync,
+        controllers.town.delete,
+    );
+    app.post(
+        '/towns/:id/comments',
+        middlewares.auth.authenticate,
+        (req, res, next, respond = true) => {
+            // Only check permissions for private comments
+            if (req.body.private) {
+                return middlewares.auth.checkPermissions(['shantytown_comment.createPrivate'], req, res, next, respond);
+            }
 
-    //         return next();
-    //     },
-    //     middlewares.charte.check,
-    //     middlewares.appVersion.sync,
-    //     controllers.town.addComment,
-    // );
-    // app.post(
-    //     '/towns/:id/comments/:commentId',
-    //     middlewares.auth.authenticate,
-    //     middlewares.charte.check,
-    //     middlewares.appVersion.sync,
-    //     controllers.town.updateComment,
-    // );
-    // app.post(
-    //     '/towns/:id/covidComments',
-    //     middlewares.auth.authenticate,
-    //     middlewares.charte.check,
-    //     middlewares.appVersion.sync,
-    //     controllers.town.createCovidComment,
-    // );
-    // app.delete(
-    //     '/towns/:id/comments/:commentId',
-    //     middlewares.auth.authenticate,
-    //     middlewares.charte.check,
-    //     middlewares.appVersion.sync,
-    //     controllers.town.deleteComment,
-    // );
+            return next();
+        },
+        middlewares.charte.check,
+        middlewares.appVersion.sync,
+        controllers.town.addComment,
+    );
+    app.post(
+        '/towns/:id/comments/:commentId',
+        middlewares.auth.authenticate,
+        middlewares.charte.check,
+        middlewares.appVersion.sync,
+        controllers.town.updateComment,
+    );
+    app.post(
+        '/towns/:id/covidComments',
+        middlewares.auth.authenticate,
+        middlewares.charte.check,
+        middlewares.appVersion.sync,
+        controllers.town.createCovidComment,
+    );
+    app.delete(
+        '/towns/:id/comments/:commentId',
+        middlewares.auth.authenticate,
+        middlewares.charte.check,
+        middlewares.appVersion.sync,
+        controllers.town.deleteComment,
+    );
 
     // high covid comment
-    // app.post(
-    //     '/high-covid-comments',
-    //     middlewares.auth.authenticate,
-    //     middlewares.charte.check,
-    //     middlewares.appVersion.sync,
-    //     controllers.town.createHighCovidComment,
-    // );
+    app.post(
+        '/high-covid-comments',
+        middlewares.auth.authenticate,
+        middlewares.charte.check,
+        middlewares.appVersion.sync,
+        controllers.town.createHighCovidComment,
+    );
 
     // organizations
     app.get(
@@ -505,13 +505,13 @@ module.exports = (app) => {
         },
     );
 
-    // app.post(
-    //     '/statistics/directory-views',
-    //     middlewares.auth.authenticate,
-    //     middlewares.charte.check,
-    //     middlewares.appVersion.sync,
-    //     controllers.stats.directoryView,
-    // );
+    app.post(
+        '/statistics/directory-views',
+        middlewares.auth.authenticate,
+        middlewares.charte.check,
+        middlewares.appVersion.sync,
+        controllers.stats.directoryView,
+    );
 
     // user activities
     app.get(
