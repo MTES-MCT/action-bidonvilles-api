@@ -49,6 +49,25 @@ module.exports = (additionalValidators = [], isAUserCreationCallback = (() => tr
             return true;
         }),
 
+    body('phone')
+        .optional()
+        .isString()
+        .trim()
+        .custom((value) => {
+            if (!value) {
+                return true;
+            }
+
+            const frenchPhoneRegex = /^(?:(?:\+|00)33|0)\s*[1-9](?:[\s.-]*\d{2}){4}$/gmi;
+            const match = value.match(frenchPhoneRegex);
+
+            if (!match) {
+                throw new Error('Le téléphone est invalide');
+            }
+
+            return true;
+        }),
+
     body('organization_category')
         .if(isAUserCreationCallback)
         .custom(async (value, { req }) => {
