@@ -26,14 +26,6 @@ MAIL_TEMPLATES.new_password = require('#server/mails/new_password');
 const { auth: authConfig } = require('#server/config');
 const { sequelize } = require('#db/models');
 
-function trim(str) {
-    if (typeof str !== 'string') {
-        return null;
-    }
-
-    return str.replace(/^\s*|\s*$/g, '');
-}
-
 function fromOptionToPermissions(user, option, dataJustice) {
     switch (option.id) {
         case 'close_shantytown':
@@ -217,8 +209,10 @@ module.exports = models => ({
          * Updates some data about the current user
          */
     async edit(req, res) {
-        // find the user
         const { id: userId } = req.user;
+        const {
+            first_name: firstName, last_name: lastName, email, phone,
+        } = req.body;
         const user = await models.user.findOne(userId, { auth: true });
 
         if (user === null) {
@@ -230,43 +224,12 @@ module.exports = models => ({
             });
         }
 
-        // validate the input
-        const errors = {};
-
-        // first name
-        const firstName = trim(req.body.first_name);
-        if (firstName === null || firstName === '') {
-            errors.first_name = ['Le prénom est obligatoire '];
-        }
-
-        // last name
-        const lastName = trim(req.body.last_name);
-        if (lastName === null || lastName === '') {
-            errors.last_name = ['Le nom de famille est obligatoire '];
-        }
-
-        // password
-        if (req.body.password) {
-            const passwordErrors = checkPassword(req.body.password);
-            if (passwordErrors.length > 0) {
-                errors.password = passwordErrors;
-            }
-        }
-
-        if (Object.keys(errors).length > 0) {
-            return res.status(400).send({
-                error: {
-                    developer_message: 'The submitted data contains errors',
-                    user_message: 'Certaines données sont invalides',
-                    fields: errors,
-                },
-            });
-        }
-
         // actually update the user
         const data = {
             first_name: firstName,
             last_name: lastName,
+            email,
+            phone,
         };
 
         if (req.body.password) {
@@ -299,6 +262,7 @@ module.exports = models => ({
                 last_name: req.body.last_name,
                 first_name: req.body.first_name,
                 email: req.body.email,
+                phone: req.body.phone,
                 organization: req.body.organization_full ? req.body.organization_full.id : null,
                 new_association: req.body.new_association === true,
                 new_association_name: req.body.new_association_name || null,

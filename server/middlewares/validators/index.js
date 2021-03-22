@@ -1,6 +1,7 @@
 const createContact = require('./createContact');
 const createTown = require('./createTown');
 const createUser = require('./createUser');
+const editUser = require('./editUser');
 const editTown = require('./editTown');
 const addShantytownActor = require('./shantytownActors/addShantytownActor');
 const updateShantytownActor = require('./shantytownActors/updateShantytownActor');
@@ -13,6 +14,7 @@ module.exports = {
     createTown,
     editTown,
     createUser,
+    editUser,
     shantytownActors: {
         addShantytownActor,
         updateShantytownActor,

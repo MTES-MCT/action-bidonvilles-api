@@ -63,6 +63,8 @@ module.exports = (app) => {
         middlewares.auth.authenticate,
         middlewares.charte.check,
         middlewares.appVersion.sync,
+        validators.editUser,
+        middlewares.validation,
         controllers.user.edit,
     );
     app.get(
