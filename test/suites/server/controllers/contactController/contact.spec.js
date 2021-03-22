@@ -98,14 +98,14 @@ describe.only('contactController.contact()', () => {
     });
 
     describe('Success cases', () => {
-        it('Should handle a simple message', async () => {
+        it('Should a simple message', async () => {
             const controller = rewiremock.proxy('#server/controllers/contactController', mockModels)(controllerMockModels);
 
             req.body = {
                 access_request_message: 'ceci est un message',
-                email: 'gael.destrem@gmail.com',
-                first_name: 'gael',
-                last_name: 'destrem',
+                email: 'john.doe@gmail.com',
+                first_name: 'john',
+                last_name: 'doe',
                 legal: true,
                 request_type: ['help'],
             };
@@ -118,14 +118,14 @@ describe.only('contactController.contact()', () => {
             expect(emailStub).to.have.been.callCount(nationalAdmins.length);
         });
 
-        it('Should should handle an access request for a non actor', async () => {
+        it('Should handle an access request for a non actor', async () => {
             const controller = rewiremock.proxy('#server/controllers/contactController', mockModels)(controllerMockModels);
 
             req.body = {
                 access_request_message: 'ceci est un message',
-                email: 'gael.destrem@gmail.com',
-                first_name: 'gael',
-                last_name: 'destrem',
+                email: 'john.doe@gmail.com',
+                first_name: 'john',
+                last_name: 'doe',
                 legal: true,
                 request_type: ['access-request'],
                 is_actor: false,
@@ -139,7 +139,7 @@ describe.only('contactController.contact()', () => {
             expect(emailStub).to.have.been.callCount(nationalAdmins.length);
         });
 
-        it('Should should handle an access request for a public_establishment', async () => {
+        it('Should handle an access request for a public_establishment', async () => {
             const createUserStub = sinon.stub();
             createUserStub.returns({});
 
@@ -168,9 +168,10 @@ describe.only('contactController.contact()', () => {
                 request_type: ['access-request'],
                 is_actor: true,
                 access_request_message: "ceci est une demande d'acces",
-                last_name: 'destrem',
-                first_name: 'gael',
-                email: 'gael.destrem@gmail.com',
+                last_name: 'John',
+                first_name: 'Doe',
+                email: 'john.doe@gmail.com',
+                phone: '0102030405',
                 organization_category: 'public_establishment',
                 organization_category_full: {},
                 organization_type: '12',
@@ -188,10 +189,11 @@ describe.only('contactController.contact()', () => {
 
             // It should send a message to all admins and ensure that it returns a 200
             expect(createUserStub).to.have.been.calledOnceWith({
-                last_name: 'destrem',
-                first_name: 'gael',
-                email: 'gael.destrem@gmail.com',
+                last_name: 'John',
+                first_name: 'Doe',
+                email: 'john.doe@gmail.com',
                 organization: 92,
+                phone: '0102030405',
                 new_association: false,
                 new_association_name: null,
                 new_association_abbreviation: null,
@@ -204,7 +206,7 @@ describe.only('contactController.contact()', () => {
             expect(res.status).to.have.been.calledOnceWith(200);
         });
 
-        it('Should should handle an access request for a territorial_collectivity', async () => {
+        it('Should handle an access request for a territorial_collectivity', async () => {
             const createUserStub = sinon.stub();
             createUserStub.returns({});
 
@@ -231,9 +233,10 @@ describe.only('contactController.contact()', () => {
                 request_type: ['access-request'],
                 is_actor: true,
                 access_request_message: "ceci est une demande d'acces",
-                last_name: 'destrem',
-                first_name: 'gael',
-                email: 'gael.destrem@gmail.com',
+                last_name: 'doe',
+                first_name: 'john',
+                email: 'john.doe@gmail.com',
+                phone: '',
                 organization_category: 'territorial_collectivity',
                 territorial_collectivity: {
                     category: 'Commune',
@@ -255,14 +258,15 @@ describe.only('contactController.contact()', () => {
 
             // It should send a message to all admins and ensure that it returns a 200
             expect(createUserStub).to.have.been.calledOnceWith({
-                last_name: 'destrem',
-                first_name: 'gael',
-                email: 'gael.destrem@gmail.com',
+                last_name: 'doe',
+                first_name: 'john',
+                email: 'john.doe@gmail.com',
                 organization: 92,
                 new_association: false,
                 new_association_name: null,
                 new_association_abbreviation: null,
                 departement: null,
+                phone: '',
                 position: 'test',
                 access_request_message: "ceci est une demande d'acces",
                 created_by: null,
@@ -271,7 +275,7 @@ describe.only('contactController.contact()', () => {
             expect(res.status).to.have.been.calledOnceWith(200);
         });
 
-        it('Should should handle an access request for a administration', async () => {
+        it('Should handle an access request for a administration', async () => {
             const createUserStub = sinon.stub();
             createUserStub.returns({});
 
@@ -297,9 +301,10 @@ describe.only('contactController.contact()', () => {
                 request_type: ['access-request'],
                 is_actor: true,
                 access_request_message: "ceci est une demande d'acces",
-                last_name: 'destrem',
-                first_name: 'gael',
-                email: 'gael.destrem@gmail.com',
+                last_name: 'doe',
+                first_name: 'john',
+                email: 'john.doe@gmail.com',
+                phone: '',
                 organization_category: 'administration',
                 organization_administration: '40752',
                 organization_full: {
@@ -314,9 +319,10 @@ describe.only('contactController.contact()', () => {
 
             // It should send a message to all admins and ensure that it returns a 200
             expect(createUserStub).to.have.been.calledOnceWith({
-                last_name: 'destrem',
-                first_name: 'gael',
-                email: 'gael.destrem@gmail.com',
+                last_name: 'doe',
+                first_name: 'john',
+                email: 'john.doe@gmail.com',
+                phone: '',
                 organization: 92,
                 new_association: false,
                 new_association_name: null,
@@ -330,7 +336,7 @@ describe.only('contactController.contact()', () => {
             expect(res.status).to.have.been.calledOnceWith(200);
         });
 
-        it('Should should handle an access request for an existing association', async () => {
+        it('Should handle an access request for an existing association', async () => {
             const createUserStub = sinon.stub();
             createUserStub.returns({});
 
@@ -359,9 +365,10 @@ describe.only('contactController.contact()', () => {
                 request_type: ['access-request'],
                 is_actor: true,
                 access_request_message: "ceci est une demande d'acces",
-                last_name: 'destrem',
-                first_name: 'gael',
-                email: 'gael.destrem@gmail.com',
+                last_name: 'doe',
+                first_name: 'john',
+                email: 'john.doe@gmail.com',
+                phone: '',
                 organization_category: 'association',
                 association: 'Accueil coopération insertion pour les nouveaux arrivants',
                 association_name: 'Accueil coopération insertion pour les nouveaux arrivants',
@@ -380,9 +387,10 @@ describe.only('contactController.contact()', () => {
 
             // It should send a message to all admins and ensure that it returns a 200
             expect(createUserStub).to.have.been.calledOnceWith({
-                last_name: 'destrem',
-                first_name: 'gael',
-                email: 'gael.destrem@gmail.com',
+                last_name: 'doe',
+                first_name: 'john',
+                email: 'john.doe@gmail.com',
+                phone: '',
                 organization: 92,
                 new_association: false,
                 new_association_name: null,
@@ -396,7 +404,7 @@ describe.only('contactController.contact()', () => {
             expect(res.status).to.have.been.calledOnceWith(200);
         });
 
-        it('Should should handle an access request for a new association', async () => {
+        it('Should handle an access request for a new association', async () => {
             const createUserStub = sinon.stub();
             createUserStub.returns({});
 
@@ -425,9 +433,10 @@ describe.only('contactController.contact()', () => {
                 request_type: ['access-request'],
                 is_actor: true,
                 access_request_message: "ceci est une demande d'acces",
-                last_name: 'destrem',
-                first_name: 'gael',
-                email: 'gael.destrem@gmail.com',
+                last_name: 'doe',
+                first_name: 'john',
+                email: 'john.doe@gmail.com',
+                phone: '',
                 organization_category: 'association',
                 association: 'Accueil coopération insertion pour les nouveaux arrivants',
                 association_name: 'Accueil coopération insertion pour les nouveaux arrivants',
@@ -445,9 +454,10 @@ describe.only('contactController.contact()', () => {
 
             // It should send a message to all admins and ensure that it returns a 200
             expect(createUserStub).to.have.been.calledOnceWith({
-                last_name: 'destrem',
-                first_name: 'gael',
-                email: 'gael.destrem@gmail.com',
+                last_name: 'doe',
+                first_name: 'john',
+                email: 'john.doe@gmail.com',
+                phone: '',
                 organization: null,
                 new_association: true,
                 new_association_name: 'Accueil coopération insertion pour les nouveaux arrivants',
