@@ -14,6 +14,7 @@ module.exports = models => ({
             res.status(500).send({
                 user_message: 'Une erreur de lecture en base de données est survenue',
             });
+            next(error);
             return;
         }
 

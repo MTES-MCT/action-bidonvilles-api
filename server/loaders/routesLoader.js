@@ -266,9 +266,10 @@ module.exports = (app) => {
                     try {
                         middlewares.auth.checkPermissions(['plan.close'], req, res, next, false);
                     } catch (error) {
-                        return res.status(500).send({
+                        res.status(500).send({
                             success: false,
                         });
+                        return next(error);
                     }
 
                     controller = controllers.plan.close;
@@ -291,7 +292,8 @@ module.exports = (app) => {
             try {
                 await middlewares.appVersion.sync(req, res, next, false);
             } catch (error) {
-                return res.status(500).send({});
+                res.status(500).send({});
+                return next(error);
             }
 
             // route to proper controller

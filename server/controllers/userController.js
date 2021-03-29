@@ -89,7 +89,7 @@ function fromOptionsToPermissions(user, options) {
 }
 
 module.exports = models => ({
-    async list(req, res) {
+    async list(req, res, next) {
         try {
             const users = await models.user.findAll(req.user);
             res.status(200).send(users);
@@ -100,10 +100,11 @@ module.exports = models => ({
                     developer_message: error.message,
                 },
             });
+            next(error);
         }
     },
 
-    async get(req, res) {
+    async get(req, res, next) {
         try {
             const user = await models.user.findOne(req.params.id, { extended: true }, req.user);
             res.status(200).send(user);
@@ -114,6 +115,7 @@ module.exports = models => ({
                     developer_message: error.message,
                 },
             });
+            next(error);
         }
     },
 

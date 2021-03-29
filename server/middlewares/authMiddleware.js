@@ -102,6 +102,7 @@ module.exports = (models) => {
                 throw new Error('');
             }
 
+            next(new Error('(4) Tried to access a secured page without authentication'));
             return;
         }
 

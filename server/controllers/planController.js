@@ -459,7 +459,7 @@ async function historize(planId, transaction) {
 }
 
 module.exports = models => ({
-    async list(req, res) {
+    async list(req, res, next) {
         try {
             const plans = await models.plan.findAll(req.user);
             res.status(200).send(plans);
@@ -470,10 +470,11 @@ module.exports = models => ({
                     developer_message: error.message,
                 },
             });
+            next(error);
         }
     },
 
-    async find(req, res) {
+    async find(req, res, next) {
         try {
             const plans = await models.plan.findOne(req.user, req.params.id);
             res.status(200).send(plans);
@@ -484,6 +485,7 @@ module.exports = models => ({
                     developer_message: error.message,
                 },
             });
+            next(error);
         }
     },
 
