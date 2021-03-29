@@ -3,8 +3,6 @@ const loaders = require('#server/loaders');
 const { port } = require('#server/config');
 
 const sentryContextHandlers = (app) => {
-    // TODO : We should ideally use these handlers, but our async wrapping logic in routesLoaders cause issues
-    // => req.protocol is not defined / trust is not a function
     app.use(Sentry.Handlers.requestHandler());
     app.use(Sentry.Handlers.tracingHandler());
 };
