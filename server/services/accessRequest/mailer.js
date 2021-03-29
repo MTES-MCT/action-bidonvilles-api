@@ -99,5 +99,11 @@ module.exports = {
                 [expiracyDate],
             );
         },
+        accessActivated(user) {
+            return mailService.send(
+                'access_request/user/access_activated_welcome',
+                user,
+            );
+        },
     },
 };
