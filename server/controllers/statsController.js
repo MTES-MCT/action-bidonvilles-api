@@ -135,7 +135,7 @@ module.exports = models => ({
         }
 
         try {
-            Stats_Directory_Views.create({
+            await Stats_Directory_Views.create({
                 organization: organizationId,
                 viewed_by: req.user.id,
                 created_at: new Date(),
