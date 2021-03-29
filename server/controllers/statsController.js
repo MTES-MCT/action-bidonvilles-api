@@ -5,50 +5,31 @@ const {
 
 module.exports = models => ({
     all: async (req, res) => {
+        const { departement } = req.query;
+
         const [
-            numberOfDepartements,
-            numberOfActiveUsers,
-            numberOfNewUsersPerMonth,
-            numberOfCollaboratorAndAssociationUsers,
-            numberOfCollaboratorAndAssociationOrganizations,
-            numberOfShantytownOperations,
-            numberOfExports,
-            numberOfComments,
-            numberOfDirectoryViews,
-            meanTimeBeforeCreationDeclaration,
-            meanTimeBeforeClosingDeclaration,
-            numberOfReviewedComments,
+            numberOfPeople,
+            numberOfShantytown,
+            numberOfResorbedShantytown,
+            numberOfPlans,
+            numberOfUsers,
         ] = await Promise.all([
-            models.stats.numberOfDepartements(),
-            models.stats.numberOfActiveUsers(),
-            models.stats.numberOfNewUsersPerMonth(),
-            models.stats.numberOfCollaboratorAndAssociationUsers(),
-            models.stats.numberOfCollaboratorAndAssociationOrganizations(),
-            models.stats.numberOfShantytownOperations(),
-            Stats_Exports.count(),
-            models.stats.numberOfComments(),
-            Stats_Directory_Views.count(),
-            models.stats.meanTimeBeforeCreationDeclaration(),
-            models.stats.meanTimeBeforeClosingDeclaration(),
-            models.stats.numberOfReviewedComments(),
+            models.stats.numberOfPeople(departement),
+            models.stats.numberOfShantytown(departement),
+            models.stats.numberOfResorbedShantytown(departement),
+            models.stats.numberOfPlans(departement),
+            models.stats.numberOfUsers(departement),
         ]);
 
         return res.status(200).send({
             success: true,
             response: {
                 statistics: {
-                    numberOfDepartements,
-                    numberOfActiveUsers,
-                    numberOfNewUsersPerMonth,
-                    numberOfCollaboratorAndAssociationUsers,
-                    numberOfCollaboratorAndAssociationOrganizations,
-                    numberOfShantytownOperations,
-                    numberOfExports,
-                    numberOfComments,
-                    numberOfDirectoryViews,
-                    meanTimeBeforeCreationDeclaration,
-                    meanTimeBeforeClosingDeclaration,
-                    numberOfReviewedComments,
+                    numberOfPeople,
+                    numberOfShantytown,
+                    numberOfResorbedShantytown,
+                    numberOfPlans,
+                    numberOfUsers,
                 },
             },
         });
