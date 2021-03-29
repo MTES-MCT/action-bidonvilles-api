@@ -1,6 +1,84 @@
 const { toFormat } = require('#server/utils/date');
 
 module.exports = database => ({
+    numberOfPeople: async (departement) => {
+        const rows = await database.query(
+            `
+            SELECT SUM(population_total) AS total
+            FROM shantytowns 
+            LEFT JOIN cities AS city ON shantytowns.fk_city = city.code
+            ${departement ? `WHERE fk_departement = '${departement}'` : ''}
+            `,
+            {
+                type: database.QueryTypes.SELECT,
+            },
+        );
+
+        return rows[0].total;
+    },
+
+    numberOfShantytown: async (departement) => {
+        const rows = await database.query(
+            `
+            SELECT COUNT(*) AS total 
+            FROM shantytowns 
+            LEFT JOIN cities AS city ON shantytowns.fk_city = city.code
+            ${departement ? `WHERE fk_departement = '${departement}'` : ''}
+            `,
+            {
+                type: database.QueryTypes.SELECT,
+            },
+        );
+
+        return rows[0].total;
+    },
+
+    numberOfResorbedShantytown: async (departement) => {
+        const rows = await database.query(
+            `
+            SELECT COUNT(*) AS total
+            FROM shantytowns 
+            LEFT JOIN cities AS city ON shantytowns.fk_city = city.code
+            WHERE closed_with_solutions = 'yes'
+            ${departement ? `AND fk_departement = '${departement}'` : ''}
+            `,
+            {
+                type: database.QueryTypes.SELECT,
+            },
+        );
+
+        return rows[0].total;
+    },
+
+    // TODO: Not sure how to filter on departement
+    numberOfPlans: async () => {
+        const rows = await database.query(
+            'SELECT COUNT(*) AS total FROM plans2',
+            {
+                type: database.QueryTypes.SELECT,
+            },
+        );
+
+        return rows[0].total;
+    },
+
+    numberOfUsers: async (departement) => {
+        const rows = await database.query(
+            `
+            SELECT COUNT(*) from users
+            LEFT JOIN organizations on users.fk_organization = organizations.organization_id
+            WHERE fk_status = 'active'
+            ${departement ? `AND fk_departement = '${departement}'` : ''}
+            `,
+            {
+                type: database.QueryTypes.SELECT,
+            },
+        );
+
+        return rows[0].total;
+    },
+
+
     numberOfDepartements: async () => {
         const rows = await database.query(
             `SELECT
