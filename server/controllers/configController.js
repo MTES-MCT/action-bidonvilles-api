@@ -3,7 +3,7 @@ const { activationTokenExpiresIn } = require('#server/config');
 const themes = require('#server/config/shantytown_actor_themes');
 
 module.exports = models => ({
-    async list(req, res) {
+    async list(req, res, next) {
         const queries = {
             field_types: models.fieldType.findAll(),
             owner_types: models.ownerType.findAll(),
@@ -37,6 +37,9 @@ module.exports = models => ({
 
                 return res.status(200).send(response);
             })
-            .catch(error => res.status(500).send(error.message));
+            .catch((error) => {
+                res.status(500).send(error.message);
+                next(error);
+            });
     },
 });
