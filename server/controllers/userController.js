@@ -22,7 +22,6 @@ const MAIL_TEMPLATES = {};
 MAIL_TEMPLATES.access_granted = require('#server/mails/access_request/user/access_granted');
 MAIL_TEMPLATES.access_denied = require('#server/mails/access_request/user/access_denied');
 MAIL_TEMPLATES.new_password = require('#server/mails/new_password');
-MAIL_TEMPLATES.access_activated_welcome = require('#server/mails/access_request/user/access_activated_welcome');
 
 const { auth: authConfig } = require('#server/config');
 const { sequelize } = require('#db/models');
