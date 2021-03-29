@@ -6,7 +6,7 @@ module.exports = () => ({
 
     TextPart: `Bonjour,
 
-    Bienvenue ! Nous sommes heureux de vous compter parmi les utilisateurs de <a href="${frontUrl}">Résorption-bidonvilles</a>.
+    Bienvenue ! Nous sommes heureux de vous compter parmi les utilisateurs de Résorption-bidonvilles.
 
     Afin de vous accompagner dans l'utilisation de la plateforme, vous trouverez ci-dessous le guide de l'utilisateur.
 
@@ -42,7 +42,7 @@ module.exports = () => ({
                         <td bgcolor="#ffffff">
                             Bonjour,<br/>
                             <br/>
-                            Bienvenue ! Nous sommes heureux de vous compter parmi les utilisateurs de <a style="text-decoration: none" href="${frontUrl}">Résorption-bidonvilles</a>.
+                            Bienvenue ! Nous sommes heureux de vous compter parmi les utilisateurs de <em><a style="color: #000F8C; text-decoration: none;" href="${frontUrl}">Résorption-bidonvilles</a></em>.
                             <br/>
                             Afin de vous accompagner dans l'utilisation de la plateforme, vous trouverez ci-dessous le guide de l'utilisateur. 
                         </td>
