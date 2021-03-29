@@ -31,8 +31,13 @@ function asyncExpress() {
     const methods = ['get', 'post', 'put', 'delete'];
     methods.forEach((methodName) => {
         const originalMethod = app[methodName];
-        app[methodName] = (path, ...callbacks) => {
-            originalMethod.call(app, path, ...callbacks.map(cb => asyncHandler(cb)));
+        app[methodName] = (...args) => {
+            if (args.length <= 1) {
+                return originalMethod.call(app, ...args);
+            }
+
+            const [path, ...callbacks] = args;
+            return originalMethod.call(app, path, ...callbacks.map(cb => asyncHandler(cb)));
         };
     });
 
