@@ -18,7 +18,10 @@ const config = {
     agenda: {
         mongo_address: `mongodb://${process.env.RB_API_MONGO_USERNAME}:${process.env.RB_API_MONGO_PASSWORD}@rb_database_agenda`,
     },
-    slack: {}
+    slack: {},
+    sentry: {
+        dsn: process.env.RB_API_SENTRY_DSN || '',
+    },
 };
 
 let webhookIndex = 1;
