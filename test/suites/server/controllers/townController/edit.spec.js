@@ -181,7 +181,7 @@ describe.only('townController.edit()', () => {
             const res = mockRes();
 
             // execute
-            await edit(req, res);
+            await edit(req, res, sinon.stub());
             expect(mock.update).to.have.been.calledWithMatch(
                 {
                     builtAt: new Date(625273200000),
@@ -244,7 +244,7 @@ describe.only('townController.edit()', () => {
             const res = mockRes();
 
             // execute
-            await edit(req, res);
+            await edit(req, res, sinon.stub());
 
             expect(mock.update).to.have.been.calledWithMatch(
                 {
