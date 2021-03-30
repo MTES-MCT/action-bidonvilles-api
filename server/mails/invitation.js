@@ -2,12 +2,12 @@ const signature = require('./signature');
 const { frontUrl } = require('#server/config');
 
 
-module.exports = data => ({
+module.exports = (guest, greeter) => ({
     Subject: '[Résorption-bidonvilles] - Découvrez la plateforme Résorption-bidonvilles',
 
-    TextPart: `Bonjour ${data.first_name},
+    TextPart: `Bonjour ${guest.first_name},
 
-        Connaissez-vous la plateforme Résorption-bidonvilles ? ${data.greeter_first_name}  ${data.greeter_last_name.toUpperCase()}, ${data.greeter_organization_name} vous invite à la découvrir !
+        Connaissez-vous la plateforme Résorption-bidonvilles ? ${greeter.first_name} ${greeter.last_name.toUpperCase()}, ${greeter.organization_name}, vous invite à la découvrir !
         
         Résorption-Bidonvilles est un outil numérique de travail collaboratif pour accélérer la résorption des bidonvilles. Il s’adresse à tous les acteurs de terrain : les services de l’État, les DDCS, les collectivités territoriales, les opérateurs…
         
@@ -34,11 +34,11 @@ module.exports = data => ({
                         <tbody>
                             <tr>
                                 <td bgcolor="#ffffff">
-                                    Bonjour ${data.first_name},<br/>
+                                    Bonjour ${guest.first_name},<br/>
                                     <br/>
-                                    Connaissez-vous la plateforme Résorption-bidonvilles ? ${data.greeter_first_name}  ${data.greeter_last_name.toUpperCase()}, ${data.greeter_organization_name} vous invite à la découvrir !<br/>
+                                    Connaissez-vous la plateforme <em><a style="color: #000F8C; text-decoration: none;" href="${frontUrl}">Résorption-bidonvilles</a></em> ? ${greeter.first_name}  ${greeter.last_name.toUpperCase()}, ${greeter.organization_name}, vous invite à la découvrir !<br/>
                                     <br/>
-                                    Résorption-Bidonvilles est un outil numérique de travail collaboratif pour accélérer la résorption des bidonvilles. Il s’adresse à tous les acteurs de terrain : les services de l’État, les DDCS, les collectivités territoriales, les opérateurs…<br/>
+                                    <em><a style="color: #000F8C; text-decoration: none;" href="${frontUrl}">Résorption-bidonvilles</a></em> est un outil numérique de travail collaboratif pour accélérer la résorption des bidonvilles. Il s’adresse à tous les acteurs de terrain : les services de l’État, les DDCS, les collectivités territoriales, les opérateurs…<br/>
                                 </td>
                             </tr>
                             <tr>
@@ -58,7 +58,7 @@ module.exports = data => ({
                             </tr>
                             <tr>
                                 <td bgcolor="#ffffff">
-                                    Vous souhaitez une démonstration personnalisée de la plateforme ? Vous avez des questions sur son utilisation ? N’hésitez pas à contacter Laure par mail ou téléphone : laure.dubuc@dihal.gouv.fr ou 01 40 81 31 54.<br/>
+                                    Vous souhaitez une démonstration personnalisée de la plateforme ? Vous avez des questions sur son utilisation ? N’hésitez pas à contacter Laure par mail ou téléphone : <a href="mailto:laure.dubuc@dihal.gouv.fr">laure.dubuc@dihal.gouv.fr</a> ou 01 40 81 31 54.<br/>
                                     Vous aussi vous voulez contribuer à la résorption des bidonvilles ? <a href="${frontUrl}/#/contact">Demandez dès à présent votre accès</a><br/>
                                     <br/>
                                     Merci,<br/>

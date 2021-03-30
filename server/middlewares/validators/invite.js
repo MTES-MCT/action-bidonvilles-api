@@ -7,8 +7,8 @@ module.exports = [
 
     body('greeter.email')
         .trim()
-        .notEmpty().withMessage('Le courriel de la personne a l\'initiative de l\'invitation doit être renseigné')
-        .isEmail().withMessage('Le courriel de la personne a l\'initiative de l\'invitation n\'est pas valide')
+        .notEmpty().bail().withMessage('Le courriel de la personne a l\'initiative de l\'invitation doit être renseigné')
+        .isEmail().bail().withMessage('Le courriel de la personne a l\'initiative de l\'invitation n\'est pas valide')
         .normalizeEmail({
             gmail_remove_dots: false,
             gmail_remove_subaddress: false,
@@ -17,8 +17,9 @@ module.exports = [
             yahoo_remove_subaddress: false,
             icloud_remove_subaddress: false,
         })
-        .custom(async (value) => {
+        .custom(async (value, { req }) => {
             let user = null;
+
             try {
                 user = await userModel.findOneByEmail(value);
                 if ((Object.keys(user).length < 1) || (user === null)) {
@@ -27,6 +28,8 @@ module.exports = [
             } catch (error) {
                 throw new Error('La personne a l\'initiative de l\'invitation n\'a pas été trouvée');
             }
+
+            req.greeter_full = user;
             return true;
         }),
 
@@ -38,15 +41,15 @@ module.exports = [
             return value;
         })
         .isArray().bail().withMessage('La liste des invités n\'est pas valide')
-        .notEmpty().withMessage('La liste des invités ne peut pas être vide'),
+        .notEmpty().bail().withMessage('La liste des invités ne peut pas être vide'),
 
-    body('guests.*.firstname')
+    body('guests.*.first_name')
         .trim()
-        .notEmpty().withMessage('Vous devez préciser le prénom de l\'invité(e)'),
+        .notEmpty().bail().withMessage('Vous devez préciser le prénom de l\'invité(e)'),
 
-    body('guests.*.lastname')
+    body('guests.*.last_name')
         .trim()
-        .notEmpty().withMessage('Vous devez préciser le nom de l\'invité(e)'),
+        .notEmpty().bail().withMessage('Vous devez préciser le nom de l\'invité(e)'),
 
     body('guests.*.email')
         .trim()
