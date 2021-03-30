@@ -24,10 +24,8 @@ const sendEmailsInvitations = async (guests, greeter) => {
 
 module.exports = () => ({
     async invite(req, res, next) {
-        const {
-            guests,
-            greeter_full: greeter,
-        } = req.body;
+        const { greeter_full: greeter } = req;
+        const { guests } = req.body;
 
         try {
             await sendEmailsInvitations(guests, greeter);
