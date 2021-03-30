@@ -470,7 +470,6 @@ describe.only('townController.createHighCovidComment()', () => {
     describe('if saving the comment fails', () => {
         let req;
         let res;
-        let returnValue;
         beforeEach(async () => {
             // setup
             reqArg.user.organization.location = locations.departement;
@@ -485,7 +484,7 @@ describe.only('townController.createHighCovidComment()', () => {
             res = mockRes();
 
             // execute
-            returnValue = await createHighCovidComment(req, res);
+            await createHighCovidComment(req, res, sinon.stub());
         });
 
         it('responds with a 500', () => {
@@ -497,10 +496,6 @@ describe.only('townController.createHighCovidComment()', () => {
                 user_message: 'Une erreur est survenue lors de l\'écriture en base de données',
                 developer_message: 'Failed saving the comment into database: Something bad happened',
             });
-        });
-
-        it('returns the response object', () => {
-            expect(returnValue).to.be.eql(res);
         });
     });
 });
