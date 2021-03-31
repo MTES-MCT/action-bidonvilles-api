@@ -54,9 +54,13 @@ module.exports = models => ({
     },
 
     public: async (req, res) => {
+        // date used for numberOfUsersPerMonth & numberOfUsersAtMonth
+        const startDate = '2020-06-01';
+
         const [
             numberOfDepartements,
             numberOfActiveUsers,
+            numberOfUsersOnJune2020,
             numberOfNewUsersPerMonth,
             numberOfCollaboratorAndAssociationUsers,
             numberOfCollaboratorAndAssociationOrganizations,
@@ -70,7 +74,8 @@ module.exports = models => ({
         ] = await Promise.all([
             models.stats.numberOfDepartements(),
             models.stats.numberOfActiveUsers(),
-            models.stats.numberOfNewUsersPerMonth(),
+            models.stats.numberOfUsersAtMonth(startDate),
+            models.stats.numberOfNewUsersPerMonth(startDate),
             models.stats.numberOfCollaboratorAndAssociationUsers(),
             models.stats.numberOfCollaboratorAndAssociationOrganizations(),
             models.stats.numberOfShantytownOperations(),
@@ -88,6 +93,7 @@ module.exports = models => ({
                 statistics: {
                     numberOfDepartements,
                     numberOfActiveUsers,
+                    numberOfUsersOnJune2020,
                     numberOfNewUsersPerMonth,
                     numberOfCollaboratorAndAssociationUsers,
                     numberOfCollaboratorAndAssociationOrganizations,

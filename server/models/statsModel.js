@@ -43,7 +43,25 @@ module.exports = database => ({
         return rows[0].total;
     },
 
-    numberOfNewUsersPerMonth: async () => {
+    numberOfUsersAtMonth: async (date = '2020-06-01') => {
+        const rows = await database.query(
+            `SELECT
+                COUNT(*) AS total
+                FROM user_accesses ua
+            WHERE 
+                ua.used_at IS NOT NULL
+                AND
+                ua.used_at < '${date}'`,
+            {
+                type: database.QueryTypes.SELECT,
+            },
+        );
+
+        return rows[0].total;
+    },
+
+    numberOfNewUsersPerMonth: async (startDateStr = '2020-06-01') => {
+        const startDate = new Date(startDateStr);
         const now = new Date();
         const limit = new Date(now.getFullYear(), now.getMonth() - 7, 1);
 
@@ -67,7 +85,6 @@ module.exports = database => ({
         );
 
         const result = [];
-        const startDate = new Date('2020-06-01');
         const monthsDiff = (now.getMonth() - startDate.getMonth()) + (now.getFullYear() - startDate.getFullYear()) * 12;
 
         for (let i = 1; i <= monthsDiff; i += 1) {
