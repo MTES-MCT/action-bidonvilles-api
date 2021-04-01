@@ -138,6 +138,26 @@ module.exports = database => ({
         return rows[0].total;
     },
 
+    numberOfOpenShantytownsAtMonth: async (departement, date = '2020-06-01') => {
+        const rows = await database.query(
+            `SELECT
+                COUNT(*) AS total
+            FROM shantytowns LEFT JOIN cities AS city ON shantytowns.fk_city = city.code
+            WHERE 
+                shantytowns.created_at < '${date}'
+                AND 
+                shantytowns.closed_at > '${date}'
+                ${departement ? `AND fk_departement = '${departement}'` : ''}
+                `,
+            {
+                type: database.QueryTypes.SELECT,
+            },
+        );
+
+        return rows[0].total;
+    },
+
+
     numberOfClosedShantytownsPerMonth: async (departement = null, startDateStr = '2019-06-01') => {
         const rows = await database.query(
             `SELECT 
