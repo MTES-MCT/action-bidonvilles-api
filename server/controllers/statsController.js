@@ -5,7 +5,7 @@ const {
 
 module.exports = models => ({
     all: async (req, res) => {
-        const { departement } = req.query;
+        const { departement } = req.params;
 
         const [
             numberOfPeople,
@@ -13,12 +13,18 @@ module.exports = models => ({
             numberOfResorbedShantytown,
             numberOfPlans,
             numberOfUsers,
+            numberOfClosedShantytownsPerMonth,
+            numberOfNewShantytownsPerMonth,
+            numberOfResorbedShantytownsPerMonth,
         ] = await Promise.all([
             models.stats.numberOfPeople(departement),
             models.stats.numberOfShantytown(departement),
             models.stats.numberOfResorbedShantytown(departement),
             models.stats.numberOfPlans(departement),
             models.stats.numberOfUsers(departement),
+            models.stats.numberOfClosedShantytownsPerMonth(departement),
+            models.stats.numberOfNewShantytownsPerMonth(departement),
+            models.stats.numberOfResorbedShantytownsPerMonth(departement),
         ]);
 
         return res.status(200).send({
@@ -30,6 +36,9 @@ module.exports = models => ({
                     numberOfResorbedShantytown,
                     numberOfPlans,
                     numberOfUsers,
+                    numberOfClosedShantytownsPerMonth,
+                    numberOfNewShantytownsPerMonth,
+                    numberOfResorbedShantytownsPerMonth,
                 },
             },
         });
