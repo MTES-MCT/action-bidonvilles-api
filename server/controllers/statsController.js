@@ -16,6 +16,7 @@ module.exports = models => ({
             numberOfClosedShantytownsPerMonth,
             numberOfNewShantytownsPerMonth,
             numberOfResorbedShantytownsPerMonth,
+            numberOfShantytownsOnJune2019,
         ] = await Promise.all([
             models.stats.numberOfPeople(departement),
             models.stats.numberOfShantytown(departement),
@@ -25,6 +26,7 @@ module.exports = models => ({
             models.stats.numberOfClosedShantytownsPerMonth(departement),
             models.stats.numberOfNewShantytownsPerMonth(departement),
             models.stats.numberOfResorbedShantytownsPerMonth(departement),
+            models.stats.numberOfOpenShantytownsAtMonth(departement, '2019-06-01'),
         ]);
 
         return res.status(200).send({
@@ -39,6 +41,7 @@ module.exports = models => ({
                     numberOfClosedShantytownsPerMonth,
                     numberOfNewShantytownsPerMonth,
                     numberOfResorbedShantytownsPerMonth,
+                    numberOfShantytownsOnJune2019,
                 },
             },
         });
