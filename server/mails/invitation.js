@@ -15,7 +15,7 @@ module.exports = (guest, greeter) => ({
 
         Vous souhaitez une démonstration personnalisée de la plateforme ? Vous avez des questions sur son utilisation ? N’hésitez pas à contacter Laure par mail ou téléphone : laure.dubuc@dihal.gouv.fr ou 01 40 81 31 54.
 
-        Vous aussi vous voulez contribuer à la résorption des bidonvilles ? Demandez dès à présent votre accès : ${frontUrl}/#/contact.
+        Vous aussi vous voulez contribuer à la résorption des bidonvilles ? Demandez dès à présent votre accès : ${frontUrl}/contact.
         
         Cordialement,
     
@@ -62,7 +62,7 @@ module.exports = (guest, greeter) => ({
                                     <br/>
                                     Vous souhaitez une démonstration personnalisée de la plateforme ? Vous avez des questions sur son utilisation ? N’hésitez pas à contacter Laure par mail ou téléphone : <a href="mailto:laure.dubuc@dihal.gouv.fr">laure.dubuc@dihal.gouv.fr</a> ou 01 40 81 31 54.<br/>
                                     <br/>
-                                    Vous aussi vous voulez contribuer à la résorption des bidonvilles ? <a href="${frontUrl}/#/contact">Demandez dès à présent votre accès</a>.<br/>
+                                    Vous aussi vous voulez contribuer à la résorption des bidonvilles ? <a href="${frontUrl}/contact">Demandez dès à présent votre accès</a>.<br/>
                                     <br/>
                                     Merci,
                                     <br/>
