@@ -235,7 +235,6 @@ describe.only('townController.createCovidComment()', () => {
     describe('if fetching the town from database fails', () => {
         let req;
         let res;
-        let returnValue;
         beforeEach(async () => {
             // setup
             req = mockReq(reqArg);
@@ -245,7 +244,7 @@ describe.only('townController.createCovidComment()', () => {
             );
 
             // execute
-            returnValue = await createCovidComment(req, res);
+            await createCovidComment(req, res, sinon.stub());
         });
 
         it('responds with status 500', () => {
@@ -260,10 +259,6 @@ describe.only('townController.createCovidComment()', () => {
                     error_message: 'Something went wrong',
                 },
             });
-        });
-
-        it('returns the response object', () => {
-            expect(returnValue).to.be.eql(res);
         });
     });
 
@@ -428,7 +423,6 @@ describe.only('townController.createCovidComment()', () => {
     describe('if saving the comment in database fails', () => {
         let req;
         let res;
-        let returnValue;
         beforeEach(async () => {
             // setup
             req = mockReq(reqArg);
@@ -446,7 +440,7 @@ describe.only('townController.createCovidComment()', () => {
                 .rejects(new Error('Something went really wrong'));
 
             // execute
-            returnValue = await createCovidComment(req, res);
+            await createCovidComment(req, res, sinon.stub());
         });
 
         it('responds with status 500', () => {
@@ -461,10 +455,6 @@ describe.only('townController.createCovidComment()', () => {
                     error_message: 'Something went really wrong',
                 },
             });
-        });
-
-        it('returns the response object', async () => {
-            expect(returnValue).to.be.eql(res);
         });
     });
 

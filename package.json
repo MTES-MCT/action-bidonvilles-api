@@ -11,6 +11,8 @@
     "license": "AGPL-3.0-or-later",
     "private": true,
     "dependencies": {
+        "@sentry/node": "^6.2.2",
+        "@sentry/tracing": "^6.2.2",
         "@slack/webhook": "^5.0.3",
         "agenda": "^3.1.0",
         "body-parser": "^1.18.3",
@@ -22,7 +24,6 @@
         "exceljs": "^2.0.1",
         "express": "^4.16.4",
         "express-validator": "^6.6.1",
-        "forever": "^1.0.0",
         "js-yaml": "^3.13.1",
         "jsonwebtoken": "^8.4.0",
         "lodash": "^4.17.19",
@@ -39,7 +40,8 @@
         "sequelize-cli": "^5.4.0",
         "sequelize-temporal": "^1.0.6",
         "set-value": "^2.0.1",
-        "validator": "^11.1.0"
+        "validator": "^11.1.0",
+        "nodemon": "^1.18.9"
     },
     "devDependencies": {
         "chai": "^4.2.0",
@@ -51,7 +53,6 @@
         "husky": "^1.2.0",
         "lint-staged": "^8.1.0",
         "mocha": "^6.0.2",
-        "nodemon": "^1.18.9",
         "proxyquire": "^2.1.0",
         "rewiremock": "^3.13.9",
         "sequelize-test-helpers": "^1.0.10",
@@ -71,13 +72,12 @@
         ]
     },
     "scripts": {
-        "db:create": "sequelize db:migrate && sequelize db:seed:all",
-        "db:reset": "sequelize db:migrate:undo:all && sequelize db:migrate && sequelize db:seed:all",
-        "start": "forever start server/index.js",
+        "db:create": "docker exec rb_api yarn sequelize db:migrate && yarn sequelize db:seed:all",
         "dev": "nodemon server/index.js",
-        "test": "yarn mocha --recursive --require ./test/bootstrap.js --bail",
+        "test": "mocha --recursive --require ./test/bootstrap.js --bail",
         "test:unit": "yarn test --invert --grep '.*server/models.*'",
-        "test:integration": "yarn test --grep '.*server/models.*'"
+        "test:integration": "yarn test --grep '.*server/models.*'",
+        "setup": "husky install"
     },
     "_moduleAliases": {
         "#server": "./server",

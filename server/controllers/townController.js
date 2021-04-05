@@ -88,7 +88,7 @@ function serializeComment(comment) {
 
 module.exports = (models) => {
     const methods = {
-        async list(req, res) {
+        async list(req, res, next) {
             try {
                 // filters
                 const filters = [];
@@ -120,11 +120,12 @@ module.exports = (models) => {
                     await models.shantytown.findAll(req.user, filters, 'list', order),
                 );
             } catch (error) {
-                return res.status(500).send(error.message);
+                res.status(500).send(error.message);
+                return next(error);
             }
         },
 
-        async find(req, res) {
+        async find(req, res, next) {
             try {
                 const town = await models.shantytown.findOne(req.user, req.params.id);
 
@@ -139,11 +140,12 @@ module.exports = (models) => {
 
                 return res.status(200).send(town);
             } catch (error) {
-                return res.status(500).send(error.message);
+                res.status(500).send(error.message);
+                return next(error);
             }
         },
 
-        async create(req, res) {
+        async create(req, res, next) {
             try {
                 let town;
                 await sequelize.transaction(async (transaction) => {
@@ -258,16 +260,17 @@ module.exports = (models) => {
                     plans: [],
                 });
             } catch (e) {
-                return res.status(500).send({
+                res.status(500).send({
                     error: {
                         developer_message: e.message,
                         user_message: 'Une erreur est survenue dans l\'enregistrement du site en base de données',
                     },
                 });
+                return next(e);
             }
         },
 
-        async close(req, res) {
+        async close(req, res, next) {
             const {
                 status,
                 closedAt,
@@ -397,16 +400,17 @@ module.exports = (models) => {
 
                 return res.status(200).send(town);
             } catch (e) {
-                return res.status(500).send({
+                res.status(500).send({
                     error: {
                         developer_message: e.message,
                         user_message: 'Une erreur est survenue dans l\'enregistrement du site en base de données',
                     },
                 });
+                return next(e);
             }
         },
 
-        async delete(req, res) {
+        async delete(req, res, next) {
             // check if the town exists
             const town = await ShantyTowns.findOne({
                 where: {
@@ -428,16 +432,17 @@ module.exports = (models) => {
                 await town.destroy();
                 return res.status(200).send({});
             } catch (e) {
-                return res.status(500).send({
+                res.status(500).send({
                     error: {
                         developer_message: e.message,
                         user_message: 'Une erreur est survenue pendant la suppression du site de la base de données',
                     },
                 });
+                return next(e);
             }
         },
 
-        async addComment(req, res) {
+        async addComment(req, res, next) {
             const {
                 description,
                 private: privateField,
@@ -452,12 +457,13 @@ module.exports = (models) => {
                     },
                 });
             } catch (error) {
-                return res.status(500).send({
+                res.status(500).send({
                     error: {
                         developer_message: 'Failed to retrieve the shantytown',
                         user_message: 'Impossible de retrouver le site concerné en base de données',
                     },
                 });
+                return next(error);
             }
 
             if (shantytown === null) {
@@ -526,16 +532,17 @@ module.exports = (models) => {
                     comments: rawComments.map(serializeComment),
                 });
             } catch (e) {
-                return res.status(500).send({
+                res.status(500).send({
                     error: {
                         developer_message: e.message,
                         user_message: 'Une erreur est survenue dans l\'enregistrement de l\'étape en base de données',
                     },
                 });
+                return next(e);
             }
         },
 
-        async updateComment(req, res) {
+        async updateComment(req, res, next) {
             let comment;
             try {
                 comment = await ShantyTownComments.findOne({
@@ -544,12 +551,13 @@ module.exports = (models) => {
                     },
                 });
             } catch (error) {
-                return res.status(500).send({
+                res.status(500).send({
                     error: {
                         developer_message: 'Failed to retrieve the comment',
                         user_message: 'Impossible de retrouver le commentaire à modifier en base de données',
                     },
                 });
+                return next(error);
             }
 
             if (comment.createdBy !== req.user.id && !hasPermission(req.user, 'moderate', 'shantytown_comment')) {
@@ -602,27 +610,29 @@ module.exports = (models) => {
                     comments: rawComments.map(serializeComment),
                 });
             } catch (error) {
-                return res.status(500).send({
+                res.status(500).send({
                     error: {
                         developer_message: 'Failed to update the comment',
                         user_message: 'Impossible de modifier le commentaire',
                     },
                 });
+                return next(error);
             }
         },
 
-        async deleteComment(req, res) {
+        async deleteComment(req, res, next) {
             let town;
 
             try {
                 town = await models.shantytown.findOne(req.user, req.params.id);
             } catch (error) {
-                return res.status(500).send({
+                res.status(500).send({
                     error: {
                         developer_message: 'Failed to retrieve the comment',
                         user_message: 'Impossible de retrouver le commentaire à supprimer en base de données',
                     },
                 });
+                return next(error);
             }
 
             const comment = town.comments.regular.find(({ id }) => id === parseInt(req.params.commentId, 10));
@@ -639,12 +649,13 @@ module.exports = (models) => {
             try {
                 author = await models.user.findOne(comment.createdBy.id);
             } catch (error) {
-                return res.status(500).send({
+                res.status(500).send({
                     error: {
                         developer_message: 'Failed to retrieve the author of the comment',
                         user_message: 'Une erreur est survenue lors de la lecture en base de données',
                     },
                 });
+                return next(error);
             }
 
             if (author.id !== req.user.id && !hasPermission(req.user, 'moderate', 'shantytown_comment')) {
@@ -676,12 +687,13 @@ module.exports = (models) => {
                     },
                 );
             } catch (error) {
-                return res.status(500).send({
+                res.status(500).send({
                     error: {
                         developer_message: 'Failed to delete the comment',
                         user_message: 'Impossible de supprimer le commentaire',
                     },
                 });
+                return next(error);
             }
 
             try {
@@ -695,7 +707,7 @@ module.exports = (models) => {
             });
         },
 
-        async export(req, res) {
+        async export(req, res, next) {
             function isLocationAllowed(user, location) {
                 if (user.permissions.shantytown.export.geographic_level === 'nation') {
                     return true;
@@ -727,7 +739,7 @@ module.exports = (models) => {
             try {
                 location = await models.geo.getLocation(req.query.locationType, req.query.locationCode);
             } catch (error) {
-                return res.status(500).send({
+                res.status(500).send({
                     success: false,
                     response: {
                         error: {
@@ -736,6 +748,7 @@ module.exports = (models) => {
                         },
                     },
                 });
+                next(error);
             }
 
             if (!isLocationAllowed(req.user, location)) {
@@ -777,7 +790,7 @@ module.exports = (models) => {
                     'export',
                 );
             } catch (error) {
-                return res.status(500).send({
+                res.status(500).send({
                     success: false,
                     response: {
                         error: {
@@ -786,10 +799,11 @@ module.exports = (models) => {
                         },
                     },
                 });
+                return next(error);
             }
 
             if (shantytowns.length === 0) {
-                return res.status(500).send({
+                res.status(500).send({
                     success: false,
                     response: {
                         error: {
@@ -798,13 +812,14 @@ module.exports = (models) => {
                         },
                     },
                 });
+                return next(new Error('no shantytown to be exported'));
             }
 
             let closingSolutions;
             try {
                 closingSolutions = await models.closingSolution.findAll();
             } catch (error) {
-                return res.status(500).send({
+                res.status(500).send({
                     success: false,
                     response: {
                         error: {
@@ -813,6 +828,7 @@ module.exports = (models) => {
                         },
                     },
                 });
+                return next(error);
             }
 
             const COLUMN_WIDTHS = {
@@ -1699,7 +1715,7 @@ module.exports = (models) => {
             try {
                 await Stats_Exports.create(stat);
             } catch (error) {
-                return res.status(500).send({
+                res.status(500).send({
                     success: false,
                     response: {
                         error: {
@@ -1708,12 +1724,13 @@ module.exports = (models) => {
                         },
                     },
                 });
+                return next(error);
             }
 
             return res.end(buffer);
         },
 
-        async createCovidComment(req, res) {
+        async createCovidComment(req, res, next) {
             // ensure town's existence
             let shantytown;
             try {
@@ -1726,13 +1743,14 @@ module.exports = (models) => {
                     });
                 }
             } catch (error) {
-                return res.status(500).send({
+                res.status(500).send({
                     user_message: `Une erreur est survenue lors de la vérification de l'existence du site #${req.params.id} en base de données`,
                     developer_message: `Failed fetching shantytown #${req.params.id}`,
                     details: {
                         error_message: error.message,
                     },
                 });
+                return next(error);
             }
 
             // sanitize input
@@ -1804,13 +1822,14 @@ module.exports = (models) => {
             try {
                 await models.shantytown.createCovidComment(req.user, req.params.id, data);
             } catch (error) {
-                return res.status(500).send({
+                res.status(500).send({
                     user_message: 'Une erreur est survenue lors de l\'écriture du commentaire en base de données',
                     developer_message: `Failed writing a covid comment for shantytown #${req.params.id}`,
                     details: {
                         error_message: error.message,
                     },
                 });
+                return next(error);
             }
 
             // fetch refreshed comments

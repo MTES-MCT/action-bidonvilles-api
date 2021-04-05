@@ -63,6 +63,8 @@ module.exports = (app) => {
         middlewares.auth.authenticate,
         middlewares.charte.check,
         middlewares.appVersion.sync,
+        validators.editUser,
+        middlewares.validation,
         controllers.user.edit,
     );
     app.get(
@@ -100,6 +102,12 @@ module.exports = (app) => {
         validators.createContact,
         middlewares.validation,
         controllers.contact.contact,
+    );
+    app.post(
+        '/invite',
+        validators.invite,
+        middlewares.validation,
+        controllers.invite.invite,
     );
     app.post(
         '/users/:id/sendActivationLink',
@@ -495,9 +503,10 @@ module.exports = (app) => {
             try {
                 middlewares.auth.checkPermissions(['stats.read'], req, res, next, false);
             } catch (error) {
-                return res.status(500).send({
+                res.status(500).send({
                     success: false,
                 });
+                return next(error);
             }
 
             await middlewares.appVersion.sync(req, res, next, false);

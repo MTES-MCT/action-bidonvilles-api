@@ -410,6 +410,15 @@ function serializeShantytown(town, permission) {
         changelog: [],
         createdAt: town.createdAt.getTime() / 1000,
         updatedAt: town.updatedAt !== null ? (town.updatedAt.getTime() / 1000) : null,
+        createdBy: {
+            id: town.createdById,
+            first_name: town.createdByFirstName,
+            last_name: town.createdByLastName,
+            position: town.createdByPosition,
+            organization: {
+                id: town.createdByOrganization,
+            },
+        },
         updatedBy: {
             id: town.updatedById,
             first_name: town.updatedByFirstName,
@@ -538,11 +547,16 @@ const SQL = {
         'shantytowns.fire_prevention_site_accessible': 'firePreventionSiteAccessible',
         'shantytowns.fire_prevention_devices': 'firePreventionDevices',
         'shantytowns.fire_prevention_comments': 'firePreventionComments',
-        'users.user_id': 'updatedById',
-        'users.first_name': 'updatedByFirstName',
-        'users.last_name': 'updatedByLastName',
-        'users.position': 'updatedByPosition',
-        'organizations.organization_id': 'updatedByOrganization',
+        'creators.user_id': 'createdById',
+        'creators.first_name': 'createdByFirstName',
+        'creators.last_name': 'createdByLastName',
+        'creators.position': 'createdByPosition',
+        'creators_organizations.organization_id': 'createdByOrganization',
+        'updators.user_id': 'updatedById',
+        'updators.first_name': 'updatedByFirstName',
+        'updators.last_name': 'updatedByLastName',
+        'updators.position': 'updatedByPosition',
+        'updators_organizations.organization_id': 'updatedByOrganization',
         'cities.code': 'cityCode',
         'cities.name': 'cityName',
         'cities.fk_main': 'cityMain',
@@ -568,8 +582,10 @@ const SQL = {
         { table: 'epci', on: 'cities.fk_epci = epci.code' },
         { table: 'departements', on: 'cities.fk_departement = departements.code' },
         { table: 'regions', on: 'departements.fk_region = regions.code' },
-        { table: 'users', on: 'shantytowns.updated_by = users.user_id' },
-        { table: 'organizations', on: 'users.fk_organization = organizations.organization_id' },
+        { table: 'users AS creators', on: 'shantytowns.created_by = creators.user_id' },
+        { table: 'organizations AS creators_organizations', on: 'creators.fk_organization = creators_organizations.organization_id' },
+        { table: 'users AS updators', on: 'shantytowns.updated_by = updators.user_id' },
+        { table: 'organizations AS updators_organizations ', on: 'updators.fk_organization = updators_organizations.organization_id' },
     ],
 };
 
@@ -699,7 +715,6 @@ module.exports = (database) => {
         if (towns.length === 0) {
             return [];
         }
-
         const serializedTowns = towns.reduce(
             (object, town) => {
                 /* eslint-disable no-param-reassign */

@@ -170,7 +170,10 @@ module.exports = {
      * @param {User} user
      */
     async handleAccessActivated(user) {
-        await sendEmail.toAdmin.accessActivated(user.user_access.sent_by, user);
+        await Promise.all([
+            sendEmail.toAdmin.accessActivated(user.user_access.sent_by, user),
+            sendEmail.toUser.accessActivated(user),
+        ]);
 
         await Promise.all([
             cancelEvent.accessPending(user.user_access.id),

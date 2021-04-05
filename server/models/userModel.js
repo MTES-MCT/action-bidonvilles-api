@@ -746,7 +746,7 @@ module.exports = (database) => {
                     :position,
                     :access_request_message,
                     :salt,
-                    '',
+                    :phone,
                     'new',
                     :created_by
                 )

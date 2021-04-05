@@ -1,5 +1,5 @@
 module.exports = models => ({
-    async list(req, res) {
+    async list(req, res, next) {
         try {
             let permission;
             if (req.filters.covid === '1') {
@@ -64,12 +64,13 @@ module.exports = models => ({
                 response: results,
             });
         } catch (error) {
-            return res.status(500).send({
+            res.status(500).send({
                 error: {
                     developer_message: 'SQL query failed',
                     user_message: 'Une erreur est survenue dans la lecture en base de données',
                 },
             });
+            return next(error);
         }
     },
 });

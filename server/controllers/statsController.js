@@ -23,7 +23,6 @@ module.exports = models => ({
             models.stats.numberOfActiveUsers(),
             models.stats.numberOfNewUsersPerMonth(),
             models.stats.numberOfCollaboratorAndAssociationUsers(),
-            models.stats.numberOfCollaboratorAndAssociationOrganizations(),
             models.stats.numberOfShantytownOperations(),
             Stats_Exports.count(),
             models.stats.numberOfComments(),
@@ -55,9 +54,13 @@ module.exports = models => ({
     },
 
     public: async (req, res) => {
+        // date used for numberOfUsersPerMonth & numberOfUsersAtMonth
+        const startDate = '2020-06-01';
+
         const [
             numberOfDepartements,
             numberOfActiveUsers,
+            numberOfUsersOnJune2020,
             numberOfNewUsersPerMonth,
             numberOfCollaboratorAndAssociationUsers,
             numberOfCollaboratorAndAssociationOrganizations,
@@ -71,7 +74,8 @@ module.exports = models => ({
         ] = await Promise.all([
             models.stats.numberOfDepartements(),
             models.stats.numberOfActiveUsers(),
-            models.stats.numberOfNewUsersPerMonth(),
+            models.stats.numberOfUsersAtMonth(startDate),
+            models.stats.numberOfNewUsersPerMonth(startDate),
             models.stats.numberOfCollaboratorAndAssociationUsers(),
             models.stats.numberOfCollaboratorAndAssociationOrganizations(),
             models.stats.numberOfShantytownOperations(),
@@ -89,6 +93,7 @@ module.exports = models => ({
                 statistics: {
                     numberOfDepartements,
                     numberOfActiveUsers,
+                    numberOfUsersOnJune2020,
                     numberOfNewUsersPerMonth,
                     numberOfCollaboratorAndAssociationUsers,
                     numberOfCollaboratorAndAssociationOrganizations,
@@ -105,7 +110,7 @@ module.exports = models => ({
         });
     },
 
-    async directoryView(req, res) {
+    async directoryView(req, res, next) {
         const organizationId = parseInt(req.body.organization, 10);
 
         try {
@@ -123,7 +128,7 @@ module.exports = models => ({
                 });
             }
         } catch (error) {
-            return res.status(500).send({
+            res.status(500).send({
                 success: false,
                 response: {
                     error: {
@@ -132,6 +137,7 @@ module.exports = models => ({
                     },
                 },
             });
+            return next(error);
         }
 
         try {
@@ -141,7 +147,7 @@ module.exports = models => ({
                 created_at: new Date(),
             });
         } catch (error) {
-            return res.status(500).send({
+            res.status(500).send({
                 success: false,
                 response: {
                     error: {
@@ -150,6 +156,7 @@ module.exports = models => ({
                     },
                 },
             });
+            return next(error);
         }
 
         return res.status(201).send({});

@@ -26,14 +26,6 @@ MAIL_TEMPLATES.new_password = require('#server/mails/new_password');
 const { auth: authConfig } = require('#server/config');
 const { sequelize } = require('#db/models');
 
-function trim(str) {
-    if (typeof str !== 'string') {
-        return null;
-    }
-
-    return str.replace(/^\s*|\s*$/g, '');
-}
-
 function fromOptionToPermissions(user, option, dataJustice) {
     switch (option.id) {
         case 'close_shantytown':
@@ -216,57 +208,29 @@ module.exports = models => ({
     /**
          * Updates some data about the current user
          */
-    async edit(req, res) {
-        // find the user
+    async edit(req, res, next) {
         const { id: userId } = req.user;
+        const {
+            first_name: firstName, last_name: lastName, email, phone,
+        } = req.body;
         const user = await models.user.findOne(userId, { auth: true });
 
         if (user === null) {
-            return res.status(500).send({
+            res.status(500).send({
                 error: {
                     user_message: 'Impossible de trouver vos informations en bases de données.',
                     developer_message: `User #${userId} does not exist`,
                 },
             });
-        }
-
-        // validate the input
-        const errors = {};
-
-        // first name
-        const firstName = trim(req.body.first_name);
-        if (firstName === null || firstName === '') {
-            errors.first_name = ['Le prénom est obligatoire '];
-        }
-
-        // last name
-        const lastName = trim(req.body.last_name);
-        if (lastName === null || lastName === '') {
-            errors.last_name = ['Le nom de famille est obligatoire '];
-        }
-
-        // password
-        if (req.body.password) {
-            const passwordErrors = checkPassword(req.body.password);
-            if (passwordErrors.length > 0) {
-                errors.password = passwordErrors;
-            }
-        }
-
-        if (Object.keys(errors).length > 0) {
-            return res.status(400).send({
-                error: {
-                    developer_message: 'The submitted data contains errors',
-                    user_message: 'Certaines données sont invalides',
-                    fields: errors,
-                },
-            });
+            return next(new Error(`User #${userId} does not exist`));
         }
 
         // actually update the user
         const data = {
             first_name: firstName,
             last_name: lastName,
+            email,
+            phone,
         };
 
         if (req.body.password) {
@@ -283,12 +247,13 @@ module.exports = models => ({
                 departement: user.departement,
             });
         } catch (error) {
-            return res.status(500).send({
+            res.status(500).send({
                 error: {
                     user_message: 'Une erreur est survenue dans l\'écriture de vos informations en base de données.',
                     developer_message: error.message,
                 },
             });
+            return next(error);
         }
     },
 
@@ -299,6 +264,7 @@ module.exports = models => ({
                 last_name: req.body.last_name,
                 first_name: req.body.first_name,
                 email: req.body.email,
+                phone: req.body.phone,
                 organization: req.body.organization_full ? req.body.organization_full.id : null,
                 new_association: req.body.new_association === true,
                 new_association_name: req.body.new_association_name || null,
@@ -317,7 +283,7 @@ module.exports = models => ({
         return res.status(200).send(result);
     },
 
-    async setDefaultExport(req, res) {
+    async setDefaultExport(req, res, next) {
         const { export: exportValue } = req.body;
 
         if (exportValue === undefined) {
@@ -335,13 +301,14 @@ module.exports = models => ({
                 defaultExport: exportValue,
             });
         } catch (error) {
-            return res.status(500).send({
+            res.status(500).send({
                 success: false,
                 error: {
                     user_message: 'La sauvegarde de vos préférences a échoué',
                     developer_message: `Failed to store the new default-export into database: ${error.message}`,
                 },
             });
+            return next(error);
         }
 
         return res.status(200).send({
@@ -449,17 +416,18 @@ module.exports = models => ({
         });
     },
 
-    async sendActivationLink(req, res) {
+    async sendActivationLink(req, res, next) {
         let user;
         try {
             user = await models.user.findOne(req.params.id, { extended: true }, req.user, 'activate');
         } catch (error) {
-            return res.status(500).send({
+            res.status(500).send({
                 error: {
                     user_message: 'Une erreur est survenue lors de la lecture en base de données',
                     developer_message: error.message,
                 },
             });
+            return next(error);
         }
 
         if (user === null) {
@@ -489,12 +457,13 @@ module.exports = models => ({
             try {
                 await models.organization.setCustomPermissions(user.organization.id, additionalPermissions);
             } catch (error) {
-                return res.status(500).send({
+                res.status(500).send({
                     error: {
                         user_message: 'Une erreur est survenue lors de la sauvegarde des options sélectionnées',
                         developer_message: error.message,
                     },
                 });
+                return next(error);
             }
         }
 
@@ -528,28 +497,30 @@ module.exports = models => ({
                 });
             });
         } catch (error) {
-            return res.status(500).send({
+            res.status(500).send({
                 error: {
                     user_message: 'Une erreur est survenue lors de l\'envoi du lien d\'activation',
                     developer_message: error.message,
                 },
             });
+            return next(error);
         }
 
         return res.status(200).send({});
     },
 
-    async denyAccess(req, res) {
+    async denyAccess(req, res, next) {
         let user;
         try {
             user = await models.user.findOne(req.params.id, undefined, req.user, 'activate');
         } catch (error) {
-            return res.status(500).send({
+            res.status(500).send({
                 error: {
                     user_message: 'Une erreur est survenue lors de la lecture en base de données',
                     developer_message: error.message,
                 },
             });
+            return next(error);
         }
 
         if (user === null) {
@@ -573,29 +544,31 @@ module.exports = models => ({
         try {
             await accessRequestService.handleAccessRequestDenied(user, req.user);
         } catch (error) {
-            return res.status(500).send({
+            res.status(500).send({
                 error: {
                     user_message: 'Une erreur est survenue lors de l\'envoi du mail',
                     developer_message: error.message,
                 },
             });
+            return next(error);
         }
 
         try {
             await models.user.delete(req.params.id);
         } catch (error) {
-            return res.status(500).send({
+            res.status(500).send({
                 error: {
                     user_message: 'Une erreur est survenue lors de la suppression du compte de la base de données',
                     developer_message: error.message,
                 },
             });
+            return next(error);
         }
 
         return res.status(200).send({});
     },
 
-    async activate(req, res) {
+    async activate(req, res, next) {
         if (!req.body.token) {
             return res.status(400).send({
                 error: {
@@ -688,12 +661,13 @@ module.exports = models => ({
                 }
             });
         } catch (error) {
-            return res.status(500).send({
+            res.status(500).send({
                 error: {
                     user_message: 'Une erreur est survenue lors de l\'écriture en base de données',
                     developer_message: 'Failed updating the user',
                 },
             });
+            return next(error);
         }
 
         // Send a slack alert, if it fails, do nothing
@@ -712,7 +686,7 @@ module.exports = models => ({
         return res.status(200).send({});
     },
 
-    async setNewPassword(req, res) {
+    async setNewPassword(req, res, next) {
         if (!req.body.token) {
             return res.status(400).send({
                 error: {
@@ -780,29 +754,31 @@ module.exports = models => ({
                 password: hashPassword(req.body.password, user.salt),
             });
         } catch (error) {
-            return res.status(500).send({
+            res.status(500).send({
                 error: {
                     user_message: 'Une erreur est survenue lors de l\'écriture en base de données',
                     developer_message: 'Failed updating the user',
                 },
             });
+            return next(error);
         }
 
         return res.status(200).send({});
     },
 
-    async upgrade(req, res) {
+    async upgrade(req, res, next) {
         // ensure the user exists and actually needs an upgrade
         let user;
         try {
             user = await models.user.findOne(req.params.id, { auth: true });
         } catch (error) {
-            return res.status(500).send({
+            res.status(500).send({
                 error: {
                     user_message: 'Une erreur est surenue lors de la lecture de la base de données',
                     developer_message: error.message,
                 },
             });
+            return next(error);
         }
 
         if (user === null) {
@@ -852,28 +828,30 @@ module.exports = models => ({
                 password: hashPassword(sanitizedData.password, user.salt),
             }));
         } catch (error) {
-            return res.status(500).send({
+            res.status(500).send({
                 error: {
                     user_message: 'Une erreur est survenue lors de l\'écriture en base de données',
                     developer_message: error.message,
                 },
             });
+            next(error);
         }
 
         return res.status(200).send({});
     },
 
-    async remove(req, res) {
+    async remove(req, res, next) {
         let user;
         try {
             user = await models.user.findOne(req.params.id, undefined, req.user, 'deactivate');
         } catch (error) {
-            return res.status(500).send({
+            res.status(500).send({
                 error: {
                     user_message: 'Une erreur est survenue lors de la lecture en base de données',
                     developer_message: error.message,
                 },
             });
+            return next(error);
         }
 
         if (user === null) {
@@ -888,18 +866,19 @@ module.exports = models => ({
         try {
             await models.user.deactivate(req.params.id);
         } catch (error) {
-            return res.status(500).send({
+            res.status(500).send({
                 error: {
                     user_message: 'Une erreur est survenue lors de la suppression du compte de la base de données',
                     developer_message: error.message,
                 },
             });
+            next(error);
         }
 
         return res.status(200).send({});
     },
 
-    async requestNewPassword(req, res) {
+    async requestNewPassword(req, res, next) {
         const data = { email: req.body.email };
         const fields = [
             { key: 'email', sanitizer: 'string', validatorOptions: [false] },
@@ -920,12 +899,13 @@ module.exports = models => ({
         try {
             user = await models.user.findOneByEmail(sanitizedData.email);
         } catch (error) {
-            return res.status(500).send({
+            res.status(500).send({
                 error: {
                     user_message: 'Une erreur est survenue lors de la lecture en base de données',
                     developer_messaage: error.message,
                 },
             });
+            return next(error);
         }
 
         if (user !== null) {
@@ -933,19 +913,20 @@ module.exports = models => ({
                 const resetLink = getPasswordResetLink(user);
                 await sendMail(user, MAIL_TEMPLATES.new_password(user, resetLink));
             } catch (error) {
-                return res.status(500).send({
+                res.status(500).send({
                     error: {
                         user_message: 'Une erreur est survenue lors de l\'envoi du mail',
                         developer_message: error.message,
                     },
                 });
+                return next(error);
             }
         }
 
         return res.status(200).send({});
     },
 
-    async setLastChangelog(req, res) {
+    async setLastChangelog(req, res, next) {
         const changelog = semver.valid(req.body.version);
         if (changelog === null) {
             return res.status(400).send({
@@ -964,17 +945,18 @@ module.exports = models => ({
                 last_changelog: changelog,
             });
         } catch (error) {
-            return res.status(500).send({
+            res.status(500).send({
                 error: {
                     user_message: 'Une erreur est survenue lors de l\'écriture en base de données',
                 },
             });
+            return next(error);
         }
 
         return res.status(200).send({});
     },
 
-    async acceptCharte(req, res) {
+    async acceptCharte(req, res, next) {
         if (parseInt(req.params.id, 10) !== req.user.id) {
             return res.status(400).send({
                 user_message: 'Vous ne pouvez pas accepter la charte pour un autre utilisateur que vous-même',
@@ -1000,10 +982,11 @@ module.exports = models => ({
                     charte_engagement_signee: req.body.version_de_charte,
                 });
             } catch (error) {
-                return res.status(500).send({
+                res.status(500).send({
                     user_message: 'Une erreur est survenue lors de la mise à jour de la base de données',
                     developer_message: error.message,
                 });
+                return next(error);
             }
         }
 
