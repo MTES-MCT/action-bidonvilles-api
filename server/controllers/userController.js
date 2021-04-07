@@ -264,7 +264,7 @@ module.exports = models => ({
                 last_name: req.body.last_name,
                 first_name: req.body.first_name,
                 email: req.body.email,
-                phone: req.body.phone,
+                phone: req.body.phone || null,
                 organization: req.body.organization_full ? req.body.organization_full.id : null,
                 new_association: req.body.new_association === true,
                 new_association_name: req.body.new_association_name || null,
