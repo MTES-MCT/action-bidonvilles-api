@@ -2,9 +2,18 @@
     "compilerOptions": {
         "baseUrl": ".",
         "paths": {
-            "#server/*": [ "./server/*" ],
-            "#db/*": [ "./db/*" ],
-            "#fixtures/*": [ "./test/fixtures/*" ]
+            "#server/*": [
+                "./server/*"
+            ],
+            "#db/*": [
+                "./db/*"
+            ],
+            "#fixtures/*": [
+                "./test/fixtures/*"
+            ],
+            "#test/*": [
+                "./test/*"
+            ],
         }
     },
     "exclude": [
