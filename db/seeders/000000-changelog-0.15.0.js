@@ -2,7 +2,7 @@ const { backUrl } = require('../../server/config');
 
 const changelog = {
     app_version: '0.15.0',
-    date: new Date(2021, 1, 1),
+    date: new Date(2021, 3, 5),
     items: [
         {
             title: 'Acteur de terrain, valorisez votre présence sur les sites',
