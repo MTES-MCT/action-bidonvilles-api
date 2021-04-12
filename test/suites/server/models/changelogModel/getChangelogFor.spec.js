@@ -37,21 +37,21 @@ describe.only('ChangelogModel', () => {
             expect(changelog).to.be.eql([
                 {
                     app_version: '0.0.0',
-                    date: 'Janvier 2020',
+                    date: '01 Janvier 2020',
                     title: 'Titre 1',
                     description: '<p>Description <strong>importante</strong></p>',
                     image: 'https://api.resorption-bidonvilles.localhost/assets/changelog/0.0.0/item_1.jpg',
                 },
                 {
                     app_version: '0.0.0',
-                    date: 'Janvier 2020',
+                    date: '01 Janvier 2020',
                     title: 'Titre 2',
                     description: '<p>Description <strong>importante</strong></p>',
                     image: 'https://api.resorption-bidonvilles.localhost/assets/changelog/0.0.0/item_1.jpg',
                 },
                 {
                     app_version: '0.0.1',
-                    date: 'Janvier 2020',
+                    date: '01 Janvier 2020',
                     title: 'Titre',
                     description: '<p>Description <strong>importante</strong></p>',
                     image: 'https://api.resorption-bidonvilles.localhost/assets/changelog/0.0.0/item_1.jpg',

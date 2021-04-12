@@ -12,7 +12,7 @@ function serializeChangelog(changelogItem) {
 
     return {
         app_version: changelogItem.app_version,
-        date: toFormat(new Date(year, parseInt(month, 10) - 1, date), 'M Y'),
+        date: toFormat(new Date(year, parseInt(month, 10) - 1, date), 'd M Y'),
         title: changelogItem.title,
         description: changelogItem.description,
         image: changelogItem.image,
