@@ -50,10 +50,14 @@ module.exports = database => ({
         return rows[0].total;
     },
 
-    // TODO: Not sure how to filter on departement
-    numberOfPlans: async () => {
+    numberOfPlans: async (departement) => {
         const rows = await database.query(
-            'SELECT COUNT(*) AS total FROM plans2',
+            `
+            SELECT COUNT(*) AS total 
+            FROM plans2
+            LEFT JOIN plan_departements on plan_departements.fk_plan = plans2.plan_id
+            ${departement ? `WHERE fk_departement = '${departement}'` : ''}
+            `,
             {
                 type: database.QueryTypes.SELECT,
             },
@@ -75,7 +79,7 @@ module.exports = database => ({
             },
         );
 
-        return rows[0].total;
+        return rows[0].count;
     },
 
 
@@ -523,6 +527,88 @@ module.exports = database => ({
         );
 
         return rows[0];
+    },
+
+    numberOfCreditsPerYear: async (departement) => {
+        const rows = await database.query(
+            `
+                SELECT 
+                    SUM(amount) as total, 
+                    EXTRACT(YEAR FROM finance_rows.created_at) as year, 
+                    finance_rows.fk_finance_type as type
+                FROM finance_rows
+                LEFT JOIN finances on finance_rows.fk_finance = finances.finance_id
+                LEFT JOIN plans2 on finances.fk_plan = plans2.plan_id
+                LEFT JOIN plan_departements on plan_departements.fk_plan = plans2.plan_id
+                ${departement ? `WHERE fk_departement = '${departement}'` : ''}
+                GROUP BY finance_rows.created_at, type
+            `,
+            {
+                type: database.QueryTypes.SELECT,
+            },
+        );
+
+        // transforms rows in a mapping { 2020: {[type]: total}}
+        return rows.reduce((acc, obj) => ({
+            ...acc,
+            [obj.year]: {
+                ...(acc[obj.year] || {}),
+                [obj.type]: obj.total,
+            },
+        }), {});
+    },
+
+    averageCompletionPercentage: async (departement) => {
+        const rows = await database.query(
+            `SELECT
+                AVG(pourcentage_completion)
+            FROM
+            (SELECT
+                c.fk_departement,
+                ((CASE WHEN (SELECT regexp_matches(s.address, '^(.+) [0-9]+ [^,]+,? [0-9]+,? [^, ]+(,.+)?$'))[1] IS NOT NULL THEN 1 ELSE 0 END)
+                +
+                (CASE WHEN ft.label <> 'Inconnu' THEN 1 ELSE 0 END)
+                +
+                (CASE WHEN ot.label <> 'Inconnu' THEN 1 ELSE 0 END)
+                +
+                (CASE WHEN s.census_status IS NOT NULL THEN 1 ELSE 0 END)
+                +
+                (CASE WHEN s.population_total IS NOT NULL THEN 1 ELSE 0 END)
+                +
+                (CASE WHEN s.population_couples IS NOT NULL THEN 1 ELSE 0 END)
+                +
+                (CASE WHEN s.population_minors IS NOT NULL THEN 1 ELSE 0 END)
+                +
+                (CASE WHEN s.population_total IS NOT NULL AND s.population_total >= 10 AND (SELECT COUNT(*) FROM shantytown_origins WHERE fk_shantytown = s.shantytown_id) > 0 THEN 1 ELSE 0 END)
+                +
+                (CASE WHEN et.label <> 'Inconnu' THEN 1 ELSE 0 END)
+                +
+                (CASE WHEN s.access_to_water IS NOT NULL THEN 1 ELSE 0 END)
+                +
+                (CASE WHEN s.access_to_sanitary IS NOT NULL THEN 1 ELSE 0 END)
+                +
+                (CASE WHEN s.trash_evacuation IS NOT NULL THEN 1 ELSE 0 END))::FLOAT / 11.0 AS pourcentage_completion
+            FROM
+                shantytowns s
+            LEFT JOIN
+                cities c ON s.fk_city = c.code
+            LEFT JOIN
+                field_types ft ON s.fk_field_type = ft.field_type_id
+            LEFT JOIN
+                owner_types ot ON s.fk_owner_type = ot.owner_type_id
+            LEFT JOIN
+                electricity_types et ON s.fk_electricity_type = et.electricity_type_id
+            WHERE
+                s.closed_at IS NULL
+                ${departement ? `AND c.fk_departement = '${departement}'` : ''}
+            ) AS tmp
+            `,
+            {
+                type: database.QueryTypes.SELECT,
+            },
+        );
+
+        return rows[0].avg;
     },
 
     numberOfReviewedComments() {
