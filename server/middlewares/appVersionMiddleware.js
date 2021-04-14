@@ -28,6 +28,7 @@ module.exports = (models) => {
             try {
                 await models.user.update(req.user.id, {
                     last_version: version,
+                    last_changelog: !req.user.last_changelog ? version : undefined,
                 });
                 req.user.last_version = version;
             } catch (error) {

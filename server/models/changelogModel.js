@@ -7,32 +7,22 @@ const { toFormat } = require('#server/utils/date');
  *
  * @returns {Object}
  */
-function serializeChangelog(changelog) {
-    return changelog.reduce((acc, item) => {
-        let newAcc = acc;
-        if (acc === null) {
-            const [year, month, date] = item.date.split('-');
+function serializeChangelog(changelogItem) {
+    const [year, month, date] = changelogItem.date.split('-');
 
-            newAcc = {
-                app_version: item.app_version,
-                date: toFormat(new Date(year, parseInt(month, 10) - 1, date), 'M Y'),
-                items: [],
-            };
-        }
-
-        newAcc.items.push({
-            title: item.title,
-            description: item.description,
-            image: item.image,
-        });
-        return newAcc;
-    }, null);
+    return {
+        app_version: changelogItem.app_version,
+        date: toFormat(new Date(year, parseInt(month, 10) - 1, date), 'd M Y'),
+        title: changelogItem.title,
+        description: changelogItem.description,
+        image: changelogItem.image,
+    };
 }
 
 module.exports = database => ({
-    getLastChangelogFor: async (user) => {
+    getChangelogFor: async (user) => {
         if (user.last_changelog === null || user.last_version === null) {
-            return null;
+            return [];
         }
 
         const changelog = await database.query(
@@ -48,7 +38,7 @@ module.exports = database => ({
                 regexp_split_to_array(changelogs.app_version, '\\.')::int[] > regexp_split_to_array(:minVersion, '\\.')::int[]
                 AND
                 regexp_split_to_array(changelogs.app_version, '\\.')::int[] <= regexp_split_to_array(:maxVersion, '\\.')::int[]
-            ORDER BY regexp_split_to_array(changelogs.app_version, '\\.')::int[] DESC, items.position ASC`,
+            ORDER BY regexp_split_to_array(changelogs.app_version, '\\.')::int[] ASC, items.position ASC`,
             {
                 type: database.QueryTypes.SELECT,
                 replacements: {
@@ -59,10 +49,10 @@ module.exports = database => ({
         );
 
         if (changelog.length === 0) {
-            return null;
+            return [];
         }
 
-        return serializeChangelog(changelog.filter(({ app_version: version }) => version === changelog[0].app_version));
+        return changelog.map(serializeChangelog);
     },
 
     getLastChangelogVersion: async () => {

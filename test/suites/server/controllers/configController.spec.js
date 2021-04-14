@@ -38,7 +38,7 @@ const mockModels = {
         findOne: sinon.stub(),
     },
     changelog: {
-        getLastChangelogFor: sinon.stub(),
+        getChangelogFor: sinon.stub(),
     },
 };
 

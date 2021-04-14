@@ -31,6 +31,7 @@
         "module-alias": "^2.2.0",
         "neat-csv": "^4.0.0",
         "node-mailjet": "^3.3.1",
+        "nodemon": "^1.18.9",
         "pg": "^8.0",
         "pg-hstore": "^2.3.2",
         "request": "^2.88.0",
@@ -38,10 +39,10 @@
         "semver": "^6.3.0",
         "sequelize": "^5.0.0",
         "sequelize-cli": "^5.4.0",
+        "sequelize-mock": "^0.10.2",
         "sequelize-temporal": "^1.0.6",
         "set-value": "^2.0.1",
-        "validator": "^11.1.0",
-        "nodemon": "^1.18.9"
+        "validator": "^11.1.0"
     },
     "devDependencies": {
         "chai": "^4.2.0",
@@ -82,6 +83,7 @@
     "_moduleAliases": {
         "#server": "./server",
         "#db": "./db",
-        "#fixtures": "./test/fixtures"
+        "#fixtures": "./test/fixtures",
+        "#test": "./test"
     }
 }
