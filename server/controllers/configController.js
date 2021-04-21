@@ -18,7 +18,7 @@ module.exports = models => ({
             electricity_types: models.electricityType.findAll(),
             permissions_description: permissionsDescription,
             user: models.user.findOne(req.user.id, { extended: true }),
-            changelog: models.changelog.getLastChangelogFor(req.user),
+            changelog: models.changelog.getChangelogFor(req.user),
             version_charte_engagement: models.charteEngagement.getLatest(),
             actor_themes: themes,
         };
