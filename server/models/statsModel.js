@@ -1,5 +1,24 @@
 const { toFormat } = require('#server/utils/date');
 
+// Convert rows which contains month/year to a mapping
+// 2020-01-01 => x, 2020-01-02 => y
+function convertToDateMapping(rows, startDate) {
+    const now = new Date();
+    const result = [];
+    const monthsDiff = (now.getMonth() - startDate.getMonth()) + (now.getFullYear() - startDate.getFullYear()) * 12;
+
+    for (let i = 1; i <= monthsDiff; i += 1) {
+        const date = new Date(now.getFullYear(), now.getMonth() - i, 1);
+        const row = rows.find(({ month, year }) => parseInt(month, 10) === date.getMonth() + 1 && year === date.getFullYear());
+        result.unshift({
+            month: toFormat(date, 'M Y'),
+            total: row !== undefined ? row.total : 0,
+        });
+    }
+
+    return result;
+}
+
 module.exports = database => ({
     numberOfPeople: async (departement) => {
         const rows = await database.query(
@@ -7,7 +26,8 @@ module.exports = database => ({
             SELECT SUM(population_total) AS total
             FROM shantytowns 
             LEFT JOIN cities AS city ON shantytowns.fk_city = city.code
-            ${departement ? `WHERE fk_departement = '${departement}'` : ''}
+            WHERE closed_at IS NULL
+            ${departement ? `AND fk_departement = '${departement}'` : ''}
             `,
             {
                 type: database.QueryTypes.SELECT,
@@ -23,7 +43,8 @@ module.exports = database => ({
             SELECT COUNT(*) AS total 
             FROM shantytowns 
             LEFT JOIN cities AS city ON shantytowns.fk_city = city.code
-            ${departement ? `WHERE fk_departement = '${departement}'` : ''}
+            WHERE closed_at IS NULL
+            ${departement ? `AND fk_departement = '${departement}'` : ''}
             `,
             {
                 type: database.QueryTypes.SELECT,
@@ -39,7 +60,9 @@ module.exports = database => ({
             SELECT COUNT(*) AS total
             FROM shantytowns 
             LEFT JOIN cities AS city ON shantytowns.fk_city = city.code
-            WHERE closed_with_solutions = 'yes'
+            WHERE closed_at IS NOT NULL
+            AND closed_with_solutions='yes'
+            AND shantytowns.created_at > '2019-01-01'
             ${departement ? `AND fk_departement = '${departement}'` : ''}
             `,
             {
@@ -148,9 +171,9 @@ module.exports = database => ({
                 COUNT(*) AS total
             FROM shantytowns LEFT JOIN cities AS city ON shantytowns.fk_city = city.code
             WHERE 
-                shantytowns.created_at < '${date}'
+                (shantytowns.created_at <= '${date}')
                 AND 
-                shantytowns.closed_at > '${date}'
+                (shantytowns.closed_at >= '${date}' OR shantytowns.closed_at IS NULL)
                 ${departement ? `AND fk_departement = '${departement}'` : ''}
                 `,
             {
@@ -170,9 +193,8 @@ module.exports = database => ({
                 COUNT(*) AS total
             FROM shantytowns LEFT JOIN cities AS city ON shantytowns.fk_city = city.code
             WHERE
-                closed_at IS NOT NULL
-                AND
                 closed_at > '${startDateStr}'
+                AND closed_with_solutions!='yes'
                 ${departement ? `AND fk_departement = '${departement}'` : ''}
             GROUP BY year,month
             ORDER BY year,month asc`,
@@ -180,23 +202,9 @@ module.exports = database => ({
                 type: database.QueryTypes.SELECT,
             },
         );
-
         const startDate = new Date(startDateStr);
-        const now = new Date();
 
-        const result = [];
-        const monthsDiff = (now.getMonth() - startDate.getMonth()) + (now.getFullYear() - startDate.getFullYear()) * 12;
-
-        for (let i = 1; i <= monthsDiff; i += 1) {
-            const date = new Date(now.getFullYear(), now.getMonth() - i, 1);
-            const row = rows.find(({ month }) => parseInt(month, 10) === date.getMonth() + 1);
-            result.unshift({
-                month: toFormat(date, 'M Y'),
-                total: row !== undefined ? row.total : 0,
-            });
-        }
-
-        return result;
+        return convertToDateMapping(rows, startDate);
     },
 
     numberOfNewShantytownsPerMonth: async (departement = null, startDateStr = '2019-06-01') => {
@@ -207,9 +215,7 @@ module.exports = database => ({
                 COUNT(*) AS total
             FROM shantytowns LEFT JOIN cities AS city ON shantytowns.fk_city = city.code
             WHERE
-                shantytowns.created_at IS NOT NULL
-                AND
-                shantytowns.created_at > '${startDateStr}'
+                (shantytowns.created_at > '${startDateStr}' OR shantytowns.declared_at > '${startDateStr}')
                 ${departement ? `AND fk_departement = '${departement}'` : ''}
             GROUP BY year,month
             ORDER BY year,month asc`,
@@ -219,21 +225,8 @@ module.exports = database => ({
         );
 
         const startDate = new Date(startDateStr);
-        const now = new Date();
 
-        const result = [];
-        const monthsDiff = (now.getMonth() - startDate.getMonth()) + (now.getFullYear() - startDate.getFullYear()) * 12;
-
-        for (let i = 1; i <= monthsDiff; i += 1) {
-            const date = new Date(now.getFullYear(), now.getMonth() - i, 1);
-            const row = rows.find(({ month }) => parseInt(month, 10) === date.getMonth() + 1);
-            result.unshift({
-                month: toFormat(date, 'M Y'),
-                total: row !== undefined ? row.total : 0,
-            });
-        }
-
-        return result;
+        return convertToDateMapping(rows, startDate);
     },
 
     numberOfResorbedShantytownsPerMonth: async (departement = null, startDateStr = '2019-06-01') => {
@@ -244,11 +237,9 @@ module.exports = database => ({
                 COUNT(*) AS total
             FROM shantytowns LEFT JOIN cities AS city ON shantytowns.fk_city = city.code
             WHERE
-                closed_at IS NOT NULL
-                AND
                 closed_at > '${startDateStr}'
                 AND
-                closed_with_solutions = 'yes'
+                closed_with_solutions='yes'
                 ${departement ? `AND fk_departement = '${departement}'` : ''}
             GROUP BY year,month
             ORDER BY year,month asc`,
@@ -258,21 +249,8 @@ module.exports = database => ({
         );
 
         const startDate = new Date(startDateStr);
-        const now = new Date();
 
-        const result = [];
-        const monthsDiff = (now.getMonth() - startDate.getMonth()) + (now.getFullYear() - startDate.getFullYear()) * 12;
-
-        for (let i = 1; i <= monthsDiff; i += 1) {
-            const date = new Date(now.getFullYear(), now.getMonth() - i, 1);
-            const row = rows.find(({ month }) => parseInt(month, 10) === date.getMonth() + 1);
-            result.unshift({
-                month: toFormat(date, 'M Y'),
-                total: row !== undefined ? row.total : 0,
-            });
-        }
-
-        return result;
+        return convertToDateMapping(rows, startDate);
     },
 
     numberOfNewUsersPerMonth: async (startDateStr = '2020-06-01') => {
@@ -282,6 +260,7 @@ module.exports = database => ({
 
         const rows = await database.query(
             `SELECT
+                EXTRACT(YEAR FROM ua.used_at) AS year,
                 EXTRACT(MONTH FROM ua.used_at) AS month,
                 COUNT(*) AS total
             FROM user_accesses ua
@@ -289,8 +268,8 @@ module.exports = database => ({
                 ua.used_at IS NOT NULL
                 AND
                 EXTRACT(EPOCH FROM ua.used_at) >= 10000
-            GROUP BY EXTRACT(MONTH FROM ua.used_at)
-            ORDER BY month asc`,
+              GROUP BY year,month
+            ORDER BY year,month asc`,
             {
                 type: database.QueryTypes.SELECT,
                 replacements: {
@@ -299,19 +278,7 @@ module.exports = database => ({
             },
         );
 
-        const result = [];
-        const monthsDiff = (now.getMonth() - startDate.getMonth()) + (now.getFullYear() - startDate.getFullYear()) * 12;
-
-        for (let i = 1; i <= monthsDiff; i += 1) {
-            const date = new Date(now.getFullYear(), now.getMonth() - i, 1);
-            const row = rows.find(({ month }) => parseInt(month, 10) === date.getMonth() + 1);
-            result.unshift({
-                month: toFormat(date, 'M Y'),
-                total: row !== undefined ? row.total : 0,
-            });
-        }
-
-        return result;
+        return convertToDateMapping(rows, startDate);
     },
 
     numberOfCollaboratorAndAssociationUsers: async () => {
@@ -534,14 +501,14 @@ module.exports = database => ({
             `
                 SELECT 
                     SUM(amount) as total, 
-                    EXTRACT(YEAR FROM finance_rows.created_at) as year, 
+                    year,
                     finance_rows.fk_finance_type as type
                 FROM finance_rows
                 LEFT JOIN finances on finance_rows.fk_finance = finances.finance_id
                 LEFT JOIN plans2 on finances.fk_plan = plans2.plan_id
                 LEFT JOIN plan_departements on plan_departements.fk_plan = plans2.plan_id
                 ${departement ? `WHERE fk_departement = '${departement}'` : ''}
-                GROUP BY finance_rows.created_at, type
+                GROUP BY year, type
             `,
             {
                 type: database.QueryTypes.SELECT,
@@ -587,7 +554,7 @@ module.exports = database => ({
                 +
                 (CASE WHEN s.access_to_sanitary IS NOT NULL THEN 1 ELSE 0 END)
                 +
-                (CASE WHEN s.trash_evacuation IS NOT NULL THEN 1 ELSE 0 END))::FLOAT / 11.0 AS pourcentage_completion
+                (CASE WHEN s.trash_evacuation IS NOT NULL THEN 1 ELSE 0 END))::FLOAT / 12.0 AS pourcentage_completion
             FROM
                 shantytowns s
             LEFT JOIN
