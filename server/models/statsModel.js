@@ -1,11 +1,11 @@
-const { toFormat } = require('#server/utils/date');
+const { toFormat, getMonthDiffBetween } = require('#server/utils/date');
 
 // Convert rows which contains month/year to a mapping
 // 2020-01-01 => x, 2020-01-02 => y
 function convertToDateMapping(rows, startDate) {
     const now = new Date();
     const result = [];
-    const monthsDiff = (now.getMonth() - startDate.getMonth()) + (now.getFullYear() - startDate.getFullYear()) * 12;
+    const monthsDiff = getMonthDiffBetween(startDate, now);
 
     for (let i = 1; i <= monthsDiff; i += 1) {
         const date = new Date(now.getFullYear(), now.getMonth() - i, 1);
