@@ -195,17 +195,16 @@ module.exports = database => ({
             FROM shantytowns LEFT JOIN cities AS city ON shantytowns.fk_city = city.code
             WHERE
                 closed_at > '${startDateStr}'
-                AND closed_with_solutions!='yes'
+                AND closed_with_solutions != 'yes'
                 ${departement ? `AND fk_departement = '${departement}'` : ''}
-            GROUP BY year,month
-            ORDER BY year,month asc`,
+            GROUP BY year, month
+            ORDER BY year ASC ,month ASC`,
             {
                 type: database.QueryTypes.SELECT,
             },
         );
-        const startDate = new Date(startDateStr);
 
-        return convertToDateMapping(rows, startDate);
+        return convertToDateMapping(rows, new Date(startDateStr));
     },
 
     numberOfNewShantytownsPerMonth: async (departement = null, startDateStr = '2019-06-01') => {
@@ -218,16 +217,14 @@ module.exports = database => ({
             WHERE
                 (shantytowns.created_at > '${startDateStr}' OR shantytowns.declared_at > '${startDateStr}')
                 ${departement ? `AND fk_departement = '${departement}'` : ''}
-            GROUP BY year,month
-            ORDER BY year,month asc`,
+            GROUP BY year, month
+            ORDER BY year ASC, month ASC`,
             {
                 type: database.QueryTypes.SELECT,
             },
         );
 
-        const startDate = new Date(startDateStr);
-
-        return convertToDateMapping(rows, startDate);
+        return convertToDateMapping(rows, new Date(startDateStr));
     },
 
     numberOfResorbedShantytownsPerMonth: async (departement = null, startDateStr = '2019-06-01') => {
@@ -240,18 +237,16 @@ module.exports = database => ({
             WHERE
                 closed_at > '${startDateStr}'
                 AND
-                closed_with_solutions='yes'
+                closed_with_solutions = 'yes'
                 ${departement ? `AND fk_departement = '${departement}'` : ''}
-            GROUP BY year,month
-            ORDER BY year,month asc`,
+            GROUP BY year, month
+            ORDER BY year ASC ,month ASC`,
             {
                 type: database.QueryTypes.SELECT,
             },
         );
 
-        const startDate = new Date(startDateStr);
-
-        return convertToDateMapping(rows, startDate);
+        return convertToDateMapping(rows, new Date(startDateStr));
     },
 
     numberOfNewUsersPerMonth: async (startDateStr = '2020-06-01') => {
@@ -269,8 +264,8 @@ module.exports = database => ({
                 ua.used_at IS NOT NULL
                 AND
                 EXTRACT(EPOCH FROM ua.used_at) >= 10000
-              GROUP BY year,month
-            ORDER BY year,month asc`,
+            GROUP BY year, month
+            ORDER BY year ASC,month ASC`,
             {
                 type: database.QueryTypes.SELECT,
                 replacements: {
