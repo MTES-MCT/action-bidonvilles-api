@@ -231,9 +231,49 @@ async function triggerActorInvitedAlert(town, host, invited) {
     await actorInvitedAlert.send(slackMessage);
 }
 
+async function triggerPeopleInvitedAlert(guest, greeter, msg) {
+    if (!slack || !slack.invite_people) {
+        return;
+    }
+
+    const peopleInvitedAlert = new IncomingWebhook(slack.invite_actor);
+
+    const guestName = formatUsername(guest);
+    const greeterName = formatUsername(greeter);
+
+    const slackMessage = {
+        text: `Nouvel intervenant invité : ${guestName}`,
+        blocks: [
+            {
+                type: 'section',
+                text: {
+                    type: 'mrkdwn',
+                    text: `:rotating_light: Personne invitée sur la plateforme par ${greeterName} ${msg}`,
+                },
+            },
+        ],
+        attachments: [
+            {
+                color: '#f2c744',
+                blocks: [
+                    {
+                        type: 'section',
+                        text: {
+                            type: 'mrkdwn',
+                            text: `Personne invitée : ${guestName}`,
+                        },
+                    },
+                ],
+            }],
+    };
+
+    await peopleInvitedAlert.send(slackMessage);
+}
+
 module.exports = {
     triggerShantytownCloseAlert,
     triggerShantytownCreationAlert,
     triggerNewUserAlert,
     triggerActorInvitedAlert,
+    triggerPeopleInvitedAlert
 };
