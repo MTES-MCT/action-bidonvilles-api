@@ -1,6 +1,112 @@
-const { toFormat } = require('#server/utils/date');
+const { toFormat, getMonthDiffBetween } = require('#server/utils/date');
+
+// Convert rows which contains month/year to a mapping
+// 2020-01-01 => x, 2020-01-02 => y
+function convertToDateMapping(rows, startDate) {
+    const now = new Date();
+    const result = [];
+    const monthsDiff = getMonthDiffBetween(startDate, now);
+
+    for (let i = 1; i <= monthsDiff; i += 1) {
+        const date = new Date(now.getFullYear(), now.getMonth() - i, 1);
+        const row = rows.find(({ month, year }) => parseInt(month, 10) === date.getMonth() + 1 && year === date.getFullYear());
+        result.unshift({
+            month: toFormat(date, 'M Y'),
+            total: row !== undefined ? row.total : 0,
+        });
+    }
+
+    return result;
+}
 
 module.exports = database => ({
+    numberOfPeople: async (departement) => {
+        const rows = await database.query(
+            `
+            SELECT SUM(population_total) AS total
+            FROM shantytowns 
+            LEFT JOIN cities AS city ON shantytowns.fk_city = city.code
+            WHERE closed_at IS NULL
+            ${departement ? `AND fk_departement = '${departement}'` : ''}
+            `,
+            {
+                type: database.QueryTypes.SELECT,
+            },
+        );
+
+        return rows[0].total;
+    },
+
+    numberOfShantytown: async (departement) => {
+        const rows = await database.query(
+            `
+            SELECT COUNT(*) AS total 
+            FROM shantytowns 
+            LEFT JOIN cities AS city ON shantytowns.fk_city = city.code
+            WHERE closed_at IS NULL
+            ${departement ? `AND fk_departement = '${departement}'` : ''}
+            `,
+            {
+                type: database.QueryTypes.SELECT,
+            },
+        );
+
+        return rows[0].total;
+    },
+
+    numberOfResorbedShantytown: async (departement) => {
+        const rows = await database.query(
+            `
+            SELECT COUNT(*) AS total
+            FROM shantytowns 
+            LEFT JOIN cities AS city ON shantytowns.fk_city = city.code
+            WHERE closed_at IS NOT NULL
+            AND closed_with_solutions='yes'
+            AND shantytowns.created_at > '2019-01-01'
+            ${departement ? `AND fk_departement = '${departement}'` : ''}
+            `,
+            {
+                type: database.QueryTypes.SELECT,
+            },
+        );
+
+        return rows[0].total;
+    },
+
+    numberOfPlans: async (departement) => {
+        const rows = await database.query(
+            `
+            SELECT COUNT(*) AS total 
+            FROM plans2
+            LEFT JOIN plan_departements on plan_departements.fk_plan = plans2.plan_id
+            WHERE closed_at IS NULL
+            ${departement ? `AND fk_departement = '${departement}'` : ''}
+            `,
+            {
+                type: database.QueryTypes.SELECT,
+            },
+        );
+
+        return rows[0].total;
+    },
+
+    numberOfUsers: async (departement) => {
+        const rows = await database.query(
+            `
+            SELECT COUNT(*) from users
+            LEFT JOIN organizations on users.fk_organization = organizations.organization_id
+            WHERE fk_status = 'active'
+            ${departement ? `AND fk_departement = '${departement}'` : ''}
+            `,
+            {
+                type: database.QueryTypes.SELECT,
+            },
+        );
+
+        return rows[0].count;
+    },
+
+
     numberOfDepartements: async () => {
         const rows = await database.query(
             `SELECT
@@ -60,6 +166,89 @@ module.exports = database => ({
         return rows[0].total;
     },
 
+    numberOfOpenShantytownsAtMonth: async (departement, date = '2020-06-01') => {
+        const rows = await database.query(
+            `SELECT
+                COUNT(*) AS total
+            FROM shantytowns LEFT JOIN cities AS city ON shantytowns.fk_city = city.code
+            WHERE 
+                (shantytowns.created_at <= '${date}')
+                AND 
+                (shantytowns.closed_at >= '${date}' OR shantytowns.closed_at IS NULL)
+                ${departement ? `AND fk_departement = '${departement}'` : ''}
+                `,
+            {
+                type: database.QueryTypes.SELECT,
+            },
+        );
+
+        return rows[0].total;
+    },
+
+
+    numberOfClosedShantytownsPerMonth: async (departement = null, startDateStr = '2019-06-01') => {
+        const rows = await database.query(
+            `SELECT 
+                EXTRACT(YEAR FROM shantytowns.closed_at) AS year,
+                EXTRACT(MONTH FROM shantytowns.closed_at) AS month,
+                COUNT(*) AS total
+            FROM shantytowns LEFT JOIN cities AS city ON shantytowns.fk_city = city.code
+            WHERE
+                closed_at > '${startDateStr}'
+                AND closed_with_solutions != 'yes'
+                ${departement ? `AND fk_departement = '${departement}'` : ''}
+            GROUP BY year, month
+            ORDER BY year ASC ,month ASC`,
+            {
+                type: database.QueryTypes.SELECT,
+            },
+        );
+
+        return convertToDateMapping(rows, new Date(startDateStr));
+    },
+
+    numberOfNewShantytownsPerMonth: async (departement = null, startDateStr = '2019-06-01') => {
+        const rows = await database.query(
+            `SELECT 
+                EXTRACT(YEAR FROM shantytowns.created_at) AS year,
+                EXTRACT(MONTH FROM shantytowns.created_at) AS month,
+                COUNT(*) AS total
+            FROM shantytowns LEFT JOIN cities AS city ON shantytowns.fk_city = city.code
+            WHERE
+                (shantytowns.created_at > '${startDateStr}' OR shantytowns.declared_at > '${startDateStr}')
+                ${departement ? `AND fk_departement = '${departement}'` : ''}
+            GROUP BY year, month
+            ORDER BY year ASC, month ASC`,
+            {
+                type: database.QueryTypes.SELECT,
+            },
+        );
+
+        return convertToDateMapping(rows, new Date(startDateStr));
+    },
+
+    numberOfResorbedShantytownsPerMonth: async (departement = null, startDateStr = '2019-06-01') => {
+        const rows = await database.query(
+            `SELECT 
+                EXTRACT(YEAR FROM shantytowns.closed_at) AS year,
+                EXTRACT(MONTH FROM shantytowns.closed_at) AS month,
+                COUNT(*) AS total
+            FROM shantytowns LEFT JOIN cities AS city ON shantytowns.fk_city = city.code
+            WHERE
+                closed_at > '${startDateStr}'
+                AND
+                closed_with_solutions = 'yes'
+                ${departement ? `AND fk_departement = '${departement}'` : ''}
+            GROUP BY year, month
+            ORDER BY year ASC ,month ASC`,
+            {
+                type: database.QueryTypes.SELECT,
+            },
+        );
+
+        return convertToDateMapping(rows, new Date(startDateStr));
+    },
+
     numberOfNewUsersPerMonth: async (startDateStr = '2020-06-01') => {
         const startDate = new Date(startDateStr);
         const now = new Date();
@@ -67,6 +256,7 @@ module.exports = database => ({
 
         const rows = await database.query(
             `SELECT
+                EXTRACT(YEAR FROM ua.used_at) AS year,
                 EXTRACT(MONTH FROM ua.used_at) AS month,
                 COUNT(*) AS total
             FROM user_accesses ua
@@ -74,8 +264,8 @@ module.exports = database => ({
                 ua.used_at IS NOT NULL
                 AND
                 EXTRACT(EPOCH FROM ua.used_at) >= 10000
-            GROUP BY EXTRACT(MONTH FROM ua.used_at)
-            ORDER BY month asc`,
+            GROUP BY year, month
+            ORDER BY year ASC,month ASC`,
             {
                 type: database.QueryTypes.SELECT,
                 replacements: {
@@ -84,19 +274,7 @@ module.exports = database => ({
             },
         );
 
-        const result = [];
-        const monthsDiff = (now.getMonth() - startDate.getMonth()) + (now.getFullYear() - startDate.getFullYear()) * 12;
-
-        for (let i = 1; i <= monthsDiff; i += 1) {
-            const date = new Date(now.getFullYear(), now.getMonth() - i, 1);
-            const row = rows.find(({ month }) => parseInt(month, 10) === date.getMonth() + 1);
-            result.unshift({
-                month: toFormat(date, 'M Y'),
-                total: row !== undefined ? row.total : 0,
-            });
-        }
-
-        return result;
+        return convertToDateMapping(rows, startDate);
     },
 
     numberOfCollaboratorAndAssociationUsers: async () => {
@@ -312,6 +490,88 @@ module.exports = database => ({
         );
 
         return rows[0];
+    },
+
+    numberOfCreditsPerYear: async (departement) => {
+        const rows = await database.query(
+            `
+                SELECT 
+                    SUM(amount) as total, 
+                    year,
+                    finance_rows.fk_finance_type as type
+                FROM finance_rows
+                LEFT JOIN finances on finance_rows.fk_finance = finances.finance_id
+                LEFT JOIN plans2 on finances.fk_plan = plans2.plan_id
+                LEFT JOIN plan_departements on plan_departements.fk_plan = plans2.plan_id
+                ${departement ? `WHERE fk_departement = '${departement}'` : ''}
+                GROUP BY year, type
+            `,
+            {
+                type: database.QueryTypes.SELECT,
+            },
+        );
+
+        // transforms rows in a mapping { 2020: {[type]: total}}
+        return rows.reduce((acc, obj) => ({
+            ...acc,
+            [obj.year]: {
+                ...(acc[obj.year] || {}),
+                [obj.type]: obj.total,
+            },
+        }), {});
+    },
+
+    averageCompletionPercentage: async (departement) => {
+        const rows = await database.query(
+            `SELECT
+                AVG(pourcentage_completion)
+            FROM
+            (SELECT
+                c.fk_departement,
+                ((CASE WHEN (SELECT regexp_matches(s.address, '^(.+) [0-9]+ [^,]+,? [0-9]+,? [^, ]+(,.+)?$'))[1] IS NOT NULL THEN 1 ELSE 0 END)
+                +
+                (CASE WHEN ft.label <> 'Inconnu' THEN 1 ELSE 0 END)
+                +
+                (CASE WHEN ot.label <> 'Inconnu' THEN 1 ELSE 0 END)
+                +
+                (CASE WHEN s.census_status IS NOT NULL THEN 1 ELSE 0 END)
+                +
+                (CASE WHEN s.population_total IS NOT NULL THEN 1 ELSE 0 END)
+                +
+                (CASE WHEN s.population_couples IS NOT NULL THEN 1 ELSE 0 END)
+                +
+                (CASE WHEN s.population_minors IS NOT NULL THEN 1 ELSE 0 END)
+                +
+                (CASE WHEN s.population_total IS NOT NULL AND s.population_total >= 10 AND (SELECT COUNT(*) FROM shantytown_origins WHERE fk_shantytown = s.shantytown_id) > 0 THEN 1 ELSE 0 END)
+                +
+                (CASE WHEN et.label <> 'Inconnu' THEN 1 ELSE 0 END)
+                +
+                (CASE WHEN s.access_to_water IS NOT NULL THEN 1 ELSE 0 END)
+                +
+                (CASE WHEN s.access_to_sanitary IS NOT NULL THEN 1 ELSE 0 END)
+                +
+                (CASE WHEN s.trash_evacuation IS NOT NULL THEN 1 ELSE 0 END))::FLOAT / 12.0 AS pourcentage_completion
+            FROM
+                shantytowns s
+            LEFT JOIN
+                cities c ON s.fk_city = c.code
+            LEFT JOIN
+                field_types ft ON s.fk_field_type = ft.field_type_id
+            LEFT JOIN
+                owner_types ot ON s.fk_owner_type = ot.owner_type_id
+            LEFT JOIN
+                electricity_types et ON s.fk_electricity_type = et.electricity_type_id
+            WHERE
+                s.closed_at IS NULL
+                ${departement ? `AND c.fk_departement = '${departement}'` : ''}
+            ) AS tmp
+            `,
+            {
+                type: database.QueryTypes.SELECT,
+            },
+        );
+
+        return rows[0].avg;
     },
 
     numberOfReviewedComments() {
