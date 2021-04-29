@@ -236,7 +236,7 @@ async function triggerPeopleInvitedAlert(guest, greeter, msg) {
         return;
     }
 
-    const peopleInvitedAlert = new IncomingWebhook(slack.invite_actor);
+    const peopleInvitedAlert = new IncomingWebhook(slack.invite_people);
 
     const guestName = formatUsername(guest);
     const greeterName = formatUsername(greeter);
@@ -260,7 +260,7 @@ async function triggerPeopleInvitedAlert(guest, greeter, msg) {
                         type: 'section',
                         text: {
                             type: 'mrkdwn',
-                            text: `Personne invitée : ${guestName}`,
+                            text: `Personne invitée : ${guestName} <${guest.email}>`,
                         },
                     },
                 ],
@@ -275,5 +275,5 @@ module.exports = {
     triggerShantytownCreationAlert,
     triggerNewUserAlert,
     triggerActorInvitedAlert,
-    triggerPeopleInvitedAlert
+    triggerPeopleInvitedAlert,
 };
