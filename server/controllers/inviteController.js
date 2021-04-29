@@ -24,13 +24,16 @@ const sendEmailsInvitations = async (guests, greeter) => {
     }
 };
 
-const sendSlackNotifications =  async (guests, greeter) => {
+const sendSlackNotifications = async (guests, greeter) => {
+    if (!slackConfig || !slackConfig.invite_people) {
+        return;
+    }
+
     for (let i = 0; i < guests.length; i += 1) {
         // Send a slack alert, if it fails, do nothing
         try {
-            if (slackConfig && slackConfig.invite_people) {
-                await triggerPeopleInvitedAlert(guests[i], greeter, "via le formulaire de demande d'accès") ;
-            }
+            // eslint-disable-next-line no-await-in-loop
+            await triggerPeopleInvitedAlert(guests[i], greeter, "via le formulaire de demande d'accès");
         } catch (err) {
             console.log(`Error with invited people webhook : ${err.message}`);
         }
@@ -60,13 +63,7 @@ module.exports = () => ({
         try {
             await sendSlackNotifications(guests, greeter);
         } catch (err) {
-            res.status(500).send({
-                error: {
-                    developer_message: 'Slack notifications could not be sent',
-                    user_message: 'Impossible d\'envoyer les notifications Slack',
-                },
-            });
-            return next(err);
+            // ignore
         }
 
         return res.status(200).send({});
