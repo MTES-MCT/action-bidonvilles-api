@@ -344,6 +344,7 @@ function serializeShantytown(town, permission) {
         status: town.status,
         latitude: town.latitude,
         longitude: town.longitude,
+        cityName: town.cityName,
         city: {
             code: town.cityCode,
             name: town.cityName,
