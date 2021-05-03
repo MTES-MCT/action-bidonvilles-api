@@ -241,12 +241,50 @@ describe.only('PermissionService', () => {
             ).to.be.false;
         });
 
-        it('Si la permission est de niveau `own` mais que la feature demandée n\'est ni `update` ni `updateMarks`, lance une exception', () => {
+        it('Si la permission est de niveau `own`, que la feature demandée n\'est ni `update` ni `updateMarks`, et que l\'utilisateur est pilote du dispositif, retourne true', () => {
+            const user = createUser({
+                id: 666,
+                organization: {
+                    id: 666,
+                },
+                permissions: { plan: { list: { geographic_level: 'own' } } },
+            });
+
             expect(
-                () => can(createUser({
-                    permissions: { plan: { list: { geographic_level: 'own' } } },
-                })).do('list', 'plan').on(location.nation(), createPlan()),
-            ).to.throw('La permission de type `own` ne peut pas être résolue pour une autre feature que `update` et `updateMarks`');
+                can(user).do('list', 'plan').on(location.nation(), createPlan({
+                    government_contacts: [user],
+                })),
+            ).to.be.true;
+        });
+
+        it('Si la permission est de niveau `own`, que la feature demandée n\'est ni `update` ni `updateMarks`, et que l\'utilisateur est opérateur du dispositif, retourne true', () => {
+            const user = createUser({
+                id: 666,
+                organization: {
+                    id: 666,
+                },
+                permissions: { plan: { list: { geographic_level: 'own' } } },
+            });
+
+            expect(
+                can(user).do('list', 'plan').on(location.nation(), createPlan({
+                    operator_contacts: [user],
+                })),
+            ).to.be.true;
+        });
+
+        it('Si la permission est de niveau `own`, que la feature demandée n\'est ni `update` ni `updateMarks`, et que le dispositif n\'a ni pilote ni dispositif, retourne false', () => {
+            const user = createUser({
+                id: 666,
+                organization: {
+                    id: 666,
+                },
+                permissions: { plan: { list: { geographic_level: 'own' } } },
+            });
+
+            expect(
+                can(user).do('list', 'plan').on(location.nation(), {}),
+            ).to.be.false;
         });
     });
 });

@@ -39,7 +39,17 @@ module.exports = {
                         return plan.operator_contacts.some(contact => contact.organization.id === user.organization.id);
                     }
 
-                    throw new Error('La permission de type `own` ne peut pas être résolue pour une autre feature que `update` et `updateMarks`');
+                    // pour toute autre feature que "update" et "updateMarks", il suffit que
+                    // l'utilisateur soit soit pilote, soit opérateur
+                    if (plan.government_contacts && plan.government_contacts.some(({ id }) => id === user.id)) {
+                        return true;
+                    }
+
+                    if (plan.operator_contacts && plan.operator_contacts.some(contact => contact.organization.id === user.organization.id)) {
+                        return true;
+                    }
+
+                    return false;
                 }
 
                 // on détermine le niveau géographique de la permission
