@@ -492,7 +492,7 @@ module.exports = (app) => {
 
     // stats
     app.get(
-        '/stats',
+        '/stats/:departement?',
         async (req, res, next) => {
             try {
                 await middlewares.auth.authenticate(req, res, next, false);

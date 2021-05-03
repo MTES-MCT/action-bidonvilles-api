@@ -41,8 +41,13 @@ function fromTsToFormat(ts, format) {
     return toFormat(new Date(ts * 1000), format);
 }
 
+function getMonthDiffBetween(d1, d2) {
+    return (d2.getMonth() - d1.getMonth()) + ((d2.getFullYear() - d1.getFullYear()) * 12);
+}
+
 module.exports = {
     toString,
     toFormat,
     fromTsToFormat,
+    getMonthDiffBetween,
 };
