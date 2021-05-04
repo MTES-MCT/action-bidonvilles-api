@@ -10,13 +10,16 @@ module.exports = () => ({
             }
 
             // docs: https://solinum.gitbook.io/soliguide-api/detail-de-lapi/lieu-et-services
-            const results = await request('https://api.soliguide.fr/search?limit=1000&categorie=601', {
+            const { places } = await request('https://api.soliguide.fr/new-search', {
+                method: 'POST',
+                body: { location: { geoType: 'pays', geoValue: 'France' }, categorie: 601, options: { limit: 1000 } },
                 headers: {
+                    'Content-Type': 'application/json',
                     Authorization: authKey,
                 },
                 json: true,
             });
-            return res.status(200).send(results);
+            return res.status(200).send(places);
         } catch (error) {
             res.status(500).send({ user_message: 'Une erreur est survenue lors de la lecture en base de données' });
             return next(error);
