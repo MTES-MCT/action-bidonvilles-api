@@ -378,14 +378,14 @@ module.exports = (app) => {
         },
         middlewares.charte.check,
         middlewares.appVersion.sync,
-        controllers.town.addComment,
+        controllers.shantytownComment.create,
     );
     app.post(
         '/towns/:id/comments/:commentId',
         middlewares.auth.authenticate,
         middlewares.charte.check,
         middlewares.appVersion.sync,
-        controllers.town.updateComment,
+        controllers.shantytownComment.update,
     );
     app.post(
         '/towns/:id/covidComments',
