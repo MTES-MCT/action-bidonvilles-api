@@ -376,6 +376,8 @@ module.exports = (app) => {
 
             return next();
         },
+        validators.shantytownComment.createShantytownComment,
+        middlewares.validation,
         middlewares.charte.check,
         middlewares.appVersion.sync,
         controllers.shantytownComment.create,

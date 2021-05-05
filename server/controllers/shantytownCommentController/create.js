@@ -1,7 +1,5 @@
-const { trim } = require('validator');
 const {
     sequelize,
-    Shantytown: ShantyTowns,
     ShantytownComment: ShantyTownComments,
 } = require('#db/models');
 const serializeComment = require('./helpers/serializeComment');
@@ -9,56 +7,16 @@ const serializeComment = require('./helpers/serializeComment');
 module.exports = async (req, res, next) => {
     const {
         description,
-        private: privateField,
+        private: isPrivate,
+        shantytown,
     } = req.body;
-
-    // get the related town
-    let shantytown;
-    try {
-        shantytown = await ShantyTowns.findOne({
-            where: {
-                shantytown_id: req.params.id,
-            },
-        });
-    } catch (error) {
-        res.status(500).send({
-            error: {
-                developer_message: 'Failed to retrieve the shantytown',
-                user_message: 'Impossible de retrouver le site concerné en base de données',
-            },
-        });
-        return next(error);
-    }
-
-    if (shantytown === null) {
-        return res.status(404).send({
-            error: {
-                developer_message: 'Shantytown does not exist',
-                user_message: 'Le site concerné par le commentaire n\'existe pas',
-            },
-        });
-    }
-
-    // ensure the description is not empty
-    const trimmedDescription = trim(description) || null;
-    if (trimmedDescription === null || trimmedDescription.length === 0) {
-        return res.status(404).send({
-            error: {
-                developer_message: 'The submitted data contains errors',
-                user_message: 'Certaines données sont invalides',
-                fields: {
-                    description: ['La description est obligatoire'],
-                },
-            },
-        });
-    }
 
     // add the step
     try {
         await ShantyTownComments.create({
             shantytown: shantytown.id,
-            description: trimmedDescription,
-            private: privateField,
+            description,
+            private: isPrivate,
             createdBy: req.user.id,
         });
 
