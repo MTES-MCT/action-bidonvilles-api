@@ -1,36 +1,9 @@
 const {
     sequelize,
-    ShantytownComment: ShantyTownComments,
 } = require('#db/models');
 const serializeComment = require('./helpers/serializeComment');
 
 module.exports = async (req, res, next) => {
-    let comment;
-    try {
-        comment = await ShantyTownComments.findOne({
-            where: {
-                shantytown_comment_id: req.params.commentId,
-            },
-        });
-    } catch (error) {
-        res.status(500).send({
-            error: {
-                developer_message: 'Failed to retrieve the comment',
-                user_message: 'Impossible de retrouver le commentaire à modifier en base de données',
-            },
-        });
-        return next(error);
-    }
-
-    if (comment.createdBy !== req.user.id && !req.user.isAllowedTo('moderate', 'shantytown_comment')) {
-        return res.status(400).send({
-            error: {
-                user_message: 'Vous n\'avez pas accès à ces données',
-                developer_message: 'Tried to access a secured page without authentication',
-            },
-        });
-    }
-
     try {
         await sequelize.query(
             'UPDATE shantytown_comments SET description = :description, private = :private WHERE shantytown_comment_id = :id',

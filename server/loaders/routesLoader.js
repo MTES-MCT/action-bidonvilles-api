@@ -5,6 +5,7 @@ const express = require('express');
 const { sequelize } = require('#db/models');
 const models = require('#server/models')(sequelize);
 const middlewares = require('#server/middlewares')(models);
+const permissions = require('#server/middlewares/permissions');
 const controllers = require('#server/controllers')(models);
 const validators = require('#server/middlewares/validators');
 
@@ -376,10 +377,10 @@ module.exports = (app) => {
 
             return next();
         },
-        validators.shantytownComment.createShantytownComment,
-        middlewares.validation,
         middlewares.charte.check,
         middlewares.appVersion.sync,
+        validators.shantytownComment.createShantytownComment,
+        middlewares.validation,
         controllers.shantytownComment.create,
     );
     app.post(
@@ -387,6 +388,9 @@ module.exports = (app) => {
         middlewares.auth.authenticate,
         middlewares.charte.check,
         middlewares.appVersion.sync,
+        validators.shantytownComment.updateShantytownComment,
+        middlewares.validation,
+        permissions.shantytownComment.update,
         controllers.shantytownComment.update,
     );
     app.post(
