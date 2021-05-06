@@ -1,7 +1,5 @@
-const {
-    sequelize,
-    ShantytownComment: ShantyTownComments,
-} = require('#db/models');
+const { sequelize } = require('#db/models');
+const shantytownComment = require('#server/models/shantytownComment');
 const { getComments } = require('#server/models/shantytownModel')(sequelize);
 
 module.exports = async (req, res, next) => {
@@ -13,11 +11,11 @@ module.exports = async (req, res, next) => {
 
     // add the comment
     try {
-        await ShantyTownComments.create({
-            shantytown: shantytown.id,
+        await shantytownComment.create({
             description,
+            fk_shantytown: shantytown.id,
+            created_by: req.user.id,
             private: isPrivate,
-            createdBy: req.user.id,
         });
     } catch (e) {
         res.status(500).send({
