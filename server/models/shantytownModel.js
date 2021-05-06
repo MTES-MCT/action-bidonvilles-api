@@ -274,6 +274,7 @@ function serializeComment(comment) {
                 organization: comment.organizationAbbreviation || comment.organizationName,
                 organizationId: comment.organizationId,
             },
+            shantytown: comment.shantytownId,
         },
         comment.covidCommentDate !== null
             ? {
