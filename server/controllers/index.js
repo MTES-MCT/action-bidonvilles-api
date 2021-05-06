@@ -2,14 +2,12 @@ const fs = require('fs');
 const path = require('path');
 
 const createShantytownComment = require('./shantytownCommentController/create');
-const updateShantytownComment = require('./shantytownCommentController/update');
 
 module.exports = (models) => {
     const basename = path.basename(module.filename);
     const controllers = {
         shantytownComment: {
             create: createShantytownComment,
-            update: updateShantytownComment,
         },
     };
 
