@@ -1,6 +1,6 @@
 const permissions = {
     roles_regular: {
-        observer: {
+        intervener: {
             shantytown: {
                 list: { level: 'local', data: { data_justice: false } },
                 read: { level: 'local', data: { data_justice: false } }
@@ -24,19 +24,19 @@ module.exports = {
 
     up: queryInterface => queryInterface.sequelize.transaction(
         transaction => queryInterface.sequelize.query(
-            'INSERT INTO roles_regular(role_id, name) VALUES(\'observer\', \'Observateur\')',
+            'INSERT INTO roles_regular(role_id, name) VALUES(\'intervener\', \'Intervenant\')',
             {
                 transaction,
             },
         )
         .then(() => queryInterface.sequelize.query(
-            'INSERT INTO organization_categories(uid, name_singular, name_plural) VALUES(\'observer\', \'Observateur\', \'Observateurs\')',
+            'INSERT INTO organization_categories(uid, name_singular, name_plural) VALUES(\'intervener\', \'Intervenant\', \'Intervenants\')',
             {
                 transaction,
             },
         ))
         .then(() => queryInterface.sequelize.query(
-            'INSERT INTO organization_types(name_singular, name_plural, fk_category, fk_role) VALUES(\'Observateur\', \'Observateurs\', \'observer\', \'observer\')',
+            'INSERT INTO organization_types(name_singular, name_plural, fk_category, fk_role) VALUES(\'Intervenant\', \'Intervenants\', \'intervener\', \'intervener\')',
             {
                 transaction,
             },
@@ -88,7 +88,7 @@ module.exports = {
         transaction => queryInterface.bulkDelete(
             'permissions',
             {
-                fk_role_regular: 'observer',
+                fk_role_regular: 'intervener',
             },
             {
                 transaction,
@@ -97,8 +97,8 @@ module.exports = {
         .then(() => queryInterface.bulkDelete(
             'organization_types',
             {
-                fk_role: 'observer',
-                fk_category: 'observer'
+                fk_role: 'intervener',
+                fk_category: 'intervener'
             },
             {
                 transaction,
@@ -107,7 +107,7 @@ module.exports = {
         .then(() => queryInterface.bulkDelete(
             'organization_categories',
             {
-                uid: 'observer',
+                uid: 'intervener',
             },
             {
                 transaction,
@@ -116,7 +116,7 @@ module.exports = {
         .then(() => queryInterface.bulkDelete(
             'roles_regular',
             {
-                role_id: 'observer',
+                role_id: 'intervener',
             },
             {
                 transaction,
