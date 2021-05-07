@@ -16,7 +16,7 @@ function factory(dependencies = {}) {
                     description: req.body.description,
                     private: req.body.private,
                 },
-                req.body.shantytown.id,
+                req.body.shantytown,
                 req.user,
             );
         } catch (error) {

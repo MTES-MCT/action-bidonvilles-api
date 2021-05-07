@@ -21,7 +21,7 @@ describe.only('services/shantytownComment', () => {
                 // input data
                 input = {
                     comment: { description: 'description', private: true },
-                    shantytownId: 1,
+                    shantytown: { id: 1 },
                     user: fakeUser(),
                 };
 
@@ -34,6 +34,7 @@ describe.only('services/shantytownComment', () => {
                 dependencies = {
                     createComment: sinon.stub(),
                     getComments: sinon.stub(),
+                    triggerNewComment: sinon.stub(),
                 };
 
                 // tested service
@@ -41,12 +42,12 @@ describe.only('services/shantytownComment', () => {
 
                 // getComments() retourne une liste de commentaires
                 dependencies.getComments
-                    .withArgs(input.user, [input.shantytownId], false)
+                    .withArgs(input.user, [input.shantytown.id], false)
                     .resolves({
-                        [input.shantytownId]: output.commentList,
+                        [input.shantytown.id]: output.commentList,
                     });
 
-                response = await createComment(input.comment, input.shantytownId, input.user);
+                response = await createComment(input.comment, input.shantytown, input.user);
             });
 
             it('insère le commentaire en base de données via le modèle shantytownComment/create', () => {
@@ -56,6 +57,14 @@ describe.only('services/shantytownComment', () => {
                     fk_shantytown: 1,
                     created_by: 2,
                 });
+            });
+
+            it('envoie une notification slack', () => {
+                expect(dependencies.triggerNewComment).to.have.been.calledOnceWith(
+                    'description',
+                    input.shantytown,
+                    input.user,
+                );
             });
 
             it('collecte et retourne la liste des commentaires actualisés', async () => {
@@ -82,13 +91,14 @@ describe.only('services/shantytownComment', () => {
                 createComment = factory({
                     createComment: modelCreateComment,
                     getComments: sinon.stub(),
+                    triggerNewComment: sinon.stub(),
                 });
             });
 
             it('lance une exception de type ServiceError', async () => {
                 let exception;
                 try {
-                    await createComment(comment, 1, user);
+                    await createComment(comment, { id: 1 }, user);
                 } catch (error) {
                     exception = error;
                 }
@@ -96,6 +106,38 @@ describe.only('services/shantytownComment', () => {
                 expect(exception).to.be.instanceOf(ServiceError);
                 expect(exception.code).to.be.eql('insert_failed');
                 expect(exception.nativeError).to.be.eql(nativeError);
+            });
+        });
+
+        describe('si la notification slack échoue', () => {
+            let createComment;
+            const comment = { description: 'description', private: true };
+            const user = fakeUser();
+            const nativeError = new Error('une erreur');
+            beforeEach(() => {
+                const triggerNewComment = sinon.stub();
+                triggerNewComment
+                    .rejects(nativeError);
+
+                const getComments = sinon.stub();
+                getComments.resolves({ 1: [] });
+
+                createComment = factory({
+                    createComment: sinon.stub(),
+                    getComments,
+                    triggerNewComment,
+                });
+            });
+
+            it('aucune exception est lancée ', async () => {
+                let exception;
+                try {
+                    await createComment(comment, { id: 1 }, user);
+                } catch (error) {
+                    exception = error;
+                }
+
+                expect(exception).to.be.undefined;
             });
         });
 
@@ -113,13 +155,14 @@ describe.only('services/shantytownComment', () => {
                 createComment = factory({
                     createComment: sinon.stub(),
                     getComments: modelGetComments,
+                    triggerNewComment: sinon.stub(),
                 });
             });
 
             it('lance une exception de type ServiceError', async () => {
                 let exception;
                 try {
-                    await createComment(comment, 1, user);
+                    await createComment(comment, { id: 1 }, user);
                 } catch (error) {
                     exception = error;
                 }

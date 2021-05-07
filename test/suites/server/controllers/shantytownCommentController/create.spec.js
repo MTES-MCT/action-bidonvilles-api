@@ -15,6 +15,7 @@ describe.only('controllers/shantytownComment', () => {
         it('fait appel au service shantytownComment/createComment() pour insérer le commentaire', async () => {
             const srvCreateComment = sinon.stub();
             const user = fakeUser();
+            const shantytown = { id: 1 };
             const ctlCreate = factory({ createComment: srvCreateComment });
 
             await ctlCreate(
@@ -22,7 +23,7 @@ describe.only('controllers/shantytownComment', () => {
                     body: {
                         description: 'description',
                         private: true,
-                        shantytown: { id: 1 },
+                        shantytown,
                     },
                     user,
                 }),
@@ -32,7 +33,7 @@ describe.only('controllers/shantytownComment', () => {
 
             expect(srvCreateComment).to.have.been.calledOnceWith(
                 { description: 'description', private: true },
-                1,
+                shantytown,
                 user,
             );
         });
