@@ -1,12 +1,12 @@
 module.exports = class ServiceError extends Error {
     /**
      * @param {String} code Un code interne d'identification de l'erreur
-     * @param {Error} originalError Erreur originelle
+     * @param {Error} nativeError Erreur originelle
      */
-    constructor(code, originalError) {
-        super(originalError.message, originalError.fileName, originalError.lineNumber);
+    constructor(code, nativeError) {
+        super(nativeError.message, nativeError.fileName, nativeError.lineNumber);
 
         this.code = code;
-        this.originalError = originalError;
+        this.nativeError = nativeError;
     }
 };
