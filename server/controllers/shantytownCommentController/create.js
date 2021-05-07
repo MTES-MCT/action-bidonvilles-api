@@ -29,7 +29,7 @@ module.exports = async (req, res, next) => {
         res.status(500).send({
             user_message: message,
         });
-        return next(error.nativeError);
+        return next((error && error.nativeError) || error);
     }
 
     return res.status(200).send({
