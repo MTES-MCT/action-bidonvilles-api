@@ -13,6 +13,8 @@ const ServiceError = require('#server/errors/ServiceError');
  * @param {Service_ShantytownComment_Create_CommentData} comment Commentaire
  * @param {Number} shantytownId `shantytown_id` du site rattaché au commentaire
  * @param {Model_User} author Auteur du commentaire
+ *
+ * @returns {Array.<Model_ShantytownComment>}
  */
 module.exports = async (comment, shantytownId, author) => {
     // create the new comment
