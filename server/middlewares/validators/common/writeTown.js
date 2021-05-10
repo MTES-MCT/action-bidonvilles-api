@@ -146,7 +146,7 @@ module.exports = mode => ([
      * Date d'installation du site
      ********************************************************************************************* */
     body('built_at')
-        .exists({ checkNull: true }).bail().withMessage('Le champ "Date d\'installation du site" est obligatoire')
+        .optional({ nullable: true })
         .isDate().bail().withMessage('Le champ "Date d\'installation du site" est invalide')
         .toDate()
         .custom((value) => {
@@ -164,7 +164,7 @@ module.exports = mode => ([
      * Date de signalement du site
      ********************************************************************************************* */
     body('declared_at')
-        .optional({ nullable: true })
+        .exists({ checkNull: true }).bail().withMessage('Le champ "Date de signalement du site" est obligatoire')
         .isDate().bail().withMessage('Le champ "Date de signalement du site" est invalide')
         .toDate()
         .custom((value, { req }) => {
