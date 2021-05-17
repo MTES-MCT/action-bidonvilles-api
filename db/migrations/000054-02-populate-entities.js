@@ -8,6 +8,7 @@ module.exports = {
                 'shantytown_comment',
                 'plan',
                 'user',
+                'stats',
             ].map(name => ({ name })),
             {
                 transaction,
