@@ -11,20 +11,25 @@ const { sequelize } = require('#db/models');
 /**
  * @param {Model_ShantytownComment_Data} data
  */
-module.exports = data => sequelize.query(
-    `INSERT INTO shantytown_comments(
-        description,
-        fk_shantytown,
-        created_by,
-        private
-    )
-    VALUES (
-        :description,
-        :fk_shantytown,
-        :created_by,
-        :private
-    )`,
-    {
-        replacements: data,
-    },
-);
+module.exports = async (data) => {
+    const [[{ shantytown_comment_id }]] = await sequelize.query(
+        `INSERT INTO shantytown_comments(
+            description,
+            fk_shantytown,
+            created_by,
+            private
+        )
+        VALUES (
+            :description,
+            :fk_shantytown,
+            :created_by,
+            :private
+        )
+        RETURNING shantytown_comment_id`,
+        {
+            replacements: data,
+        },
+    );
+
+    return shantytown_comment_id;
+};
