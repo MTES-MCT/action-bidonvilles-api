@@ -19,6 +19,7 @@ module.exports = models => ({
             numberOfCreditsPerYear,
             averageCompletionPercentage,
             numberOfShantytownsOnJune2019,
+            populationTotal,
         ] = await Promise.all([
             models.stats.numberOfPeople(departement),
             models.stats.numberOfShantytown(departement),
@@ -31,6 +32,7 @@ module.exports = models => ({
             models.stats.numberOfCreditsPerYear(departement),
             models.stats.averageCompletionPercentage(departement),
             models.stats.numberOfOpenShantytownsAtMonth(departement, '2019-06-01'),
+            models.stats.populationTotal(departement),
         ]);
 
         return res.status(200).send({
@@ -48,6 +50,7 @@ module.exports = models => ({
                     numberOfCreditsPerYear,
                     averageCompletionPercentage,
                     numberOfShantytownsOnJune2019,
+                    populationTotal,
                 },
             },
         });
