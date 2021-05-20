@@ -28,6 +28,9 @@ const features = {
         'deactivate',
         'delete',
     ],
+    stats: [
+        'read',
+    ],
 };
 
 module.exports = {
