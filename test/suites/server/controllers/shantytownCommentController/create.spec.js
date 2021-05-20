@@ -7,16 +7,24 @@ const { serialized: fakeUser } = require('#test/utils/user');
 const { expect } = chai;
 chai.use(sinonChai);
 
-const { factory } = require('#server/controllers/shantytownCommentController/create');
+const shantytownCommentService = require('#server/services/shantytownComment');
+const ctlCreate = require('#server/controllers/shantytownCommentController/create');
+
 const ServiceError = require('#server/errors/ServiceError');
 
 describe.only('controllers/shantytownComment', () => {
+    let createCommentService;
+    beforeEach(() => {
+        createCommentService = sinon.stub(shantytownCommentService, 'createComment');
+    });
+    afterEach(() => {
+        createCommentService.restore();
+    });
+
     describe('create()', () => {
         it('fait appel au service shantytownComment/createComment() pour insérer le commentaire', async () => {
-            const srvCreateComment = sinon.stub();
             const user = fakeUser();
             const shantytown = { id: 1 };
-            const ctlCreate = factory({ createComment: srvCreateComment });
 
             await ctlCreate(
                 mockReq({
@@ -31,7 +39,7 @@ describe.only('controllers/shantytownComment', () => {
                 sinon.stub(),
             );
 
-            expect(srvCreateComment).to.have.been.calledOnceWith(
+            expect(createCommentService).to.have.been.calledOnceWith(
                 { description: 'description', private: true },
                 shantytown,
                 user,
@@ -41,10 +49,7 @@ describe.only('controllers/shantytownComment', () => {
         it('répond une 200 et la liste des commentaires retournée par le service shantytownComment/createComment()', async () => {
             // le service createComment() retourne une liste de commentaires
             const comments = []; // @todo: utiliser une liste de fakeComments() dès que l'utilitaire est mergé dans develop
-            const srvCreateComment = sinon.stub();
-            srvCreateComment.resolves(comments);
-
-            const ctlCreate = factory({ createComment: srvCreateComment });
+            createCommentService.resolves(comments);
 
             const res = mockRes();
             await ctlCreate(
@@ -71,11 +76,9 @@ describe.only('controllers/shantytownComment', () => {
             let next;
             let error;
             beforeEach(async () => {
-                const srvCreateComment = sinon.stub();
                 error = new Error('Une erreur');
-                srvCreateComment.rejects(new ServiceError('insert_failed', error));
+                createCommentService.rejects(new ServiceError('insert_failed', error));
 
-                const ctlCreate = factory({ createComment: srvCreateComment });
                 res = mockRes();
                 next = sinon.stub();
 
@@ -109,11 +112,9 @@ describe.only('controllers/shantytownComment', () => {
             let next;
             let error;
             beforeEach(async () => {
-                const srvCreateComment = sinon.stub();
                 error = new Error('Une erreur');
-                srvCreateComment.rejects(new ServiceError('fetch_failed', error));
+                createCommentService.rejects(new ServiceError('fetch_failed', error));
 
-                const ctlCreate = factory({ createComment: srvCreateComment });
                 res = mockRes();
                 next = sinon.stub();
 
@@ -147,11 +148,9 @@ describe.only('controllers/shantytownComment', () => {
             let next;
             let error;
             beforeEach(async () => {
-                const srvCreateComment = sinon.stub();
                 error = new Error('Une erreur');
-                srvCreateComment.rejects(error);
+                createCommentService.rejects(error);
 
-                const ctlCreate = factory({ createComment: srvCreateComment });
                 res = mockRes();
                 next = sinon.stub();
 
