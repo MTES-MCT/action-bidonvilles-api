@@ -1,7 +1,11 @@
 const { sequelize } = require('#db/models');
+
 const shantytownCommentModel = require('#server/models/shantytownComment');
 const shantytownModel = require('#server/models/shantytownModel')(sequelize);
 const slackUtils = require('#server/utils/slack');
+const userModel = require('#server/models/userModel')(sequelize);
+const mailService = require('#server/services/mailService');
+
 const ServiceError = require('#server/errors/ServiceError');
 
 /**
@@ -12,9 +16,10 @@ const ServiceError = require('#server/errors/ServiceError');
  * @returns {Array.<Model_ShantytownComment>}
  */
 module.exports = async (comment, shantytown, author) => {
-    // create the new comment
+    // on insère le commentaire
+    let commentId;
     try {
-        await shantytownCommentModel.create({
+        commentId = await shantytownCommentModel.create({
             description: comment.description,
             private: comment.private,
             fk_shantytown: shantytown.id,
@@ -24,18 +29,32 @@ module.exports = async (comment, shantytown, author) => {
         throw new ServiceError('insert_failed', error);
     }
 
+    // on tente d'envoyer une notification slack
     try {
         await slackUtils.triggerNewComment(comment.description, shantytown, author);
     } catch (error) {
         // ignore
     }
 
-    // return the updated list of comments
+    // on retourne la liste mise à jour des commentaires du site
     let comments;
     try {
         comments = await shantytownModel.getComments(author, [shantytown.id], false);
     } catch (error) {
         throw new ServiceError('fetch_failed', error);
+    }
+
+    // on tente d'envoyer une notification mail à tous les intervenants du site
+    try {
+        const watchers = await userModel.getShantytownWatchers(shantytown.id, comment.private);
+        if (watchers.length > 0) {
+            const serializedComment = await shantytownCommentModel.findOne(commentId);
+            await Promise.all(
+                watchers.map(user => mailService.send('new_comment', user, undefined, [shantytown, serializedComment])),
+            );
+        }
+    } catch (error) {
+        // ignore
     }
 
     return comments[shantytown.id];
