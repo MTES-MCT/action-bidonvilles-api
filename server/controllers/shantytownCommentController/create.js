@@ -1,50 +1,39 @@
-const { createComment: $createComment } = require('#server/services/shantytownComment');
+const shantytownCommentService = require('#server/services/shantytownComment');
 
-function factory(dependencies = {}) {
-    // resolve dependencies
-    const { createComment } = {
-        ...{ createComment: $createComment },
-        ...dependencies,
-    };
+module.exports = async (req, res, next) => {
+    let comments;
 
-    // controller
-    return async (req, res, next) => {
-        let comments;
-        try {
-            comments = await createComment(
-                {
-                    description: req.body.description,
-                    private: req.body.private,
-                },
-                req.body.shantytown,
-                req.user,
-            );
-        } catch (error) {
-            let message;
-            switch (error && error.code) {
-                case 'insert_failed':
-                    message = 'Votre commentaire n\'a pas pu être enregistré.';
-                    break;
+    try {
+        comments = await shantytownCommentService.createComment(
+            {
+                description: req.body.description,
+                private: req.body.private,
+            },
+            req.body.shantytown,
+            req.user,
+        );
+    } catch (error) {
+        let message;
+        switch (error && error.code) {
+            case 'insert_failed':
+                message = 'Votre commentaire n\'a pas pu être enregistré.';
+                break;
 
-                case 'fetch_failed':
-                    message = 'Votre commentaire a bien été enregistré mais la liste des commentaires n\'a pas pu être actualisée.';
-                    break;
+            case 'fetch_failed':
+                message = 'Votre commentaire a bien été enregistré mais la liste des commentaires n\'a pas pu être actualisée.';
+                break;
 
-                default:
-                    message = 'Une erreur inconnue est survenue.';
-            }
-
-            res.status(500).send({
-                user_message: message,
-            });
-            return next((error && error.nativeError) || error);
+            default:
+                message = 'Une erreur inconnue est survenue.';
         }
 
-        return res.status(200).send({
-            comments,
+        res.status(500).send({
+            user_message: message,
         });
-    };
-}
+        return next((error && error.nativeError) || error);
+    }
 
-module.exports = factory();
-module.exports.factory = factory;
+    return res.status(200).send({
+        comments,
+    });
+};
