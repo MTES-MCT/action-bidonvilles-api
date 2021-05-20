@@ -1,21 +1,42 @@
 const chai = require('chai');
 const sinon = require('sinon');
 const sinonChai = require('sinon-chai');
+const proxyquire = require('proxyquire');
 
 chai.use(sinonChai);
 
 const { expect } = chai;
-const { factory } = require('#server/services/shantytownComment/createComment');
-const { serialized: fakeUser } = require('#test/utils/user');
-
+const { sequelize } = require('#db/models');
+const shantytownCommentModel = require('#server/models/shantytownComment');
+const shantytownModel = require('#server/models/shantytownModel')(sequelize);
+const slackUtils = require('#server/utils/slack');
 const ServiceError = require('#server/errors/ServiceError');
 
+const createComment = proxyquire('#server/services/shantytownComment/createComment', {
+    '#server/models/shantytownModel': () => shantytownModel,
+});
+const { serialized: fakeUser } = require('#test/utils/user');
+
+
 describe.only('services/shantytownComment', () => {
+    const dependencies = {
+        createComment: undefined,
+        getComments: undefined,
+        triggerNewComment: undefined,
+    };
+    beforeEach(() => {
+        dependencies.createComment = sinon.stub(shantytownCommentModel, 'create');
+        dependencies.getComments = sinon.stub(shantytownModel, 'getComments');
+        dependencies.triggerNewComment = sinon.stub(slackUtils, 'triggerNewComment');
+    });
+    afterEach(() => {
+        Object.values(dependencies).forEach(stub => stub && stub.restore());
+    });
+
     describe('createComment()', () => {
         describe('', () => {
             let input;
             let output;
-            let dependencies;
             let response;
             beforeEach(async () => {
                 // input data
@@ -29,16 +50,6 @@ describe.only('services/shantytownComment', () => {
                 output = {
                     commentList: [],
                 };
-
-                // dependencies
-                dependencies = {
-                    createComment: sinon.stub(),
-                    getComments: sinon.stub(),
-                    triggerNewComment: sinon.stub(),
-                };
-
-                // tested service
-                const createComment = factory(dependencies);
 
                 // getComments() retourne une liste de commentaires
                 dependencies.getComments
@@ -73,13 +84,11 @@ describe.only('services/shantytownComment', () => {
         });
 
         describe('si l\'insertion de commentaires échoue', () => {
-            let createComment;
             const comment = { description: 'description', private: true };
             const user = fakeUser();
             const nativeError = new Error('une erreur');
             beforeEach(() => {
-                const modelCreateComment = sinon.stub();
-                modelCreateComment
+                dependencies.createComment
                     .withArgs({
                         description: comment.description,
                         private: comment.private,
@@ -87,12 +96,6 @@ describe.only('services/shantytownComment', () => {
                         created_by: user.id,
                     })
                     .rejects(nativeError);
-
-                createComment = factory({
-                    createComment: modelCreateComment,
-                    getComments: sinon.stub(),
-                    triggerNewComment: sinon.stub(),
-                });
             });
 
             it('lance une exception de type ServiceError', async () => {
@@ -110,23 +113,12 @@ describe.only('services/shantytownComment', () => {
         });
 
         describe('si la notification slack échoue', () => {
-            let createComment;
             const comment = { description: 'description', private: true };
             const user = fakeUser();
             const nativeError = new Error('une erreur');
             beforeEach(() => {
-                const triggerNewComment = sinon.stub();
-                triggerNewComment
-                    .rejects(nativeError);
-
-                const getComments = sinon.stub();
-                getComments.resolves({ 1: [] });
-
-                createComment = factory({
-                    createComment: sinon.stub(),
-                    getComments,
-                    triggerNewComment,
-                });
+                dependencies.triggerNewComment.rejects(nativeError);
+                dependencies.getComments.resolves({ 1: [] });
             });
 
             it('aucune exception est lancée ', async () => {
@@ -142,21 +134,13 @@ describe.only('services/shantytownComment', () => {
         });
 
         describe('si le fetch de commentaires échoue', () => {
-            let createComment;
             const comment = { description: 'description', private: true };
             const user = fakeUser();
             const nativeError = new Error('une erreur');
             beforeEach(() => {
-                const modelGetComments = sinon.stub();
-                modelGetComments
+                dependencies.getComments
                     .withArgs(user, [1], false)
                     .rejects(nativeError);
-
-                createComment = factory({
-                    createComment: sinon.stub(),
-                    getComments: modelGetComments,
-                    triggerNewComment: sinon.stub(),
-                });
             });
 
             it('lance une exception de type ServiceError', async () => {
