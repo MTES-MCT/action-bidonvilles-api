@@ -21,11 +21,7 @@ module.exports = {
      */
     send(templateName, recipient, sender = null, templateArgs, preserveRecipient = true) {
         let finalRecipient = recipient;
-        if (preserveRecipient !== true) {
-            if (!testEmail) {
-                return Promise.reject('No test email is setup');
-            }
-
+        if (testEmail && !preserveRecipient) {
             finalRecipient = {
                 email: testEmail,
                 first_name: 'Service',
