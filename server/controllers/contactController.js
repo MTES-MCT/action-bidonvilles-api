@@ -3,18 +3,15 @@ const accessRequestService = require('#server/services/accessRequest/accessReque
 
 const {
     send: sendMail,
-} = require('#server/utils/mail');
-
-const MAIL_TEMPLATES = {};
-MAIL_TEMPLATES.contact_message = require('#server/mails/contact_message');
+    PRESERVE_RECIPIENT,
+} = require('#server/services/mailService');
 
 const sendEmailNewContactMessageToAdmins = async (data, models, contact) => {
     const admins = await models.user.getNationalAdmins();
-    const mailTemplate = MAIL_TEMPLATES.contact_message(data, new Date());
 
     for (let i = 0; i < admins.length; i += 1) {
         // eslint-disable-next-line no-await-in-loop
-        await sendMail(admins[i], mailTemplate, contact);
+        await sendMail('contact_message', admins[i], contact, [data, new Date()], !PRESERVE_RECIPIENT);
     }
 };
 

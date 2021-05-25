@@ -37,6 +37,7 @@ module.exports = models => async (req, res, next) => {
                     req.user,
                     req.shantytown,
                 ],
+                mailService.PRESERVE_RECIPIENT,
             );
         } catch (error) {
             console.log(error);

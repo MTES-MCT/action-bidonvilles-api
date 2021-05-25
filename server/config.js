@@ -22,6 +22,7 @@ const config = {
     sentry: {
         dsn: process.env.RB_API_SENTRY_DSN || '',
     },
+    testEmail: process.env.RB_API_TEST_EMAIL || null,
 };
 
 let webhookIndex = 1;

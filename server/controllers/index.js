@@ -1,9 +1,15 @@
 const fs = require('fs');
 const path = require('path');
 
+const createShantytownComment = require('./shantytownCommentController/create');
+
 module.exports = (models) => {
     const basename = path.basename(module.filename);
-    const controllers = {};
+    const controllers = {
+        shantytownComment: {
+            create: createShantytownComment,
+        },
+    };
 
     // instanciate all controllers
     fs

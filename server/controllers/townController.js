@@ -3,16 +3,14 @@ const cleanParams = require('./townController/helpers/cleanParams');
 const {
     sequelize,
     Shantytown: ShantyTowns,
-    ShantytownComment: ShantyTownComments,
     ClosingSolution,
     Stats_Exports,
 } = require('#db/models');
 const { fromTsToFormat: tsToString, toFormat: dateToString } = require('#server/utils/date');
 const { createExport } = require('#server/utils/excel');
-const { send: sendMail } = require('#server/utils/mail');
+const { send: sendMail, PRESERVE_RECIPIENT } = require('#server/services/mailService');
 const { triggerShantytownCloseAlert, triggerShantytownCreationAlert } = require('#server/utils/slack');
 const { slack: slackConfig } = require('#server/config');
-const COMMENT_DELETION_MAIL = require('#server/mails/comment_deletion.js');
 
 function fromGeoLevelToTableName(geoLevel) {
     switch (geoLevel) {
@@ -42,48 +40,8 @@ function addError(errors, field, error) {
     errors[field].push(error);
 }
 
-function trim(str) {
-    if (typeof str !== 'string') {
-        return null;
-    }
-
-    return str.replace(/^\s*|\s*$/g, '');
-}
-
 function hasPermission(user, feature, entity) {
     return user.permissions && user.permissions[entity] && user.permissions[entity][feature] && user.permissions[entity][feature].allowed === true;
-}
-
-function serializeComment(comment) {
-    return Object.assign(
-        {
-            id: comment.commentId,
-            description: comment.commentDescription,
-            createdAt: comment.commentCreatedAt !== null ? (comment.commentCreatedAt.getTime() / 1000) : null,
-            createdBy: {
-                id: comment.commentCreatedBy,
-                firstName: comment.userFirstName,
-                lastName: comment.userLastName,
-                position: comment.userPosition,
-                organization: comment.organizationAbbreviation || comment.organizationName,
-                organizationId: comment.organizationId,
-            },
-            private: comment.commentPrivate,
-            shantytown: comment.shantytownId,
-        },
-        comment.covidCommentDate !== null
-            ? {
-                covid: {
-                    date: comment.covidCommentDate,
-                    information: comment.covidCommentInformation,
-                    distribution_de_kits: comment.covidCommentDistribution,
-                    cas_contacts: comment.covidCommentCasContacts,
-                    cas_suspects: comment.covidCommentCasSuspects,
-                    cas_averes: comment.covidCommentCasAveres,
-                },
-            }
-            : {},
-    );
 }
 
 module.exports = (models) => {
@@ -442,184 +400,6 @@ module.exports = (models) => {
             }
         },
 
-        async addComment(req, res, next) {
-            const {
-                description,
-                private: privateField,
-            } = req.body;
-
-            // get the related town
-            let shantytown;
-            try {
-                shantytown = await ShantyTowns.findOne({
-                    where: {
-                        shantytown_id: req.params.id,
-                    },
-                });
-            } catch (error) {
-                res.status(500).send({
-                    error: {
-                        developer_message: 'Failed to retrieve the shantytown',
-                        user_message: 'Impossible de retrouver le site concerné en base de données',
-                    },
-                });
-                return next(error);
-            }
-
-            if (shantytown === null) {
-                return res.status(404).send({
-                    error: {
-                        developer_message: 'Shantytown does not exist',
-                        user_message: 'Le site concerné par le commentaire n\'existe pas',
-                    },
-                });
-            }
-
-            // ensure the description is not empty
-            const trimmedDescription = trim(description);
-            if (trimmedDescription === null || trimmedDescription.length === 0) {
-                return res.status(404).send({
-                    error: {
-                        developer_message: 'The submitted data contains errors',
-                        user_message: 'Certaines données sont invalides',
-                        fields: {
-                            description: ['La description est obligatoire'],
-                        },
-                    },
-                });
-            }
-
-            // add the step
-            try {
-                await ShantyTownComments.create({
-                    shantytown: shantytown.id,
-                    description: trimmedDescription,
-                    private: privateField,
-                    createdBy: req.user.id,
-                });
-
-                const filterPrivateComments = !req.user.isAllowedTo('listPrivate', 'shantytown_comment');
-
-                const rawComments = await sequelize.query(
-                    `SELECT
-                        shantytown_comments.shantytown_comment_id AS "commentId",
-                        shantytown_comments.fk_shantytown AS "shantytownId",
-                        shantytown_comments.description AS "commentDescription",
-                        shantytown_comments.created_at AS "commentCreatedAt",
-                        shantytown_comments.created_by AS "commentCreatedBy",
-                        shantytown_comments.private AS "commentPrivate",
-                        users.first_name AS "userFirstName",
-                        users.last_name AS "userLastName",
-                        users.position AS "userPosition",
-                        organizations.organization_id AS "organizationId",
-                        organizations.name AS "organizationName",
-                        organizations.abbreviation AS "organizationAbbreviation"
-                    FROM shantytown_comments
-                    LEFT JOIN users ON shantytown_comments.created_by = users.user_id
-                    LEFT JOIN organizations ON users.fk_organization = organizations.organization_id
-                    WHERE shantytown_comments.fk_shantytown = :id
-                    ${filterPrivateComments === true ? 'AND private IS FALSE ' : ''}
-                    ORDER BY shantytown_comments.created_at DESC`,
-                    {
-                        type: sequelize.QueryTypes.SELECT,
-                        replacements: {
-                            id: shantytown.id,
-                        },
-                    },
-                );
-
-                return res.status(200).send({
-                    comments: rawComments.map(serializeComment),
-                });
-            } catch (e) {
-                res.status(500).send({
-                    error: {
-                        developer_message: e.message,
-                        user_message: 'Une erreur est survenue dans l\'enregistrement de l\'étape en base de données',
-                    },
-                });
-                return next(e);
-            }
-        },
-
-        async updateComment(req, res, next) {
-            let comment;
-            try {
-                comment = await ShantyTownComments.findOne({
-                    where: {
-                        shantytown_comment_id: req.params.commentId,
-                    },
-                });
-            } catch (error) {
-                res.status(500).send({
-                    error: {
-                        developer_message: 'Failed to retrieve the comment',
-                        user_message: 'Impossible de retrouver le commentaire à modifier en base de données',
-                    },
-                });
-                return next(error);
-            }
-
-            if (comment.createdBy !== req.user.id && !hasPermission(req.user, 'moderate', 'shantytown_comment')) {
-                return res.status(400).send({
-                    error: {
-                        user_message: 'Vous n\'avez pas accès à ces données',
-                        developer_message: 'Tried to access a secured page without authentication',
-                    },
-                });
-            }
-
-            try {
-                await sequelize.query(
-                    'UPDATE shantytown_comments SET description = :description, private = :private WHERE shantytown_comment_id = :id',
-                    {
-                        replacements: {
-                            id: req.params.commentId,
-                            description: req.body.description,
-                            private: req.body.private,
-                        },
-                    },
-                );
-
-                const rawComments = await sequelize.query(
-                    `SELECT
-                        shantytown_comments.shantytown_comment_id AS "commentId",
-                        shantytown_comments.fk_shantytown AS "shantytownId",
-                        shantytown_comments.description AS "commentDescription",
-                        shantytown_comments.created_at AS "commentCreatedAt",
-                        shantytown_comments.created_by AS "commentCreatedBy",
-                        users.first_name AS "userFirstName",
-                        users.last_name AS "userLastName",
-                        users.position AS "userPosition",
-                        organizations.name AS "organizationName",
-                        organizations.abbreviation AS "organizationAbbreviation"
-                    FROM shantytown_comments
-                    LEFT JOIN users ON shantytown_comments.created_by = users.user_id
-                    LEFT JOIN organizations ON users.fk_organization = organizations.organization_id
-                    WHERE shantytown_comments.fk_shantytown = :id
-                    ORDER BY shantytown_comments.created_at DESC`,
-                    {
-                        type: sequelize.QueryTypes.SELECT,
-                        replacements: {
-                            id: req.params.id,
-                        },
-                    },
-                );
-
-                return res.status(200).send({
-                    comments: rawComments.map(serializeComment),
-                });
-            } catch (error) {
-                res.status(500).send({
-                    error: {
-                        developer_message: 'Failed to update the comment',
-                        user_message: 'Impossible de modifier le commentaire',
-                    },
-                });
-                return next(error);
-            }
-        },
-
         async deleteComment(req, res, next) {
             let town;
 
@@ -697,7 +477,7 @@ module.exports = (models) => {
             }
 
             try {
-                await sendMail(author, COMMENT_DELETION_MAIL(town, comment, message, req.user), req.user);
+                await sendMail('comment_deletion', author, req.user, [town, comment, message, req.user], PRESERVE_RECIPIENT);
             } catch (error) {
                 // ignore
             }

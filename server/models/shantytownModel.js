@@ -274,8 +274,9 @@ function serializeComment(comment) {
                 organization: comment.organizationAbbreviation || comment.organizationName,
                 organizationId: comment.organizationId,
             },
+            shantytown: comment.shantytownId,
         },
-        comment.covidCommentDate !== null
+        comment.covidCommentDate
             ? {
                 covid: {
                     date: comment.covidCommentDate.getTime() / 1000,
@@ -879,6 +880,8 @@ module.exports = (database) => {
     }
 
     return {
+        serializeComment,
+
         findAll: (user, filters = [], feature = 'list', order = undefined) => query(filters, order, user, feature),
 
         findOne: async (user, shantytownId) => {

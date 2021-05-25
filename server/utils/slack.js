@@ -270,10 +270,51 @@ async function triggerPeopleInvitedAlert(guest, greeter, msg) {
     await peopleInvitedAlert.send(slackMessage);
 }
 
+async function triggerNewComment(comment, shantytown, author) {
+    if (!slack || !slack.new_comment) {
+        return;
+    }
+
+    const newCommentAlert = new IncomingWebhook(slack.new_comment);
+
+    const address = formatAddress(shantytown);
+    const username = formatUsername(author);
+    const townLink = formatTownLink(shantytown.id, address);
+
+    const slackMessage = {
+        text: `Commentaire sur le site ${address} par ${username}`,
+        blocks: [
+            {
+                type: 'section',
+                text: {
+                    type: 'mrkdwn',
+                    text: `:rotating_light: Commentaire sur le site: ${townLink} par ${username}`,
+                },
+            },
+        ],
+        attachments: [
+            {
+                color: '#f2c744',
+                blocks: [
+                    {
+                        type: 'section',
+                        text: {
+                            type: 'mrkdwn',
+                            text: `*Commentaire* : ${comment}`,
+                        },
+                    },
+                ],
+            }],
+    };
+
+    await newCommentAlert.send(slackMessage);
+}
+
 module.exports = {
     triggerShantytownCloseAlert,
     triggerShantytownCreationAlert,
     triggerNewUserAlert,
     triggerActorInvitedAlert,
     triggerPeopleInvitedAlert,
+    triggerNewComment,
 };
