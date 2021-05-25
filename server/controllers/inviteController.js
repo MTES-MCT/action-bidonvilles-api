@@ -1,11 +1,9 @@
 const {
     send: sendMail,
-} = require('#server/utils/mail');
+    PRESERVE_RECIPIENT,
+} = require('#server/services/mailService');
 const { triggerPeopleInvitedAlert } = require('#server/utils/slack');
 const { slack: slackConfig } = require('#server/config');
-
-const MAIL_TEMPLATES = {};
-MAIL_TEMPLATES.invitation = require('#server/mails/invitation');
 
 const sendEmailsInvitations = async (guests, greeter) => {
     for (let i = 0; i < guests.length; i += 1) {
@@ -17,7 +15,7 @@ const sendEmailsInvitations = async (guests, greeter) => {
 
         try {
             // eslint-disable-next-line no-await-in-loop
-            await sendMail(guest, MAIL_TEMPLATES.invitation(guest, greeter));
+            await sendMail('invitation', guest, null, [guest, greeter], PRESERVE_RECIPIENT);
         } catch (err) {
             // Ignore
         }

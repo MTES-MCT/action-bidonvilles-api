@@ -14,6 +14,7 @@ module.exports = () => async (req, res, next) => {
                 req.user,
                 req.shantytown,
             ],
+            mailService.PRESERVE_RECIPIENT,
         );
     } catch (error) {
         res.status(500).send({

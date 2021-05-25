@@ -9,6 +9,7 @@ module.exports = {
                     admin,
                     user,
                     [user],
+                    !mailService.PRESERVE_RECIPIENT,
                 )),
             );
         },
@@ -20,6 +21,7 @@ module.exports = {
                     admin,
                     user,
                     [user],
+                    !mailService.PRESERVE_RECIPIENT,
                 )),
             );
         },
@@ -31,6 +33,7 @@ module.exports = {
                     admin,
                     user,
                     [user],
+                    !mailService.PRESERVE_RECIPIENT,
                 )),
             );
         },
@@ -41,6 +44,7 @@ module.exports = {
                 admin,
                 user,
                 [user, submitDate],
+                !mailService.PRESERVE_RECIPIENT,
             );
         },
 
@@ -50,6 +54,7 @@ module.exports = {
                 admin,
                 user,
                 [user],
+                !mailService.PRESERVE_RECIPIENT,
             );
         },
     },
@@ -61,6 +66,7 @@ module.exports = {
                 user,
                 null,
                 [user],
+                mailService.PRESERVE_RECIPIENT,
             );
         },
 
@@ -70,6 +76,7 @@ module.exports = {
                 user,
                 admin,
                 [user, admin],
+                mailService.PRESERVE_RECIPIENT,
             );
         },
 
@@ -79,6 +86,7 @@ module.exports = {
                 user,
                 admin,
                 [admin, activationLink, expiracyDate],
+                mailService.PRESERVE_RECIPIENT,
             );
         },
 
@@ -88,6 +96,7 @@ module.exports = {
                 user,
                 admin,
                 [activationLink, expiracyDate],
+                mailService.PRESERVE_RECIPIENT,
             );
         },
 
@@ -97,12 +106,16 @@ module.exports = {
                 user,
                 admin,
                 [expiracyDate],
+                mailService.PRESERVE_RECIPIENT,
             );
         },
         accessActivated(user) {
             return mailService.send(
                 'access_request/user/access_activated_welcome',
                 user,
+                null,
+                [],
+                mailService.PRESERVE_RECIPIENT,
             );
         },
     },
