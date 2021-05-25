@@ -43,6 +43,7 @@ module.exports = (agenda) => {
                 user,
                 null,
                 [],
+                mailService.PRESERVE_RECIPIENT,
             );
         },
     );

@@ -50,7 +50,7 @@ module.exports = async (comment, shantytown, author) => {
         if (watchers.length > 0) {
             const serializedComment = await shantytownCommentModel.findOne(commentId);
             await Promise.all(
-                watchers.map(user => mailService.send('new_comment', user, undefined, [shantytown, serializedComment])),
+                watchers.map(user => mailService.send('new_comment', user, undefined, [shantytown, serializedComment], !mailService.PRESERVE_RECIPIENT)),
             );
         }
     } catch (error) {

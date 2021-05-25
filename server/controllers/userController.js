@@ -14,13 +14,12 @@ const {
 } = require('#server/utils/auth');
 const {
     send: sendMail,
-} = require('#server/utils/mail');
+    PRESERVE_RECIPIENT,
+} = require('#server/services/mailService');
 const permissionsDescription = require('#server/permissions_description');
 const accessRequestService = require('#server/services/accessRequest/accessRequestService');
 
 const MAIL_TEMPLATES = {};
-MAIL_TEMPLATES.access_granted = require('#server/mails/access_request/user/access_granted');
-MAIL_TEMPLATES.access_denied = require('#server/mails/access_request/user/access_denied');
 MAIL_TEMPLATES.new_password = require('#server/mails/new_password');
 
 const { auth: authConfig } = require('#server/config');
@@ -911,7 +910,7 @@ module.exports = models => ({
         if (user !== null) {
             try {
                 const resetLink = getPasswordResetLink(user);
-                await sendMail(user, MAIL_TEMPLATES.new_password(user, resetLink));
+                await sendMail('new_password', user, null, [user, resetLink], PRESERVE_RECIPIENT);
             } catch (error) {
                 res.status(500).send({
                     error: {

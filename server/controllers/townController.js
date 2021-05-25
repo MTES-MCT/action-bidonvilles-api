@@ -8,10 +8,9 @@ const {
 } = require('#db/models');
 const { fromTsToFormat: tsToString, toFormat: dateToString } = require('#server/utils/date');
 const { createExport } = require('#server/utils/excel');
-const { send: sendMail } = require('#server/utils/mail');
+const { send: sendMail, PRESERVE_RECIPIENT } = require('#server/services/mailService');
 const { triggerShantytownCloseAlert, triggerShantytownCreationAlert } = require('#server/utils/slack');
 const { slack: slackConfig } = require('#server/config');
-const COMMENT_DELETION_MAIL = require('#server/mails/comment_deletion.js');
 
 function fromGeoLevelToTableName(geoLevel) {
     switch (geoLevel) {
@@ -478,7 +477,7 @@ module.exports = (models) => {
             }
 
             try {
-                await sendMail(author, COMMENT_DELETION_MAIL(town, comment, message, req.user), req.user);
+                await sendMail('comment_deletion', author, req.user, [town, comment, message, req.user], PRESERVE_RECIPIENT);
             } catch (error) {
                 // ignore
             }

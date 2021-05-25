@@ -50,7 +50,7 @@ const emailStub = sinon.stub();
 
 
 const mockModels = {
-    '#server/utils/mail': {
+    '#server/services/mailService': {
         send: emailStub,
     },
     '#server/services/accessRequest/accessRequestService': {
